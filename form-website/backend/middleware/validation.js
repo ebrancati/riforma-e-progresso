@@ -1,9 +1,15 @@
 import { Template } from '../models/Template.js';
+import { InputSanitizer } from '../utils/sanitizer.js';
 import { config } from '../config/config.js';
 
 // Middleware to validate template data
 export function validateTemplateData(req, res, next) {
   try {
+    // Pre-validate using InputSanitizer for security
+    const sanitizedData = InputSanitizer.validateTemplateData(req.body);
+    req.body = sanitizedData;
+    
+    // Additional validation using Template class for business rules
     const validation = Template.validate(req.body);
     
     if (!validation.isValid) {
@@ -15,7 +21,8 @@ export function validateTemplateData(req, res, next) {
     
     next();
   } catch (error) {
-    res.status(500).json({
+    // InputSanitizer throws errors for security violations
+    return res.status(400).json({
       error: 'Validation error',
       details: error.message
     });
@@ -29,6 +36,17 @@ export function parseJsonBody(req, res, next) {
     
     req.on('data', chunk => {
       body += chunk.toString();
+
+      const suspiciousPatterns = ['<script', 'javascript:', '$where', '$regex'];
+      const lowerBody = body.toLowerCase();
+      for (const pattern of suspiciousPatterns) {
+        if (lowerBody.includes(pattern)) {
+          return res.status(400).json({
+            error: 'Malicious content detected',
+            details: 'Request contains potentially harmful content'
+          });
+        }
+      }
     });
     
     req.on('end', () => {
@@ -69,6 +87,9 @@ export function setCorsHeaders(req, res, next) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
