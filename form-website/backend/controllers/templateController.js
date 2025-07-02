@@ -33,7 +33,7 @@ export class TemplateController {
       
       if (error.message === 'Template not found') {
         return res.status(404).json({
-          error: 'Template non trovato',
+          error: 'Template not found',
           details: 'No templates found with this ID'
         });
       }
@@ -85,7 +85,7 @@ export class TemplateController {
     } catch (error) {
       console.error('Error updating template:', error);
       
-      if (error.message === 'ID non valido') {
+      if (error.message === 'Invalid ID') {
         return res.status(400).json({
           error: 'Invalid ID',
           details: 'The ID provided is not a valid MongoDB ObjectId'

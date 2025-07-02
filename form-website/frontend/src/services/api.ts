@@ -48,16 +48,24 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
+    // Create AbortController for timeout functionality
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
       ...options,
+      signal: controller.signal, // Add abort signal
     };
 
     try {
       const response = await fetch(url, config);
+      
+      // Clear timeout if request completes successfully
+      clearTimeout(timeoutId);
       
       // If we get here, we're online
       this.isOffline = false;

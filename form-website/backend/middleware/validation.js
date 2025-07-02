@@ -1,4 +1,3 @@
-// middleware/validation.js
 import { Template } from '../models/Template.js';
 import { config } from '../config/config.js';
 
