@@ -13,6 +13,7 @@ const ScheduleTemplatePage: React.FC = () => {
   const [isServerAvailable, setIsServerAvailable] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showEditingReminder, setShowEditingReminder] = useState(true);
   
   // Custom hooks
   const {
@@ -158,11 +159,12 @@ const ScheduleTemplatePage: React.FC = () => {
     try {
       const templateData = { name: trimmedName, schedule };
       
-      if (editingTemplateId) {
-        await updateTemplate(editingTemplateId, templateData);
-      } else {
-        await createTemplate(templateData);
-      }
+    if (editingTemplateId) {
+      await updateTemplate(editingTemplateId, templateData);
+      setShowEditingReminder(false);
+    } else {
+      await createTemplate(templateData);
+    }
 
       clearForm();
     } catch (error) { // Error handled by hook
@@ -194,6 +196,7 @@ const ScheduleTemplatePage: React.FC = () => {
       const template = templates.find(t => t.id === showEditConfirm);
       if (template) {
         loadTemplate(template, false);
+        setShowEditingReminder(true);
       }
       setShowEditConfirm(null);
     }
@@ -204,6 +207,7 @@ const ScheduleTemplatePage: React.FC = () => {
       const template = templates.find(t => t.id === showEditConfirm);
       if (template) {
         loadTemplate(template, true);
+        setShowEditingReminder(true);
       }
       setShowEditConfirm(null);
     }
@@ -217,6 +221,7 @@ const ScheduleTemplatePage: React.FC = () => {
   const resetForm = () => {
     if (!window.confirm('Sei sicuro di voler resettare tutto il form?')) return;
     clearForm();
+    setShowEditingReminder(true);
   };
 
   // Retry connection
@@ -252,6 +257,20 @@ const ScheduleTemplatePage: React.FC = () => {
           successMessage={successMessage} 
         />
 
+        {/* Editing Reminder Overlay */}
+        {editingTemplateId && showEditingReminder && (
+          <div className="editing-reminder-overlay">
+            ℹ️ Ricorda di premere "Aggiorna Template" per salvare le modifiche
+            <button 
+              onClick={() => setShowEditingReminder(false)} 
+              className="dismiss-reminder"
+              title="Nascondi promemoria"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Edit Modal */}
         <EditModal
           isOpen={!!showEditConfirm}
@@ -274,7 +293,7 @@ const ScheduleTemplatePage: React.FC = () => {
           {editingTemplateId && (
             <div className="editing-indicator">
               🔧 Stai modificando un template esistente
-              <button onClick={clearForm} className="cancel-edit-button">
+              <button onClick={() => { clearForm(); setShowEditingReminder(true); }} className="cancel-edit-button">
                 Annulla Modifica
               </button>
             </div>
