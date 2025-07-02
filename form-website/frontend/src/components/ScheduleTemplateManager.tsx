@@ -1,40 +1,66 @@
 import React, { useState, useEffect } from 'react';
+import { apiService } from '../services/api';
+import { useTemplates } from '../hooks/useTemplates';
+import { useScheduleForm } from '../hooks/useScheduleForm';
+import NotificationMessages from './NotificationMessages';
+import DayScheduleCard from './DayScheduleCard';
+import TemplateCard from './TemplateCard';
+import EditModal from './EditModal';
+import type { DayKey, DaySchedule } from '../types/schedule';
 import './ScheduleTemplateManager.css';
 
-interface TimeSlot {
-  id: string;
-  startTime: string;
-  endTime: string;
-}
+// Add CSS for animations
+const additionalStyles = `
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+`;
 
-interface DaySchedule {
-  [key: string]: TimeSlot[];
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = additionalStyles;
+  document.head.appendChild(styleSheet);
 }
-
-interface Template {
-  id: number;
-  name: string;
-  schedule: DaySchedule;
-  created: string;
-}
-
-type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
 const ScheduleTemplateManager: React.FC = () => {
-  const [templateName, setTemplateName] = useState('');
-  const [schedule, setSchedule] = useState<DaySchedule>({
-    monday: [],
-    tuesday: [],
-    wednesday: [],
-    thursday: [],
-    friday: [],
-    saturday: [],
-    sunday: []
-  });
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [copiedDaySlots, setCopiedDaySlots] = useState<TimeSlot[] | null>(null);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isServerAvailable, setIsServerAvailable] = useState(false);
+  const [showEditConfirm, setShowEditConfirm] = useState<string | null>(null);
+  
+  // Custom hooks
+  const {
+    templates,
+    isLoading,
+    error,
+    successMessage,
+    loadTemplates,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate
+  } = useTemplates();
 
+  const {
+    templateName,
+    setTemplateName,
+    schedule,
+    editingTemplateId,
+    addTimeSlot,
+    removeTimeSlot,
+    updateTimeSlot,
+    copyDay,
+    pasteToDay,
+    clearForm,
+    loadTemplate
+  } = useScheduleForm();
+
+  // Constants
   const dayNames: { [key in DayKey]: string } = {
     monday: 'Lunedì',
     tuesday: 'Martedì',
@@ -55,7 +81,7 @@ const ScheduleTemplateManager: React.FC = () => {
     sunday: 'Dom'
   };
 
-  // Generate time options (every 30 minutes)
+  // Generate time options
   const generateTimeOptions = (): string[] => {
     const options: string[] = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -67,126 +93,32 @@ const ScheduleTemplateManager: React.FC = () => {
     return options;
   };
 
-  // Convert hours to minutes for comparisons
-  const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
-  // Convert minutes to hours
-  const minutesToTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  };
-
-  // Sort slots by start time
-  const sortTimeSlots = (slots: TimeSlot[]): TimeSlot[] => {
-    return [...slots].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-  };
-
-  // Load template from localStorage on startup
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
   const timeOptions = generateTimeOptions();
 
-  // Add time slot to a day
-  const addTimeSlot = (day: DayKey) => {
-    // Find the first free slot
-    const existingSlots = schedule[day];
-    let startTime = '09:00';
-    let endTime = '10:00';
-    
-    // If there are already slots, find the next available time
-    if (existingSlots.length > 0) {
-      const sortedSlots = sortTimeSlots(existingSlots);
-      const lastSlot = sortedSlots[sortedSlots.length - 1];
-      startTime = lastSlot.endTime;
-      
-      // Calculate end time (1 hour later)
-      const startMinutes = timeToMinutes(startTime);
-      const endMinutes = startMinutes + 60;
-      
-      // If it goes beyond 24:00, use the last slot + 30 minutes
-      if (endMinutes >= 24 * 60) {
-        const nextStart = timeToMinutes(lastSlot.endTime);
-        const nextEnd = Math.min(nextStart + 30, 24 * 60 - 30);
-        startTime = minutesToTime(nextStart);
-        endTime = minutesToTime(nextEnd);
-      } else {
-        endTime = minutesToTime(endMinutes);
-      }
+  // Initialize app
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    try {
+      await apiService.checkHealth();
+      setIsServerAvailable(true);
+      await loadTemplates();
+    } catch (error) {
+      console.error('Server initialization failed:', error);
+      setIsServerAvailable(false);
     }
-
-    const newSlot: TimeSlot = {
-      id: `${day}-${Date.now()}`,
-      startTime,
-      endTime
-    };
-
-    setSchedule(prev => ({
-      ...prev,
-      [day]: sortTimeSlots([...prev[day], newSlot])
-    }));
   };
 
-  const removeTimeSlot = (day: DayKey, slotId: string) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: prev[day].filter(slot => slot.id !== slotId)
-    }));
-  };
-
-  const updateTimeSlot = (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => {
-    const currentSlot = schedule[day].find(slot => slot.id === slotId);
-    if (!currentSlot) return;
-
-    const newStartTime = field === 'startTime' ? value : currentSlot.startTime;
-    const newEndTime = field === 'endTime' ? value : currentSlot.endTime;
-
-    // Make sure the end time is after the start time
-    if (timeToMinutes(newEndTime) <= timeToMinutes(newStartTime)) {
-      alert('L\'orario di fine deve essere successivo a quello di inizio.');
+  // Handle day copy with user interaction
+  const handleCopyDay = (day: DayKey) => {
+    const result = copyDay(day);
+    if (!result.success) {
+      // Handle error through notification system
       return;
     }
 
-    // Check for conflicts with other slots (excluding the current one)
-    const hasConflict = schedule[day].some(slot => {
-      if (slot.id === slotId) return false;
-      
-      const slotStartMinutes = timeToMinutes(slot.startTime);
-      const slotEndMinutes = timeToMinutes(slot.endTime);
-      const newStartMinutes = timeToMinutes(newStartTime);
-      const newEndMinutes = timeToMinutes(newEndTime);
-      
-      return (newStartMinutes < slotEndMinutes && newEndMinutes > slotStartMinutes);
-    });
-
-    if (hasConflict) {
-      alert('Questo orario si sovrappone con un altro slot esistente.');
-      return;
-    }
-
-    setSchedule(prev => ({
-      ...prev,
-      [day]: sortTimeSlots(prev[day].map(slot => 
-        slot.id === slotId ? { ...slot, [field]: value } : slot
-      ))
-    }));
-  };
-
-  const copyDay = (day: DayKey) => {
-    const daySlots = schedule[day];
-    
-    if (daySlots.length === 0) {
-      alert('Nessun orario da copiare per questo giorno');
-      return;
-    }
-
-    setCopiedDaySlots([...daySlots]);
-    
     setTimeout(() => {
       const targetDay = prompt(`Orari copiati! Inserisci il giorno dove incollare (es: tuesday, wednesday, etc.)\n\nGiorni disponibili: monday, tuesday, wednesday, thursday, friday, saturday, sunday`);
       if (targetDay && targetDay !== day && Object.keys(dayNames).includes(targetDay)) {
@@ -195,113 +127,45 @@ const ScheduleTemplateManager: React.FC = () => {
     }, 500);
   };
 
-  // Paste copied schedules
-  const pasteToDay = (targetDay: DayKey) => {
-    if (!copiedDaySlots) {
-      alert('Nessun orario copiato');
-      return;
+  // Handle time slot update with error handling
+  const handleUpdateTimeSlot = (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => {
+    const result = updateTimeSlot(day, slotId, field, value);
+    if (!result.success) {
+      // Handle error through notification system
     }
-
-    // Check if any copied slots create conflicts
-    const existingSlots = schedule[targetDay];
-    const hasAnyConflict = copiedDaySlots.some(copiedSlot => {
-      return existingSlots.some(existingSlot => {
-        const copiedStartMinutes = timeToMinutes(copiedSlot.startTime);
-        const copiedEndMinutes = timeToMinutes(copiedSlot.endTime);
-        const existingStartMinutes = timeToMinutes(existingSlot.startTime);
-        const existingEndMinutes = timeToMinutes(existingSlot.endTime);
-        
-        return (copiedStartMinutes < existingEndMinutes && copiedEndMinutes > existingStartMinutes);
-      });
-    });
-
-    if (hasAnyConflict) {
-      alert('Alcuni degli orari copiati si sovrappongono con quelli esistenti. Operazione annullata.');
-      return;
-    }
-
-    const newSlots = copiedDaySlots.map(slot => ({
-      ...slot,
-      id: `${targetDay}-${Date.now()}-${Math.random()}`
-    }));
-
-    setSchedule(prev => ({
-      ...prev,
-      [targetDay]: sortTimeSlots([...prev[targetDay], ...newSlots])
-    }));
   };
 
-  // Clears the form without confirmation (for internal use)
-  const clearForm = () => {
-    setTemplateName('');
-    setSchedule({
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
-      sunday: []
-    });
-  };
+  // Save or update template
+  const saveTemplate = async () => {
+    if (!isServerAvailable) return;
 
-  // Complete form reset, with confirmation
-  const resetForm = () => {
-    if (!window.confirm('Sei sicuro di voler resettare tutto il form?')) return;
-    
-    clearForm();
-  };
-
-  const saveTemplate = () => {
     const trimmedName = templateName.trim();
-    
-    if (!trimmedName) {
-      alert('Inserisci un nome per il template');
-      return;
+    if (!trimmedName) return;
+
+    // Check for duplicate names
+    if (!editingTemplateId || templates.find(t => t.id === editingTemplateId)?.name !== trimmedName) {
+      const existingTemplate = templates.find(t => 
+        t.name.toLowerCase() === trimmedName.toLowerCase() && t.id !== editingTemplateId
+      );
+      if (existingTemplate) return;
     }
 
-    // Check if a template with the same name already exists
-    const existingTemplate = templates.find(t => 
-      t.name.toLowerCase() === trimmedName.toLowerCase()
-    );
-    
-    if (existingTemplate) {
-      alert('Esiste già un template con questo nome. Scegli un nome diverso.');
-      return;
-    }
-
-    // Check that there is at least one time configured
     const hasAnySlots = Object.values(schedule).some(daySlots => daySlots.length > 0);
-    if (!hasAnySlots) {
-      alert('Aggiungi almeno un orario prima di salvare il template.');
-      return;
+    if (!hasAnySlots) return;
+
+    try {
+      const templateData = { name: trimmedName, schedule };
+      
+      if (editingTemplateId) {
+        await updateTemplate(editingTemplateId, templateData);
+      } else {
+        await createTemplate(templateData);
+      }
+
+      clearForm();
+    } catch (error) { // Error handled by hook
+      console.error(error)
     }
-
-    const template: Template = {
-      id: Date.now(),
-      name: trimmedName,
-      schedule: { ...schedule },
-      created: new Date().toLocaleDateString('it-IT')
-    };
-
-    const existingTemplates = JSON.parse(localStorage.getItem('scheduleTemplates') || '[]');
-    const updatedTemplates = [...existingTemplates, template];
-    localStorage.setItem('scheduleTemplates', JSON.stringify(updatedTemplates));
-
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000);
-
-    // Reset form and reload template
-    clearForm();
-    loadTemplates();
-  };
-
-  // Load saved templates
-  const loadTemplates = () => {
-    const savedTemplates = JSON.parse(localStorage.getItem('scheduleTemplates') || '[]');
-    setTemplates(savedTemplates);
   };
 
   // Generate template summary
@@ -318,50 +182,141 @@ const ScheduleTemplateManager: React.FC = () => {
       : 'Nessun orario configurato';
   };
 
-  // Load template into form
-  const loadTemplate = (templateId: number) => {
-    const template = templates.find(t => t.id === templateId);
-    
-    if (!template) return;
-
-    setTemplateName(template.name + ' (copia)');
-    
-    // Sort each day's slots as they load
-    const sortedSchedule: DaySchedule = {};
-    Object.keys(template.schedule).forEach(day => {
-      sortedSchedule[day] = sortTimeSlots(template.schedule[day]);
-    });
-    
-    setSchedule(sortedSchedule);
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Modal handlers
+  const handleEditTemplate = (templateId: string) => {
+    setShowEditConfirm(templateId);
   };
 
-  const deleteTemplate = (templateId: number) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questo template?')) return;
+  const handleCreateCopy = () => {
+    if (showEditConfirm) {
+      const template = templates.find(t => t.id === showEditConfirm);
+      if (template) {
+        loadTemplate(template, false);
+      }
+      setShowEditConfirm(null);
+    }
+  };
 
-    const filteredTemplates = templates.filter(t => t.id !== templateId);
-    localStorage.setItem('scheduleTemplates', JSON.stringify(filteredTemplates));
-    
-    loadTemplates();
+  const handleEditOriginal = () => {
+    if (showEditConfirm) {
+      const template = templates.find(t => t.id === showEditConfirm);
+      if (template) {
+        loadTemplate(template, true);
+      }
+      setShowEditConfirm(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditConfirm(null);
+  };
+
+  // Reset form with confirmation
+  const resetForm = () => {
+    if (!window.confirm('Sei sicuro di voler resettare tutto il form?')) return;
+    clearForm();
+  };
+
+  // Retry connection
+  const retryConnection = () => {
+    initializeApp();
   };
 
   return (
     <div className="container">
+      {/* Header */}
       <div className="header">
         <h1>Gestione Template Orari</h1>
         <p>Crea e gestisci i tuoi template di disponibilità settimanali</p>
+        <div style={{ marginTop: '10px', fontSize: '14px' }}>
+          <span style={{ 
+            display: 'inline-block',
+            width: '10px',
+            height: '10px',
+            borderRadius: '50%',
+            backgroundColor: isServerAvailable ? '#48bb78' : '#e53e3e',
+            marginRight: '8px'
+          }}></span>
+          {isServerAvailable ? 'Server Connesso' : 'Server Non Disponibile'}
+          {!isServerAvailable && (
+            <button 
+              onClick={retryConnection}
+              style={{ 
+                marginLeft: '10px', 
+                padding: '4px 8px',
+                fontSize: '12px',
+                backgroundColor: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+              disabled={isLoading}
+            >
+              Riprova
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="main-content">
-        {/* Sezione Creazione Template */}
+        {/* Notifications */}
+        <NotificationMessages error={error} successMessage={successMessage} />
+
+        {/* Edit Modal */}
+        <EditModal
+          isOpen={!!showEditConfirm}
+          onCreateCopy={handleCreateCopy}
+          onEditOriginal={handleEditOriginal}
+          onCancel={handleCancelEdit}
+        />
+
+        {/* Loading Indicator */}
+        {isLoading && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '20px', 
+            backgroundColor: '#f0f2f5',
+            margin: '20px 0',
+            borderRadius: '8px'
+          }}>
+            <div>⏳ Caricamento in corso...</div>
+          </div>
+        )}
+
+        {/* Create Template Section */}
         <div className="create-section">
-          {showSuccessMessage && (
-            <div className="success-message show">
-              Template salvato con successo!
+          {/* Editing Indicator */}
+          {editingTemplateId && (
+            <div style={{
+              backgroundColor: '#e8f4fd',
+              color: '#1a365d',
+              padding: '15px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              border: '1px solid #bee3f8',
+              textAlign: 'center'
+            }}>
+              🔧 Stai modificando un template esistente
+              <button
+                onClick={clearForm}
+                style={{
+                  marginLeft: '15px',
+                  padding: '5px 10px',
+                  backgroundColor: '#4299e1',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Annulla Modifica
+              </button>
             </div>
           )}
 
+          {/* Template Name Input */}
           <div className="form-group">
             <label className="form-label" htmlFor="templateName">Nome Template</label>
             <input
@@ -372,123 +327,81 @@ const ScheduleTemplateManager: React.FC = () => {
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               required
+              disabled={isLoading || !isServerAvailable}
             />
           </div>
 
+          {/* Schedule Grid */}
           <div className="schedule-grid">
-            {Object.keys(dayNames).map((day, index) => {
+            {Object.keys(dayNames).map((day) => {
               const dayKey = day as DayKey;
               const daySlots = schedule[dayKey];
               
               return (
-                <div key={day} className="day-card" style={{ animationDelay: `${(index + 1) * 0.1}s` }}>
-                  <div className="day-header">
-                    <div className="day-name">{dayNames[dayKey]}</div>
-                    <div className="day-actions">
-                      <button
-                        className="btn-icon copy"
-                        onClick={() => copyDay(dayKey)}
-                        title="Copia"
-                      >
-                        📋
-                      </button>
-                      <button
-                        className="btn-icon"
-                        onClick={() => addTimeSlot(dayKey)}
-                        title="Aggiungi"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div className="time-slots">
-                    {daySlots.length === 0 ? (
-                      <div className="no-slots">Nessun orario inserito</div>
-                    ) : (
-                      daySlots.map((slot) => (
-                        <div key={slot.id} className="time-slot">
-                          <select
-                            className="time-input start-time"
-                            value={slot.startTime}
-                            onChange={(e) => updateTimeSlot(dayKey, slot.id, 'startTime', e.target.value)}
-                          >
-                            {timeOptions.map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                          <span className="time-separator">-</span>
-                          <select
-                            className="time-input end-time"
-                            value={slot.endTime}
-                            onChange={(e) => updateTimeSlot(dayKey, slot.id, 'endTime', e.target.value)}
-                          >
-                            {timeOptions.map(time => (
-                              <option key={time} value={time}>{time}</option>
-                            ))}
-                          </select>
-                          <button
-                            className="btn-delete"
-                            onClick={() => removeTimeSlot(dayKey, slot.id)}
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                <DayScheduleCard
+                  key={day}
+                  day={dayKey}
+                  dayName={dayNames[dayKey]}
+                  daySlots={daySlots}
+                  timeOptions={timeOptions}
+                  isLoading={isLoading}
+                  isServerAvailable={isServerAvailable}
+                  onAddTimeSlot={addTimeSlot}
+                  onCopyDay={handleCopyDay}
+                  onRemoveTimeSlot={removeTimeSlot}
+                  onUpdateTimeSlot={handleUpdateTimeSlot}
+                />
               );
             })}
           </div>
 
+          {/* Action Buttons */}
           <div className="action-buttons">
-            <button className="btn btn-secondary" onClick={resetForm}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={resetForm}
+              disabled={isLoading || !isServerAvailable}
+            >
               Reset
             </button>
-            <button className="btn btn-primary" onClick={saveTemplate}>
-              Salva Template
+            <button 
+              className="btn btn-primary" 
+              onClick={saveTemplate}
+              disabled={isLoading || !isServerAvailable}
+            >
+              {isLoading 
+                ? (editingTemplateId ? 'Aggiornamento...' : 'Salvataggio...') 
+                : (editingTemplateId ? 'Aggiorna Template' : 'Salva Template')
+              }
             </button>
           </div>
         </div>
 
-        {/* Sezione Template Salvati */}
+        {/* Saved Templates Section */}
         <div className="templates-section">
           <h2>Template Salvati</h2>
           <div className="templates-grid">
             {templates.length === 0 ? (
               <div className="empty-state">
                 <h3>Nessun template salvato</h3>
-                <p>Crea il tuo primo template di orari utilizzando il form sopra</p>
+                <p>
+                  {isServerAvailable 
+                    ? 'Crea il tuo primo template di orari utilizzando il form sopra'
+                    : 'Connetti il server per visualizzare e gestire i template'
+                  }
+                </p>
               </div>
             ) : (
               templates.map(template => (
-                <div key={template.id} className="template-card">
-                  <div className="template-header">
-                    <div className="template-name">{template.name}</div>
-                    <div className="template-actions">
-                      <button
-                        className="btn-icon"
-                        onClick={() => loadTemplate(template.id)}
-                        title="Carica"
-                      >
-                        📝
-                      </button>
-                      <button
-                        className="btn-icon"
-                        onClick={() => deleteTemplate(template.id)}
-                        title="Elimina"
-                        style={{ background: '#e53e3e' }}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                  <div className="template-summary">
-                    {generateTemplateSummary(template.schedule)}
-                    <br />
-                    <small>Creato: {template.created}</small>
-                  </div>
-                </div>
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  isLoading={isLoading}
+                  isServerAvailable={isServerAvailable}
+                  onEdit={handleEditTemplate}
+                  onDelete={deleteTemplate}
+                  generateSummary={generateTemplateSummary}
+                />
               ))
             )}
           </div>

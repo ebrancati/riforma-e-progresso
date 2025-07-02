@@ -9,7 +9,7 @@ export interface DaySchedule {
 }
 
 export interface Template {
-  id: number;
+  id: string;
   name: string;
   schedule: DaySchedule;
   created: string;
@@ -21,9 +21,38 @@ export interface DayNames {
   [key: string]: string;
 }
 
-export interface ScheduleTemplateManagerProps {
-  // hypothetical future props for APIs
-  onSaveTemplate?: (template: Template) => Promise<void>;
-  onDeleteTemplate?: (templateId: number) => Promise<void>;
-  onLoadTemplates?: () => Promise<Template[]>;
+// Result types for operations
+export interface OperationResult {
+  success: boolean;
+  error?: string;
+}
+
+// Hook return types
+export interface UseTemplatesReturn {
+  templates: Template[];
+  isLoading: boolean;
+  error: string | null;
+  successMessage: string | null;
+  loadTemplates: () => Promise<void>;
+  createTemplate: (templateData: Omit<Template, 'id' | 'created'>) => Promise<Template>;
+  updateTemplate: (id: string, templateData: Omit<Template, 'id' | 'created'>) => Promise<Template>;
+  deleteTemplate: (id: string) => Promise<void>;
+  clearError: () => void;
+  showSuccess: (message: string) => void;
+}
+
+export interface UseScheduleFormReturn {
+  templateName: string;
+  setTemplateName: (name: string) => void;
+  schedule: DaySchedule;
+  editingTemplateId: string | null;
+  copiedDaySlots: TimeSlot[] | null;
+  addTimeSlot: (day: DayKey) => void;
+  removeTimeSlot: (day: DayKey, slotId: string) => void;
+  updateTimeSlot: (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => OperationResult;
+  copyDay: (day: DayKey) => OperationResult;
+  pasteToDay: (targetDay: DayKey) => OperationResult;
+  clearForm: () => void;
+  loadTemplate: (template: Template, forEditing?: boolean) => void;
+  sortTimeSlots: (slots: TimeSlot[]) => TimeSlot[];
 }

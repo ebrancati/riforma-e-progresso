@@ -2,7 +2,7 @@ import http from 'http';
 import url from 'url';
 import { config } from './config/config.js';
 import { connectToDatabase } from './utils/database.js';
-import { handleTemplateRoutes } from './routes/templates.js';
+import { handleTemplateRoutes } from './routes/template.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
 
 // Health check endpoint
