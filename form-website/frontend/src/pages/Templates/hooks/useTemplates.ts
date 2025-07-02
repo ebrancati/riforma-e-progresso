@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { apiService, ApiError, type ApiTemplate, type CreateTemplateRequest } from '../services/api';
-import type { Template } from '../types/schedule';
+import { apiService, ApiError, type ApiTemplate, type CreateTemplateRequest } from '../../../services/api';
+import type { Template } from '../../../types/schedule';
 
 export const useTemplates = () => {
   const [templates, setTemplates] = useState<Template[]>([]);

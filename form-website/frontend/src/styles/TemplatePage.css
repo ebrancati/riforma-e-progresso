@@ -343,10 +343,85 @@ body {
   animation: fadeIn 0.5s ease;
 }
 
+/* Server Status */
+.server-status {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.server-status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.server-status-indicator.online  { background-color: #48bb78; }
+.server-status-indicator.offline { background-color: #e53e3e; }
+
+.retry-button {
+  margin-left: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.retry-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  background-color: #f0f2f5;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+/* Editing Indicator */
+.editing-indicator {
+  background-color: #e8f4fd;
+  color: #1a365d;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #bee3f8;
+  text-align: center;
+}
+
+.cancel-edit-button {
+  margin-left: 15px;
+  padding: 5px 10px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
 @keyframes slideIn {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 

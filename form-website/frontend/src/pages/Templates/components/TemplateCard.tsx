@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Template, DaySchedule } from '../types/schedule';
+import type { Template, DaySchedule } from '../../../types/schedule';
 
 interface TemplateCardProps {
   template: Template;

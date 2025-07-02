@@ -1,38 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
-import { useTemplates } from '../hooks/useTemplates';
-import { useScheduleForm } from '../hooks/useScheduleForm';
-import NotificationMessages from './NotificationMessages';
-import DayScheduleCard from './DayScheduleCard';
-import TemplateCard from './TemplateCard';
-import EditModal from './EditModal';
-import type { DayKey, DaySchedule } from '../types/schedule';
-import './ScheduleTemplateManager.css';
-
-// Add CSS for animations
-const additionalStyles = `
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
-`;
-
-// Inject styles
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.textContent = additionalStyles;
-  document.head.appendChild(styleSheet);
-}
+import { apiService } from '../../services/api';
+import { useTemplates } from './hooks/useTemplates';
+import { useScheduleForm } from './hooks/useScheduleForm';
+import NotificationMessages from '../../components/NotificationMessages';
+import DayScheduleCard from './components/DayScheduleCard';
+import TemplateCard from './components/TemplateCard';
+import EditModal from './components/EditModal';
+import type { DayKey, DaySchedule, TimeSlot } from '../../types/schedule';
+import '../../styles/TemplatePage.css';
 
 const ScheduleTemplateManager: React.FC = () => {
   const [isServerAvailable, setIsServerAvailable] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   
   // Custom hooks
   const {
@@ -137,21 +117,37 @@ const ScheduleTemplateManager: React.FC = () => {
 
   // Save or update template
   const saveTemplate = async () => {
-    if (!isServerAvailable) return;
+    if (!isServerAvailable) {
+      setLocalError('Server non disponibile. Impossibile salvare il template.');
+      setTimeout(() => setLocalError(null), 3000);
+      return;
+    }
 
     const trimmedName = templateName.trim();
-    if (!trimmedName) return;
+    if (!trimmedName) {
+      setLocalError('Inserisci un nome per il template');
+      setTimeout(() => setLocalError(null), 3000);
+      return;
+    }
 
     // Check for duplicate names
     if (!editingTemplateId || templates.find(t => t.id === editingTemplateId)?.name !== trimmedName) {
       const existingTemplate = templates.find(t => 
         t.name.toLowerCase() === trimmedName.toLowerCase() && t.id !== editingTemplateId
       );
-      if (existingTemplate) return;
+      if (existingTemplate) {
+        setLocalError('Esiste già un template con questo nome. Scegli un nome diverso.');
+        setTimeout(() => setLocalError(null), 3000);
+        return;
+      }
     }
 
-    const hasAnySlots = Object.values(schedule).some(daySlots => daySlots.length > 0);
-    if (!hasAnySlots) return;
+    const hasAnySlots = (Object.values(schedule) as TimeSlot[][]).some(daySlots => daySlots.length > 0);
+    if (!hasAnySlots) {
+      setLocalError('Aggiungi almeno un orario prima di salvare il template.');
+      setTimeout(() => setLocalError(null), 3000);
+      return;
+    }
 
     try {
       const templateData = { name: trimmedName, schedule };
@@ -228,29 +224,13 @@ const ScheduleTemplateManager: React.FC = () => {
       <div className="header">
         <h1>Gestione Template Orari</h1>
         <p>Crea e gestisci i tuoi template di disponibilità settimanali</p>
-        <div style={{ marginTop: '10px', fontSize: '14px' }}>
-          <span style={{ 
-            display: 'inline-block',
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            backgroundColor: isServerAvailable ? '#48bb78' : '#e53e3e',
-            marginRight: '8px'
-          }}></span>
+        <div className="server-status">
+          <span className={`server-status-indicator ${isServerAvailable ? 'online' : 'offline'}`}></span>
           {isServerAvailable ? 'Server Connesso' : 'Server Non Disponibile'}
           {!isServerAvailable && (
             <button 
               onClick={retryConnection}
-              style={{ 
-                marginLeft: '10px', 
-                padding: '4px 8px',
-                fontSize: '12px',
-                backgroundColor: '#667eea',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+              className="retry-button"
               disabled={isLoading}
             >
               Riprova
@@ -261,7 +241,10 @@ const ScheduleTemplateManager: React.FC = () => {
 
       <div className="main-content">
         {/* Notifications */}
-        <NotificationMessages error={error} successMessage={successMessage} />
+        <NotificationMessages 
+          error={localError || error} 
+          successMessage={successMessage} 
+        />
 
         {/* Edit Modal */}
         <EditModal
@@ -273,44 +256,19 @@ const ScheduleTemplateManager: React.FC = () => {
 
         {/* Loading Indicator */}
         {isLoading && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '20px', 
-            backgroundColor: '#f0f2f5',
-            margin: '20px 0',
-            borderRadius: '8px'
-          }}>
-            <div>⏳ Caricamento in corso...</div>
+          <div className="loading-indicator">
+            <div>Caricamento in corso...</div>
           </div>
         )}
 
         {/* Create Template Section */}
         <div className="create-section">
+          
           {/* Editing Indicator */}
           {editingTemplateId && (
-            <div style={{
-              backgroundColor: '#e8f4fd',
-              color: '#1a365d',
-              padding: '15px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              border: '1px solid #bee3f8',
-              textAlign: 'center'
-            }}>
+            <div className="editing-indicator">
               🔧 Stai modificando un template esistente
-              <button
-                onClick={clearForm}
-                style={{
-                  marginLeft: '15px',
-                  padding: '5px 10px',
-                  backgroundColor: '#4299e1',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px'
-                }}
-              >
+              <button onClick={clearForm} className="cancel-edit-button">
                 Annulla Modifica
               </button>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import ScheduleTemplateManager from './components/ScheduleTemplateManager';
+import ScheduleTemplateManager from './pages/Templates/TemplatePage';
 import './App.css';
 
 const App: React.FC = () => {

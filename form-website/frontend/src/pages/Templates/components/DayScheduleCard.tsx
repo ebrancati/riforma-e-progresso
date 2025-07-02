@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DayKey, TimeSlot } from '../types/schedule';
+import type { DayKey, TimeSlot } from '../../../types/schedule';
 
 interface DayScheduleCardProps {
   day: DayKey;

@@ -1,0 +1,50 @@
+.notification-error {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fed7d7;
+  color: #c53030;
+  padding: 15px 25px;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  max-width: 90vw;
+  min-width: 300px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+}
+
+.notification-success {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #c6f6d5;
+  color: #22543d;
+  padding: 15px 25px;
+  border-radius: 8px;
+  border: 1px solid #9ae6b4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  max-width: 90vw;
+  min-width: 300px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
