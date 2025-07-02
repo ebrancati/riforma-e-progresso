@@ -101,18 +101,19 @@ const ScheduleTemplatePage: React.FC = () => {
 
   // Handle day copy with user interaction
   const handleCopyDay = (day: DayKey) => {
-    const result = copyDay(day);
-    if (!result.success) {
-      setValidationError(`⚠️ ${result.error}`);
+    const daySlots = schedule[day];
+
+    if (daySlots.length === 0) {
+      setValidationError(`⚠️ Nessun orario da copiare per questo giorno`);
       return;
     }
+    
+    copyDay(day);
 
-    setTimeout(() => {
-      const targetDay = prompt(`Orari copiati! Inserisci il giorno dove incollare (es: tuesday, wednesday, etc.)\n\nGiorni disponibili: monday, tuesday, wednesday, thursday, friday, saturday, sunday`);
-      if (targetDay && targetDay !== day && Object.keys(dayNames).includes(targetDay)) {
-        pasteToDay(targetDay as DayKey);
-      }
-    }, 500);
+    const targetDay = prompt(`Orari copiati! Inserisci il giorno dove incollare \n\nGiorni disponibili: monday, tuesday, wednesday, thursday, friday, saturday, sunday`);
+    if (targetDay && targetDay !== day && Object.keys(dayNames).includes(targetDay)) {
+      pasteToDay(targetDay as DayKey, daySlots); // Passa i dati direttamente
+    }
   };
 
   // Handle time slot update with error handling

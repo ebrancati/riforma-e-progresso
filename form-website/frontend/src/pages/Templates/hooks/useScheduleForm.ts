@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Template, DaySchedule, TimeSlot, DayKey } from '../types/schedule';
+import type { Template, DaySchedule, TimeSlot, DayKey } from '../../../types/schedule';
 
 export const useScheduleForm = () => {
   const [templateName, setTemplateName] = useState('');
@@ -127,13 +127,19 @@ export const useScheduleForm = () => {
   };
 
   // Paste copied slots
-  const pasteToDay = (targetDay: DayKey) => {
-    if (!copiedDaySlots) {
+  const pasteToDay = (targetDay: DayKey, slotsToUse?: TimeSlot[]) => {
+      console.log('slotsToUse:', slotsToUse);
+  console.log('copiedDaySlots:', copiedDaySlots);
+  
+  const slotsToApply = slotsToUse || copiedDaySlots;
+  console.log('slotsToApply:', slotsToApply);
+    
+    if (!slotsToApply) {
       return { success: false, error: 'Nessun orario copiato' };
     }
 
     const existingSlots = schedule[targetDay];
-    const hasAnyConflict = copiedDaySlots.some(copiedSlot => {
+    const hasAnyConflict = slotsToApply.some(copiedSlot => {
       return existingSlots.some(existingSlot => {
         const copiedStartMinutes = timeToMinutes(copiedSlot.startTime);
         const copiedEndMinutes = timeToMinutes(copiedSlot.endTime);
@@ -148,7 +154,7 @@ export const useScheduleForm = () => {
       return { success: false, error: 'Alcuni degli orari copiati si sovrappongono con quelli esistenti.' };
     }
 
-    const newSlots = copiedDaySlots.map(slot => ({
+    const newSlots = slotsToApply.map(slot => ({
       ...slot,
       id: `${targetDay}-${Date.now()}-${Math.random()}`
     }));
