@@ -1,11 +1,15 @@
-import { ObjectId } from 'mongodb';
+import { InputSanitizer } from '../utils/sanitizer.js';
 import { getCollection } from '../utils/database.js';
+import { ObjectId } from 'mongodb';
 import { config } from '../config/config.js';
 
 export class Template {
   constructor(data) {
-    this.name = data.name;
-    this.schedule = data.schedule;
+    // Validate and sanitize data before setting properties
+    const sanitizedData = InputSanitizer.validateTemplateData(data);
+    
+    this.name = sanitizedData.name;
+    this.schedule = sanitizedData.schedule;
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
   }
@@ -25,9 +29,7 @@ export class Template {
   }
 
   static async findById(id) {
-    if (!ObjectId.isValid(id)) {
-      throw new Error('Invalid ID');
-    }
+    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
 
     const collection = this.getCollection();
     const template = await collection.findOne({ _id: new ObjectId(id) });
@@ -40,8 +42,10 @@ export class Template {
   }
 
   static async findByName(name) {
+    const sanitizedName = InputSanitizer.sanitizeTemplateName(name);
+    
     const collection = this.getCollection();
-    return await collection.findOne({ name: name.trim() });
+    return await collection.findOne({ name: sanitizedName });
   }
 
   // Create new template
@@ -52,7 +56,7 @@ export class Template {
     if (existing) throw new Error('A template with this name already exists');
 
     const result = await collection.insertOne({
-      name: this.name.trim(),
+      name: this.name,
       schedule: this.schedule,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
@@ -68,9 +72,8 @@ export class Template {
   }
 
   static async updateById(id, updateData) {
-    if (!ObjectId.isValid(id)) {
-      throw new Error('Invalid ID');
-    }
+
+    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
 
     const collection = this.getCollection();
     
@@ -90,8 +93,8 @@ export class Template {
       updatedAt: new Date()
     };
     
-    if (updateData.name) updateFields.name = updateData.name.trim();
-    if (updateData.schedule) updateFields.schedule = updateData.schedule;
+    if (updateData.name)     updateFields.name     = InputSanitizer.sanitizeTemplateName(updateData.name);
+    if (updateData.schedule) updateFields.schedule = InputSanitizer.validateSchedule(updateData.schedule);
 
     await collection.updateOne(
       { _id: new ObjectId(id) },
@@ -104,9 +107,8 @@ export class Template {
   }
 
   static async deleteById(id) {
-    if (!ObjectId.isValid(id)) {
-      throw new Error('Invalid ID');
-    }
+
+    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
 
     const collection = this.getCollection();
     const result = await collection.deleteOne({ _id: new ObjectId(id) });
@@ -131,38 +133,12 @@ export class Template {
 
   static validate(data) {
     const errors = [];
-
-    // Validate name
-    if (!data.name || typeof data.name !== 'string')
-        errors.push('Required template name');
-    else if (data.name.trim().length === 0)
-        errors.push('Template name cannot be empty');
-    else if (data.name.trim().length > config.template.maxNameLength)
-        errors.push(`Template name too long (max ${config.template.maxNameLength} characters)`);
-
-    // Validate schedule
-    if (!data.schedule || typeof data.schedule !== 'object') {
-      errors.push('Schedule required');
-    } else {
-      // Make sure all days are present
-      for (const day of config.template.requiredDays) {
-        if (!Array.isArray(data.schedule[day])) {
-          errors.push(`${day} must be an array`);
-          continue;
-        }
-
-        // Validate every slot of the day
-        for (const slot of data.schedule[day]) {
-          const slotErrors = this.validateTimeSlot(slot, day);
-          errors.push(...slotErrors);
-        }
-      }
+    try {
+      InputSanitizer.validateTemplateData(data);
+    } catch (error) {
+      errors.push(error.message);
     }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   }
 
   // Validate single time slot
