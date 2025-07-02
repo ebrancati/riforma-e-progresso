@@ -7,12 +7,12 @@ import DayScheduleCard from './components/DayScheduleCard';
 import TemplateCard from './components/TemplateCard';
 import EditModal from './components/EditModal';
 import type { DayKey, DaySchedule, TimeSlot } from '../../types/schedule';
-import '../../styles/TemplatePage.css';
+import '../../styles/ScheduleTemplatePage.css';
 
-const ScheduleTemplateManager: React.FC = () => {
+const ScheduleTemplatePage: React.FC = () => {
   const [isServerAvailable, setIsServerAvailable] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState<string | null>(null);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // Custom hooks
   const {
@@ -80,6 +80,13 @@ const ScheduleTemplateManager: React.FC = () => {
     initializeApp();
   }, []);
 
+  useEffect(() => {
+    if (validationError) {
+      const timer = setTimeout(() => setValidationError(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [validationError]);
+
   const initializeApp = async () => {
     try {
       await apiService.checkHealth();
@@ -95,7 +102,7 @@ const ScheduleTemplateManager: React.FC = () => {
   const handleCopyDay = (day: DayKey) => {
     const result = copyDay(day);
     if (!result.success) {
-      // Handle error through notification system
+      setValidationError(`⚠️ ${result.error}`);
       return;
     }
 
@@ -110,23 +117,24 @@ const ScheduleTemplateManager: React.FC = () => {
   // Handle time slot update with error handling
   const handleUpdateTimeSlot = (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => {
     const result = updateTimeSlot(day, slotId, field, value);
-    if (!result.success) {
-      // Handle error through notification system
-    }
+    if (!result.success) setValidationError(`⚠️ ${result.error}`);
   };
 
   // Save or update template
   const saveTemplate = async () => {
     if (!isServerAvailable) {
-      setLocalError('Server non disponibile. Impossibile salvare il template.');
-      setTimeout(() => setLocalError(null), 3000);
+      setValidationError('Server non disponibile. Impossibile salvare il template.');
       return;
     }
 
     const trimmedName = templateName.trim();
     if (!trimmedName) {
-      setLocalError('Inserisci un nome per il template');
-      setTimeout(() => setLocalError(null), 3000);
+      setValidationError('Inserisci un nome per il template');
+      return;
+    }
+
+    if (trimmedName.length > 100) {
+      setValidationError(`⚠️ Il nome è troppo lungo (massimo 100 caratteri)`);
       return;
     }
 
@@ -136,16 +144,14 @@ const ScheduleTemplateManager: React.FC = () => {
         t.name.toLowerCase() === trimmedName.toLowerCase() && t.id !== editingTemplateId
       );
       if (existingTemplate) {
-        setLocalError('Esiste già un template con questo nome. Scegli un nome diverso.');
-        setTimeout(() => setLocalError(null), 3000);
+        setValidationError('Esiste già un template con questo nome. Scegli un nome diverso.');
         return;
       }
     }
 
     const hasAnySlots = (Object.values(schedule) as TimeSlot[][]).some(daySlots => daySlots.length > 0);
     if (!hasAnySlots) {
-      setLocalError('Aggiungi almeno un orario prima di salvare il template.');
-      setTimeout(() => setLocalError(null), 3000);
+      setValidationError('Aggiungi almeno un orario prima di salvare il template.');
       return;
     }
 
@@ -242,7 +248,7 @@ const ScheduleTemplateManager: React.FC = () => {
       <div className="main-content">
         {/* Notifications */}
         <NotificationMessages 
-          error={localError || error} 
+          error={error || validationError} 
           successMessage={successMessage} 
         />
 
@@ -263,7 +269,7 @@ const ScheduleTemplateManager: React.FC = () => {
 
         {/* Create Template Section */}
         <div className="create-section">
-          
+
           {/* Editing Indicator */}
           {editingTemplateId && (
             <div className="editing-indicator">
@@ -369,4 +375,4 @@ const ScheduleTemplateManager: React.FC = () => {
   );
 };
 
-export default ScheduleTemplateManager;
+export default ScheduleTemplatePage;

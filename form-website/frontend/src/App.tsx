@@ -1,11 +1,11 @@
 import React from 'react';
-import ScheduleTemplateManager from './pages/Templates/TemplatePage';
+import ScheduleTemplatePage from './pages/Templates/ScheduleTemplatePage';
 import './App.css';
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <ScheduleTemplateManager />
+      <ScheduleTemplatePage />
     </div>
   );
 };

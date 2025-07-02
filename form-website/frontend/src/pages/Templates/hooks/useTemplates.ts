@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiService, ApiError, type ApiTemplate, type CreateTemplateRequest } from '../../../services/api';
 import type { Template } from '../../../types/schedule';
 
@@ -7,6 +7,13 @@ export const useTemplates = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Convert API template to internal format
   const convertApiTemplate = (apiTemplate: ApiTemplate): Template => ({
