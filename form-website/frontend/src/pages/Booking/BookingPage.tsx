@@ -6,6 +6,10 @@ import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
 import { formatDateToString, formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import '../../styles/UserBooking/BookingHeader.css';
+import '../../styles/UserBooking/CalendarGrid.css';
+import '../../styles/UserBooking/TimeSlotList.css';
+import '../../styles/UserBooking/BookingForm.css';
 import '../../styles/UserBooking/BookingPage.css';
 
 const BookingPage: React.FC = () => {
@@ -609,21 +613,26 @@ const BookingPage: React.FC = () => {
                   </div>
 
                   {/* Role Field */}
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="role">
-                      Ruolo per cui ti candidi *
-                    </label>
-                    <input
-                      type="text"
-                      id="role"
-                      className="form-input"
-                      placeholder="es. Grafico, Developer, Marketing Manager..."
-                      value={formData.role}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
-                      disabled={isSubmitting}
-                      required
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="role">
+                        Ruolo *
+                      </label>
+                      <input
+                        type="text"
+                        id="role"
+                        className="form-input"
+                        placeholder="es. Grafico, Developer, Marketing Manager..."
+                        value={formData.role}
+                        onChange={(e) => handleInputChange('role', e.target.value)}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
                   </div>
+                    
+                  {/* Empty div to maintain grid layout */}
+                  <div className="form-group"></div>
 
                   {/* CV Upload */}
                   <div className="form-group">

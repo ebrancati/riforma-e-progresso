@@ -41,7 +41,7 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({
           <div className="booking-info">
             <div className="booking-info-item">
               <span className="info-icon">⏱️</span>
-              <span className="info-text">Durata: {bookingLink.duration} minuti</span>
+              <span className="info-text">Durata prevista: {bookingLink.duration} minuti</span>
             </div>
           </div>
         )}
