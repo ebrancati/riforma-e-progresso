@@ -43,15 +43,6 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({
               <span className="info-icon">⏱️</span>
               <span className="info-text">Durata: {bookingLink.duration} minuti</span>
             </div>
-            
-            {bookingLink.requireAdvanceBooking && (
-              <div className="booking-info-item">
-                <span className="info-icon">📅</span>
-                <span className="info-text">
-                  Preavviso richiesto: {bookingLink.advanceHours} ore
-                </span>
-              </div>
-            )}
           </div>
         )}
         

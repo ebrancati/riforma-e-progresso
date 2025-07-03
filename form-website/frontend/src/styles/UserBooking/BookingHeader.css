@@ -1,0 +1,189 @@
+.booking-header {
+  background: var(--white);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: var(--spacing-3xl);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--primary-blue);
+}
+
+.booking-header-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.booking-title {
+  color: var(--gray-700);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.booking-subtitle {
+  color: var(--gray-500);
+  font-size: var(--font-size-lg);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.booking-info {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+.booking-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--blue-pale);
+  color: var(--primary-blue);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: 1px solid var(--blue-light);
+}
+
+.info-icon {
+  font-size: var(--font-size-base);
+}
+
+/* Progress Bar */
+.booking-progress {
+  margin-top: var(--spacing-xl);
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--gray-400);
+  transition: all var(--transition-normal);
+}
+
+.progress-step.active {
+  color: var(--primary-orange);
+  transform: scale(1.1);
+}
+
+.progress-step.completed {
+  color: var(--success);
+}
+
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  background: var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  transition: all var(--transition-normal);
+  border: 3px solid var(--gray-200);
+}
+
+.progress-step.active .step-circle {
+  background: var(--primary-orange);
+  color: var(--white);
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 4px rgba(245, 121, 32, 0.2);
+}
+
+.progress-step.completed .step-circle {
+  background: var(--success);
+  color: var(--white);
+  border-color: var(--success);
+}
+
+.step-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 0 auto;
+  max-width: 400px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-orange), var(--success));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .booking-header {
+    padding: var(--spacing-xl);
+  }
+  
+  .booking-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .booking-subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .progress-steps {
+    gap: var(--spacing-xl);
+  }
+  
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-base);
+  }
+  
+  .step-title {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-info {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .progress-steps {
+    gap: var(--spacing-lg);
+  }
+  
+  .step-circle {
+    width: 35px;
+    height: 35px;
+    font-size: var(--font-size-sm);
+  }
+}

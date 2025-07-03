@@ -20,8 +20,8 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
   const selectedDateObj = new Date(selectedDate + 'T00:00:00');
   const displayDate = formatDateForDisplay(selectedDateObj);
   
+  // Only show available slots
   const availableSlots = timeSlots.filter(slot => slot.available);
-  const bookedSlots = timeSlots.filter(slot => !slot.available);
   
   const handleSlotClick = (timeSlot: TimeSlot) => {
     if (!timeSlot.available) return;
@@ -76,72 +76,31 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
             </button>
           </div>
         ) : (
-          <>
-            {/* Available Slots */}
-            <div className="available-slots-section">
-              <h3 className="slots-section-title">
-                Orari disponibili ({availableSlots.length})
-              </h3>
-              
-              <div className="slots-grid">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot.id}
-                    className="time-slot-button available"
-                    onClick={() => handleSlotClick(slot)}
-                    disabled={isLoading}
-                  >
-                    <span className="time-slot-time">
-                      {formatTimeRange(slot)}
-                    </span>
-                    <span className="time-slot-status">
-                      Libero
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="available-slots-section">
+            <h3 className="slots-section-title">
+              Orari disponibili ({availableSlots.length})
+            </h3>
             
-            {/* Booked Slots (optional display) */}
-            {bookedSlots.length > 0 && (
-              <div className="booked-slots-section">
-                <h3 className="slots-section-title">
-                  Orari già prenotati ({bookedSlots.length})
-                </h3>
-                
-                <div className="slots-grid">
-                  {bookedSlots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className="time-slot-button booked"
-                    >
-                      <span className="time-slot-time">
-                        {formatTimeRange(slot)}
-                      </span>
-                      <span className="time-slot-status">
-                        Occupato
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
+            <div className="slots-grid">
+              {availableSlots.map((slot) => (
+                <button
+                  key={slot.id}
+                  className="time-slot-button available"
+                  onClick={() => handleSlotClick(slot)}
+                  disabled={isLoading}
+                >
+                  <span className="time-slot-time">
+                    {formatTimeRange(slot)}
+                  </span>
+                  <span className="time-slot-status">
+                    Libero
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
-      
-      {/* Info Section */}
-      {availableSlots.length > 0 && (
-        <div className="time-slots-info">
-          <div className="info-card">
-            <h4>💡 Suggerimento</h4>
-            <p>
-              Dopo aver selezionato l'orario, potrai compilare i tuoi dati 
-              e caricare il curriculum per completare la prenotazione.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

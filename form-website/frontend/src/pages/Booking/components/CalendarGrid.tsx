@@ -1,4 +1,3 @@
-// src/components/Booking/CalendarGrid.tsx
 import React from 'react';
 import type { DayAvailability } from '../../../types/booking';
 import { 

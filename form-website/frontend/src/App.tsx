@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import ScheduleTemplatePage from './pages/Templates/ScheduleTemplatePage';
 import BookingSetupPage     from './pages/BookingSetup/BookingSetupPage';
 import BookingLinksListPage from './pages/BookingLinks/BookingLinksListPage';
-import BookingCalendarPage  from './pages/Booking/BookingCalendarPage';
-import BookingTimeSlotsPage from './pages/Booking/BookingTimeSlotsPage';
-import BookingFormPage      from './pages/Booking/BookingFormPage';
+import BookingPage          from './pages/Booking/BookingPage';
 import NotFoundPage         from './pages/NotFoundPage';
 import './App.css';
 
@@ -19,13 +17,11 @@ const App: React.FC = () => {
           <Route path="/admin/booking-setup" element={<BookingSetupPage />} />
           <Route path="/admin/booking-links" element={<BookingLinksListPage />} />
           
-          {/* Public Booking Routes */}
-          <Route path="/book/:slug" element={<BookingCalendarPage />} />
-          <Route path="/book/:slug/slots/:date" element={<BookingTimeSlotsPage />} />
-          <Route path="/book/:slug/form" element={<BookingFormPage />} />
+          {/* Public Booking Route */}
+          <Route path="/book/:slug" element={<BookingPage />} />
           
           {/* Redirect to time-slots for now */}
-          <Route path="/" element={<Navigate to="/admin/time-slots" replace />} />
+          <Route path="/" element={<Navigate to="/admin/booking-links" replace />} />
           
           {/* 404 page */}
           <Route path="*" element={<NotFoundPage />} />

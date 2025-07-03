@@ -1,45 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import BookingHeader from './components/BookingHeader';
+import CalendarGrid from './components/CalendarGrid';
+import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
-import '../../styles/BookingPage.css';
-
-interface BookingFormData {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  notes: string;
-  cvFile: File | null;
-  acceptPrivacy: boolean;
-}
+import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
+import { formatDateToString, formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import '../../styles/UserBooking/BookingPage.css';
 
 const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   
-  // Form data state
+  // Current step in booking process
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  
+  // Booking data
+  const [bookingLink, setBookingLink] = useState<BookingLinkInfo | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  
+  // Calendar data
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [availability, setAvailability] = useState<DayAvailability[]>([]);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  
+  // Form data
   const [formData, setFormData] = useState<BookingFormData>({
     firstName: '',
     lastName: '',
     phone: '',
     email: '',
+    role: '',
     notes: '',
     cvFile: null,
-    acceptPrivacy: false
+    acceptPrivacy: false,
+    selectedDate: '',
+    selectedTime: '',
+    bookingLinkId: ''
   });
-
-  // UI state
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Loading states
+  const [isLoadingLink, setIsLoadingLink] = useState(true);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Error and success states
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [bookingLinkInfo, setBookingLinkInfo] = useState<any>(null);
-  const [isLoadingInfo, setIsLoadingInfo] = useState(true);
 
-  // Load booking link info
+  // Load booking link info on mount
   useEffect(() => {
     loadBookingLinkInfo();
   }, [slug]);
 
-  // Clear messages after timeout
+  // Load calendar data when date changes
+  useEffect(() => {
+    if (bookingLink && currentStep === 1) {
+      loadCalendarAvailability();
+    }
+  }, [currentDate, bookingLink, currentStep]);
+
+  // Load time slots when date is selected
+  useEffect(() => {
+    if (selectedDate && currentStep === 2) {
+      loadTimeSlots();
+    }
+  }, [selectedDate, currentStep]);
+
+  // Update form data when booking details change
+  useEffect(() => {
+    if (bookingLink) {
+      setFormData(prev => ({
+        ...prev,
+        selectedDate,
+        selectedTime,
+        bookingLinkId: bookingLink.id
+      }));
+    }
+  }, [bookingLink, selectedDate, selectedTime]);
+
+  // Clear error after timeout
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);
@@ -47,6 +88,7 @@ const BookingPage: React.FC = () => {
     }
   }, [error]);
 
+  // Clear success message after timeout
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 8000);
@@ -57,29 +99,202 @@ const BookingPage: React.FC = () => {
   // Load booking link information
   const loadBookingLinkInfo = async () => {
     try {
-      setIsLoadingInfo(true);
+      setIsLoadingLink(true);
       
       // TODO: Replace with actual API call
       // const linkInfo = await apiService.getBookingLinkBySlug(slug);
       
-      // Mock data for now
+      // Mock data
       setTimeout(() => {
-        const mockData = {
-          name: 'Colloquio Grafici',
+        const mockData: BookingLinkInfo = {
+          id: 'BL_123456789_abc',
+          name: 'Colloquio Riforma e Progresso',
+          templateId: 'TPL_123456789_def',
+          urlSlug: slug || '',
           duration: 30,
           requireAdvanceBooking: true,
           advanceHours: 24,
-          isActive: true
+          isActive: true,
+          created: '2025-01-01',
+          updatedAt: '2025-01-01T00:00:00Z'
         };
-        setBookingLinkInfo(mockData);
-        setIsLoadingInfo(false);
+        setBookingLink(mockData);
+        setIsLoadingLink(false);
       }, 500);
       
     } catch (error) {
       console.error('Failed to load booking link info:', error);
       setError('Link di prenotazione non trovato o non più attivo.');
-      setIsLoadingInfo(false);
+      setIsLoadingLink(false);
     }
+  };
+
+  // Load calendar availability for current month
+  const loadCalendarAvailability = async () => {
+    try {
+      setIsLoadingCalendar(true);
+      
+      // TODO: Replace with actual API call
+      // const monthData = await apiService.getMonthAvailability(slug, currentDate);
+      
+      // Mock availability data
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const mockAvailability: DayAvailability[] = [];
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateString = formatDateToString(date);
+        
+        // Mock logic: weekends not available, some weekdays have limited slots
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const isPast = date < new Date().setHours(0, 0, 0, 0);
+        const randomlyUnavailable = Math.random() < 0.2; // 20% chance of no availability
+        
+        const totalSlots = isWeekend || isPast ? 0 : Math.floor(Math.random() * 8) + 2; // 2-10 slots
+        const bookedSlots = Math.floor(Math.random() * totalSlots * 0.6); // 0-60% booked
+        const availableSlots = Math.max(0, totalSlots - bookedSlots);
+        
+        mockAvailability.push({
+          date: dateString,
+          available: !isWeekend && !isPast && !randomlyUnavailable && availableSlots > 0,
+          totalSlots,
+          availableSlots
+        });
+      }
+      
+      setAvailability(mockAvailability);
+      setIsLoadingCalendar(false);
+      
+    } catch (error) {
+      console.error('Failed to load calendar availability:', error);
+      setError('Errore nel caricamento delle disponibilità del calendario.');
+      setIsLoadingCalendar(false);
+    }
+  };
+
+  // Load available time slots for selected date
+  const loadTimeSlots = async () => {
+    try {
+      setIsLoadingSlots(true);
+      
+      // TODO: Replace with actual API call
+      // const slots = await apiService.getTimeSlots(slug, selectedDate);
+      
+      // Mock time slots data - only available slots
+      setTimeout(() => {
+        const mockSlots: TimeSlot[] = [
+          {
+            id: 'TS_1_001',
+            startTime: '09:00',
+            endTime: '09:30',
+            available: true
+          },
+          {
+            id: 'TS_1_003',
+            startTime: '10:00',
+            endTime: '10:30',
+            available: true
+          },
+          {
+            id: 'TS_1_004',
+            startTime: '10:30',
+            endTime: '11:00',
+            available: true
+          },
+          {
+            id: 'TS_1_005',
+            startTime: '11:00',
+            endTime: '11:30',
+            available: true
+          },
+          {
+            id: 'TS_1_006',
+            startTime: '11:30',
+            endTime: '12:00',
+            available: true
+          },
+          {
+            id: 'TS_1_009',
+            startTime: '14:30',
+            endTime: '15:00',
+            available: true
+          },
+          {
+            id: 'TS_1_010',
+            startTime: '15:00',
+            endTime: '15:30',
+            available: true
+          },
+          {
+            id: 'TS_1_012',
+            startTime: '16:00',
+            endTime: '16:30',
+            available: true
+          },
+          {
+            id: 'TS_1_013',
+            startTime: '16:30',
+            endTime: '17:00',
+            available: true
+          }
+        ];
+        
+        setTimeSlots(mockSlots);
+        setIsLoadingSlots(false);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Failed to load time slots:', error);
+      setError('Errore nel caricamento degli orari disponibili.');
+      setIsLoadingSlots(false);
+    }
+  };
+
+  // Handle month navigation
+  const handlePreviousMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  // Handle day selection
+  const handleDaySelect = (selectedDateString: string) => {
+    const dayAvailability = availability.find(day => day.date === selectedDateString);
+    
+    if (!dayAvailability?.available) {
+      setError('Questo giorno non è disponibile per appuntamenti.');
+      return;
+    }
+    
+    setSelectedDate(selectedDateString);
+    setCurrentStep(2);
+  };
+
+  // Handle time slot selection
+  const handleTimeSlotSelect = (selectedSlot: TimeSlot) => {
+    if (!selectedSlot.available) {
+      setError('Questo orario non è più disponibile.');
+      return;
+    }
+    
+    setSelectedTime(selectedSlot.startTime);
+    setCurrentStep(3);
+  };
+
+  // Handle back navigation
+  const handleBackToCalendar = () => {
+    setCurrentStep(1);
+    setSelectedDate('');
+    setSelectedTime('');
+  };
+
+  const handleBackToTimeSlots = () => {
+    setCurrentStep(2);
+    setSelectedTime('');
   };
 
   // Handle input changes
@@ -128,6 +343,7 @@ const BookingPage: React.FC = () => {
     if (!formData.lastName.trim()) return 'Il cognome è obbligatorio';
     if (!formData.phone.trim()) return 'Il telefono è obbligatorio';
     if (!formData.email.trim()) return 'L\'email è obbligatoria';
+    if (!formData.role.trim()) return 'Il ruolo è obbligatorio';
     if (!formData.cvFile) return 'Il curriculum è obbligatorio';
     if (!formData.acceptPrivacy) return 'Devi accettare la Privacy Policy per procedere';
     
@@ -157,51 +373,56 @@ const BookingPage: React.FC = () => {
     }
 
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       setError(null);
       
-      // TODO: Implement actual API call
+      // TODO: Implement actual API call with file upload
       console.log('Submitting booking:', {
         ...formData,
-        slug,
         cvFile: formData.cvFile?.name
       });
       
       // Mock submission
       setTimeout(() => {
         setSuccessMessage(
-          '🎉 Prenotazione inviata con successo!\n\n' +
-          'Riceverai una conferma via email a breve con tutti i dettagli del colloquio.\n\n' +
+          '🎉 Prenotazione confermata!\n\n' +
+          `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
+          'Riceverai una conferma via email con tutti i dettagli.\n\n' +
           'Grazie per aver scelto di candidarti!'
         );
         
-        // Reset form
-        setFormData({
-          firstName: '',
-          lastName: '',
-          phone: '',
-          email: '',
-          notes: '',
-          cvFile: null,
-          acceptPrivacy: false
-        });
-        
-        // Reset file input
-        const fileInput = document.getElementById('cvFile') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-        
-        setIsLoading(false);
+        setIsSubmitting(false);
       }, 2000);
       
     } catch (error) {
       console.error('Failed to submit booking:', error);
       setError('Errore durante l\'invio della prenotazione. Riprova più tardi.');
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Loading state
-  if (isLoadingInfo) {
+  // Get step title
+  const getStepTitle = (): string => {
+    switch (currentStep) {
+      case 1: return 'Seleziona una data';
+      case 2: return 'Scegli un orario';
+      case 3: return 'Completa la prenotazione';
+      default: return '';
+    }
+  };
+
+  // Get step subtitle
+  const getStepSubtitle = (): string => {
+    switch (currentStep) {
+      case 1: return 'Clicca su un giorno disponibile nel calendario';
+      case 2: return `Orari disponibili per ${formatDateForDisplay(new Date(selectedDate))}`;
+      case 3: return 'Compila i tuoi dati e carica il curriculum';
+      default: return '';
+    }
+  };
+
+  // Loading state for booking link
+  if (isLoadingLink) {
     return (
       <div className="container">
         <div className="header">
@@ -218,7 +439,7 @@ const BookingPage: React.FC = () => {
   }
 
   // Error state (link not found)
-  if (!bookingLinkInfo) {
+  if (!bookingLink) {
     return (
       <div className="container">
         <div className="header">
@@ -239,20 +460,13 @@ const BookingPage: React.FC = () => {
   return (
     <div className="container">
       {/* Header */}
-      <div className="header">
-        <h1>Prenotazione {bookingLinkInfo.name}</h1>
-        <p>Compila tutti i campi per candidarti a questo ruolo</p>
-        <div className="booking-info">
-          <span className="duration-info">
-            ⏱️ Durata colloquio: {bookingLinkInfo.duration} minuti
-          </span>
-          {bookingLinkInfo.requireAdvanceBooking && (
-            <span className="advance-info">
-              📅 Preavviso richiesto: {bookingLinkInfo.advanceHours} ore
-            </span>
-          )}
-        </div>
-      </div>
+      <BookingHeader 
+        bookingLink={bookingLink}
+        title={`Prenotazione ${bookingLink.name}`}
+        subtitle={getStepSubtitle()}
+        showProgress={true}
+        currentStep={currentStep}
+      />
 
       <div className="main-content">
         {/* Notifications */}
@@ -261,179 +475,291 @@ const BookingPage: React.FC = () => {
           successMessage={successMessage} 
         />
 
-        {/* Booking Form */}
-        <div className="booking-form-section">
-          <form onSubmit={handleSubmit} className="booking-form">
-            
-            {/* Name Fields */}
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label" htmlFor="firstName">
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  className="form-input"
-                  placeholder="Il tuo nome"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label" htmlFor="lastName">
-                  Cognome *
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  className="form-input"
-                  placeholder="Il tuo cognome"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Contact Fields */}
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label" htmlFor="phone">
-                  Telefono *
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  className="form-input"
-                  placeholder="+39 123 456 7890"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label" htmlFor="email">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="form-input"
-                  placeholder="tua@email.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* CV Upload */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="cvFile">
-                Curriculum Vitae *
-              </label>
-              <div className="file-upload-wrapper">
-                <input
-                  type="file"
-                  id="cvFile"
-                  className="file-input"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx"
-                  onChange={handleFileUpload}
-                  disabled={isLoading}
-                  required
-                />
-                <label htmlFor="cvFile" className="file-upload-label">
-                  <span className="file-upload-icon">📎</span>
-                  <span className="file-upload-text">
-                    {formData.cvFile ? formData.cvFile.name : 'Scegli file CV'}
-                  </span>
-                  <span className="file-upload-button">Sfoglia</span>
-                </label>
-              </div>
-              <div className="file-help">
-                Formati supportati: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx) - Max 10MB
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="notes">
-                Note aggiuntive
-              </label>
-              <textarea
-                id="notes"
-                className="form-textarea"
-                placeholder="Inserisci eventuali note aggiuntive (facoltativo)..."
-                rows={4}
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                disabled={isLoading}
+        {/* Step Content */}
+        <div className="step-content">
+          
+          {/* Step 1: Calendar */}
+          {currentStep === 1 && (
+            <div className="calendar-step">
+              <CalendarGrid
+                year={currentDate.getFullYear()}
+                month={currentDate.getMonth()}
+                availability={availability}
+                onDayClick={handleDaySelect}
+                onPreviousMonth={handlePreviousMonth}
+                onNextMonth={handleNextMonth}
+                isLoading={isLoadingCalendar}
               />
             </div>
+          )}
 
-            {/* Privacy Policy */}
-            <div className="form-group">
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.acceptPrivacy}
-                    onChange={(e) => handleInputChange('acceptPrivacy', e.target.checked)}
-                    disabled={isLoading}
-                    required
-                  />
-                  <span className="checkbox-text">
-                    Accetto la <a href="/privacy-policy" target="_blank" className="privacy-link">Privacy Policy</a> e 
-                    autorizzo il trattamento dei miei dati personali per finalità di selezione del personale *
-                  </span>
-                </label>
+          {/* Step 2: Time Slots */}
+          {currentStep === 2 && (
+            <div className="timeslots-step">
+              <TimeSlotList
+                selectedDate={selectedDate}
+                timeSlots={timeSlots}
+                onTimeSlotSelect={handleTimeSlotSelect}
+                onBackToCalendar={handleBackToCalendar}
+                isLoading={isLoadingSlots}
+              />
+            </div>
+          )}
+
+          {/* Step 3: Form */}
+          {currentStep === 3 && (
+            <div className="form-step">
+              {/* Selected appointment info */}
+              <div className="appointment-summary">
+                <div className="summary-card">
+                  <h3>📅 Riepilogo appuntamento</h3>
+                  <div className="summary-details">
+                    <div className="summary-item">
+                      <strong>Data:</strong> {formatDateForDisplay(new Date(selectedDate))}
+                    </div>
+                    <div className="summary-item">
+                      <strong>Orario:</strong> {selectedTime}
+                    </div>
+                    <div className="summary-item">
+                      <strong>Durata:</strong> {bookingLink.duration} minuti
+                    </div>
+                  </div>
+                  <button 
+                    className="change-appointment-btn"
+                    onClick={handleBackToTimeSlots}
+                    disabled={isSubmitting}
+                  >
+                    Cambia orario
+                  </button>
+                </div>
+              </div>
+
+              {/* Booking Form */}
+              <div className="booking-form-section">
+                <form onSubmit={handleSubmit} className="booking-form">
+                  
+                  {/* Name Fields */}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="firstName">
+                        Nome *
+                      </label>
+                      <input
+                        type="text"
+                        id="firstName"
+                        className="form-input"
+                        placeholder="Il tuo nome"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="lastName">
+                        Cognome *
+                      </label>
+                      <input
+                        type="text"
+                        id="lastName"
+                        className="form-input"
+                        placeholder="Il tuo cognome"
+                        value={formData.lastName}
+                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Contact Fields */}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="phone">
+                        Telefono *
+                      </label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        className="form-input"
+                        placeholder="+39 123 456 7890"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="email">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        className="form-input"
+                        placeholder="tua@email.com"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role Field */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="role">
+                      Ruolo per cui ti candidi *
+                    </label>
+                    <input
+                      type="text"
+                      id="role"
+                      className="form-input"
+                      placeholder="es. Grafico, Developer, Marketing Manager..."
+                      value={formData.role}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                      disabled={isSubmitting}
+                      required
+                    />
+                  </div>
+
+                  {/* CV Upload */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="cvFile">
+                      Curriculum Vitae *
+                    </label>
+                    <div className="file-upload-wrapper">
+                      <input
+                        type="file"
+                        id="cvFile"
+                        className="file-input"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx"
+                        onChange={handleFileUpload}
+                        disabled={isSubmitting}
+                        required
+                      />
+                      <label htmlFor="cvFile" className="file-upload-label">
+                        <span className="file-upload-icon">📎</span>
+                        <span className="file-upload-text">
+                          {formData.cvFile ? formData.cvFile.name : 'Scegli file CV'}
+                        </span>
+                        <span className="file-upload-button">Sfoglia</span>
+                      </label>
+                    </div>
+                    <div className="file-help">
+                      Formati supportati: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx) - Max 10MB
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="notes">
+                      Note aggiuntive
+                    </label>
+                    <textarea
+                      id="notes"
+                      className="form-textarea"
+                      placeholder="Inserisci eventuali note aggiuntive (facoltativo)..."
+                      rows={4}
+                      value={formData.notes}
+                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  {/* Privacy Policy */}
+                  <div className="form-group">
+                    <div className="checkbox-group">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={formData.acceptPrivacy}
+                          onChange={(e) => handleInputChange('acceptPrivacy', e.target.checked)}
+                          disabled={isSubmitting}
+                          required
+                        />
+                        <span className="checkbox-text">
+                          Accetto la <a href="/privacy-policy" target="_blank" className="privacy-link">Privacy Policy</a> e 
+                          autorizzo il trattamento dei miei dati personali per finalità di selezione del personale *
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="form-actions">
+                    <button 
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleBackToTimeSlots}
+                      disabled={isSubmitting}
+                    >
+                      ← Cambia orario
+                    </button>
+                    
+                    <button 
+                      type="submit"
+                      className="btn btn-primary btn-submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="loading-spinner">⏳</span>
+                          Invio in corso...
+                        </>
+                      ) : (
+                        <>
+                          <span className="submit-icon">🚀</span>
+                          Conferma Prenotazione
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
-
-            {/* Submit Button */}
-            <div className="form-actions">
-              <button 
-                type="submit"
-                className="btn btn-primary btn-submit"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <span className="loading-spinner">⏳</span>
-                    Invio in corso...
-                  </>
-                ) : (
-                  <>
-                    <span className="submit-icon">🚀</span>
-                    Invia Candidatura
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          )}
         </div>
 
         {/* Info Section */}
         <div className="info-section">
-          <h3>Cosa succede dopo?</h3>
-          <ol>
-            <li>Riceverai una <strong>conferma via email</strong> della tua candidatura</li>
-            <li>Il nostro team <strong>esaminerà il tuo CV</strong> entro 48 ore</li>
-            <li>Se idoneo, riceverai una <strong>proposta di orari</strong> per il colloquio</li>
-            <li>Potrai <strong>scegliere l'orario</strong> più comodo per te</li>
-            <li>Ti invieremo i <strong>dettagli del colloquio</strong> (luogo/video call)</li>
-          </ol>
+          {currentStep === 1 && (
+            <>
+              <h3>Come prenotare</h3>
+              <ol>
+                <li><strong>Seleziona un giorno</strong> disponibile dal calendario</li>
+                <li><strong>Scegli l'orario</strong> che preferisci tra quelli liberi</li>
+                <li><strong>Compila il form</strong> e carica il curriculum</li>
+              </ol>
+            </>
+          )}
+          
+          {currentStep === 2 && (
+            <>
+              <h3>💡 Suggerimento</h3>
+              <p>
+                Dopo aver selezionato l'orario, potrai compilare i tuoi dati 
+                e caricare il curriculum per completare la prenotazione.
+              </p>
+            </>
+          )}
+          
+          {currentStep === 3 && (
+            <>
+              <h3>Cosa succede dopo?</h3>
+              <ol>
+                <li>Riceverai una <strong>conferma via email</strong> della tua prenotazione</li>
+                <li>Il nostro team <strong>esaminerà il tuo CV</strong> entro 48 ore</li>
+                <li>Ti invieremo i <strong>dettagli del colloquio</strong> (luogo/video call)</li>
+                <li>Potrai <strong>modificare o cancellare</strong> la prenotazione se necessario</li>
+              </ol>
+            </>
+          )}
           
           <div className="contact-info">
-            <p><strong>Hai domande?</strong> Non esitare a contattarci!</p>
+            <p><strong>Hai domande?</strong> Non esitare a contattarci per assistenza!</p>
           </div>
         </div>
       </div>

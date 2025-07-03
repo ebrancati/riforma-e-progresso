@@ -1,0 +1,315 @@
+/* ============================================
+   TIME SLOTS COMPONENT
+   ============================================ */
+
+.time-slots-container {
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.time-slots-container.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.time-slots-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.selected-date-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-700);
+  margin-bottom: var(--spacing-md);
+}
+
+.time-slots-subtitle {
+  color: var(--gray-500);
+  font-size: var(--font-size-lg);
+}
+
+.time-slots-navigation {
+  margin-bottom: var(--spacing-3xl);
+}
+
+.back-button {
+  background: var(--gray-500);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.back-button:hover:not(:disabled) {
+  background: var(--gray-600);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.back-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.time-slots-list {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.time-slots-loading {
+  text-align: center;
+  padding: var(--spacing-5xl);
+  color: var(--gray-500);
+}
+
+.time-slots-loading .loading-spinner {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-lg);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.no-slots-available {
+  text-align: center;
+  padding: var(--spacing-5xl) var(--spacing-xl);
+  color: var(--gray-500);
+}
+
+.no-slots-icon {
+  font-size: var(--font-size-5xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.no-slots-available h3 {
+  color: var(--gray-700);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.no-slots-available p {
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xl);
+}
+
+.available-slots-section {
+  padding: var(--spacing-3xl);
+}
+
+.slots-section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-700);
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.time-slot-button {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.time-slot-button.available {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+
+.time-slot-button.available::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--success);
+}
+
+.time-slot-button.available:hover:not(:disabled) {
+  border-color: var(--primary-orange);
+  background: var(--orange-pale);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.time-slot-button.available:hover:not(:disabled)::before {
+  background: var(--primary-orange);
+}
+
+.time-slot-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.time-slot-time {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-700);
+}
+
+.time-slot-status {
+  font-size: var(--font-size-sm);
+  color: var(--success-dark);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-slot-button.available:hover .time-slot-status {
+  color: var(--orange-dark);
+}
+
+.time-slot-button.available:hover .time-slot-time {
+  color: var(--orange-dark);
+}
+
+/* Slot animation on load */
+.time-slot-button {
+  animation: slideInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.time-slot-button:nth-child(1) { animation-delay: 0.1s; }
+.time-slot-button:nth-child(2) { animation-delay: 0.2s; }
+.time-slot-button:nth-child(3) { animation-delay: 0.3s; }
+.time-slot-button:nth-child(4) { animation-delay: 0.4s; }
+.time-slot-button:nth-child(5) { animation-delay: 0.5s; }
+.time-slot-button:nth-child(6) { animation-delay: 0.6s; }
+.time-slot-button:nth-child(7) { animation-delay: 0.7s; }
+.time-slot-button:nth-child(8) { animation-delay: 0.8s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .time-slots-container {
+    margin: 0 var(--spacing-lg);
+  }
+  
+  .selected-date-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .time-slots-subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .back-button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-sm);
+  }
+  
+  .slots-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+  }
+  
+  .available-slots-section {
+    padding: var(--spacing-xl);
+  }
+  
+  .time-slot-button {
+    padding: var(--spacing-lg);
+  }
+  
+  .time-slot-time {
+    font-size: var(--font-size-base);
+  }
+  
+  .time-slot-status {
+    font-size: var(--font-size-xs);
+  }
+  
+  .no-slots-available {
+    padding: var(--spacing-3xl) var(--spacing-lg);
+  }
+  
+  .no-slots-icon {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .time-slots-container {
+    margin: 0;
+  }
+  
+  .time-slots-header {
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .selected-date-title {
+    font-size: var(--font-size-lg);
+  }
+  
+  .time-slots-subtitle {
+    font-size: var(--font-size-sm);
+  }
+  
+  .slots-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .time-slot-button {
+    padding: var(--spacing-md);
+  }
+  
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .time-slots-navigation {
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .available-slots-section {
+    padding: var(--spacing-lg);
+  }
+  
+  .slots-section-title {
+    font-size: var(--font-size-lg);
+  }
+}

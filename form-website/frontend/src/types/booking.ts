@@ -31,6 +31,7 @@ export interface BookingFormData {
   lastName: string;
   phone: string;
   email: string;
+  role: string;
   notes: string;
   cvFile: File | null;
   acceptPrivacy: boolean;
@@ -48,6 +49,7 @@ export interface CreateBookingRequest {
   lastName: string;
   phone: string;
   email: string;
+  role: string;
   notes?: string;
   acceptPrivacy: boolean;
   // CV will be handled separately as FormData
@@ -62,6 +64,7 @@ export interface BookingResponse {
   lastName: string;
   email: string;
   phone: string;
+  role: string;
   notes?: string;
   cvFilePath?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
