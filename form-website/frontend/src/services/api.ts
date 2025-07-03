@@ -1,3 +1,48 @@
+// ========== PUBLIC BOOKING INTERFACES ==========
+
+export interface ApiDayAvailability {
+  date: string;           // YYYY-MM-DD format
+  available: boolean;     // Has any available slots
+  totalSlots: number;     // Total slots for this day
+  availableSlots: number; // Available slots remaining
+}
+
+export interface ApiPublicTimeSlot {
+  id: string;
+  startTime: string;     // HH:MM format
+  endTime: string;       // HH:MM format
+  available: boolean;    // Always true for public API (only returns available slots)
+}
+
+export interface CreateBookingRequest {
+  selectedDate: string;  // YYYY-MM-DD
+  selectedTime: string;  // HH:MM
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  role: string;
+  notes?: string;
+}
+
+export interface ApiBooking {
+  id: string;
+  bookingLinkId: string;
+  selectedDate: string;
+  selectedTime: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  notes: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ========== TEMPLATE INTERFACES ==========
+
 export interface ApiTimeSlot {
   id: string;
   startTime: string;
@@ -32,6 +77,8 @@ export interface CreateTemplateRequest {
     sunday: ApiTimeSlot[];
   };
 }
+
+// ========== BOOKING LINK INTERFACES ==========
 
 export interface ApiBookingLink {
   id: string;
@@ -123,6 +170,72 @@ class ApiService {
   // Check if we're currently offline
   isCurrentlyOffline(): boolean {
     return this.isOffline;
+  }
+
+  // ========== PUBLIC BOOKING METHODS ==========
+
+  // Get booking link by URL slug (public)
+  async getBookingLinkBySlug(slug: string): Promise<ApiBookingLink> {
+    return this.request<ApiBookingLink>(`/api/public/booking/${slug}`);
+  }
+
+  // Get month availability (public)
+  async getMonthAvailability(slug: string, year: number, month: number): Promise<{
+    year: number;
+    month: number;
+    bookingLinkId: string;
+    availability: ApiDayAvailability[];
+  }> {
+    return this.request<{
+      year: number;
+      month: number;
+      bookingLinkId: string;
+      availability: ApiDayAvailability[];
+    }>(`/api/public/booking/${slug}/availability/${year}/${month}`);
+  }
+
+  // Get available time slots for a date (public)
+  async getAvailableTimeSlots(slug: string, date: string): Promise<{
+    date: string;
+    bookingLinkId: string;
+    timeSlots: ApiPublicTimeSlot[];
+  }> {
+    return this.request<{
+      date: string;
+      bookingLinkId: string;
+      timeSlots: ApiPublicTimeSlot[];
+    }>(`/api/public/booking/${slug}/slots/${date}`);
+  }
+
+  // Validate time slot availability (public)
+  async validateTimeSlot(slug: string, date: string, time: string): Promise<{
+    valid: boolean;
+    date: string;
+    time: string;
+    error: string | null;
+    bookingLinkId: string;
+  }> {
+    return this.request<{
+      valid: boolean;
+      date: string;
+      time: string;
+      error: string | null;
+      bookingLinkId: string;
+    }>(`/api/public/booking/${slug}/validate/${date}/${time}`);
+  }
+
+  // Create booking (public)
+  async createBooking(slug: string, bookingData: CreateBookingRequest): Promise<{
+    message: string;
+    booking: ApiBooking;
+  }> {
+    return this.request<{
+      message: string;
+      booking: ApiBooking;
+    }>(`/api/public/booking/${slug}/book`, {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
   }
 
   // ========== TEMPLATE METHODS ==========

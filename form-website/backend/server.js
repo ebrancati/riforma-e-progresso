@@ -4,6 +4,7 @@ import { config } from './config/config.js';
 import { connectToDatabase } from './utils/database.js';
 import { handleBookingLinkRoutes } from './routes/bookingLink.js';
 import { handleTemplateRoutes } from './routes/template.js';
+import { handlePublicBookingRoutes } from './routes/publicBooking.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
 
 // Health check endpoint
@@ -22,10 +23,12 @@ async function handleRequest(req, res) {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    if (pathname === '/api/health')                return handleHealthCheck(req, res);             // Health check
-    if (pathname.startsWith('/api/booking-links')) return await handleBookingLinkRoutes(req, res); // Booking link routes
-    if (pathname.startsWith('/api/templates'))     return await handleTemplateRoutes(req, res);    // Template routes
+    if (pathname === '/api/health')                 return handleHealthCheck(req, res);
+    if (pathname.startsWith('/api/public/booking')) return await handlePublicBookingRoutes(req, res);
+    if (pathname.startsWith('/api/booking-links'))  return await handleBookingLinkRoutes(req, res);
+    if (pathname.startsWith('/api/templates'))      return await handleTemplateRoutes(req, res);
 
+    // Route not found
     res.status(404).json({
       error: 'Endpoint not found',
       details: `${req.method} ${pathname} doesn't exist`
@@ -100,6 +103,10 @@ async function startServer() {
     server.listen(config.port, () => {
       console.log(`Server running on port ${config.port}`);
       console.log(`Environment: ${config.nodeEnv}`);
+      console.log('Available endpoints:');
+      console.log('  - Admin API: /api/templates, /api/booking-links');
+      console.log('  - Public API: /api/public/booking/:slug/*');
+      console.log('  - Health: /api/health');
     });
 
   } catch (error) {

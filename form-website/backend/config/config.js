@@ -8,12 +8,24 @@ export const config = {
   dbName: 'schedule-templates',
   collections: {
     templates: 'templates',
-    bookingLinks: 'booking-links'
+    bookingLinks: 'booking-links',
+    bookings: 'bookings'
   },
   
   // Validation settings
   template: {
     maxNameLength: 100,
     requiredDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  },
+  
+  // Booking settings
+  booking: {
+    allowedDurations: [30], // Currently only 30-minute slots
+    maxAdvanceHours: 168, // Maximum 1 week advance booking
+    minAdvanceHours: 1, // Minimum 1 hour advance booking
+    maxNameLength: 50,
+    maxRoleLength: 100,
+    maxNotesLength: 500,
+    maxPhoneLength: 20
   }
 };

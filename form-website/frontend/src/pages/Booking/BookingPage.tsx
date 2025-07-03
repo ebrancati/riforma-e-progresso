@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { apiService, ApiError } from '../../services/api';
 import BookingHeader from './components/BookingHeader';
 import CalendarGrid from './components/CalendarGrid';
 import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
-import { formatDateToString, formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import '../../styles/UserBooking/BookingHeader.css';
 import '../../styles/UserBooking/CalendarGrid.css';
 import '../../styles/UserBooking/TimeSlotList.css';
@@ -105,30 +106,42 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingLink(true);
       
-      // TODO: Replace with actual API call
-      // const linkInfo = await apiService.getBookingLinkBySlug(slug);
+      if (!slug) {
+        throw new Error('No booking slug provided');
+      }
       
-      // Mock data
-      setTimeout(() => {
-        const mockData: BookingLinkInfo = {
-          id: 'BL_123456789_abc',
-          name: 'Colloquio Riforma e Progresso',
-          templateId: 'TPL_123456789_def',
-          urlSlug: slug || '',
-          duration: 30,
-          requireAdvanceBooking: true,
-          advanceHours: 24,
-          isActive: true,
-          created: '2025-01-01',
-          updatedAt: '2025-01-01T00:00:00Z'
-        };
-        setBookingLink(mockData);
-        setIsLoadingLink(false);
-      }, 500);
+      const linkInfo = await apiService.getBookingLinkBySlug(slug);
+      
+      // Convert API response to internal format
+      const bookingLinkData: BookingLinkInfo = {
+        id: linkInfo.id,
+        name: linkInfo.name,
+        templateId: linkInfo.templateId,
+        urlSlug: linkInfo.urlSlug,
+        duration: linkInfo.duration,
+        requireAdvanceBooking: linkInfo.requireAdvanceBooking,
+        advanceHours: linkInfo.advanceHours,
+        isActive: linkInfo.isActive,
+        created: linkInfo.created,
+        updatedAt: linkInfo.updatedAt
+      };
+      
+      setBookingLink(bookingLinkData);
+      setIsLoadingLink(false);
       
     } catch (error) {
       console.error('Failed to load booking link info:', error);
-      setError('Link di prenotazione non trovato o non più attivo.');
+      if (error instanceof ApiError) {
+        if (error.statusCode === 404) {
+          setError('Link di prenotazione non trovato o non più attivo.');
+        } else if (error.isNetworkError()) {
+          setError('Impossibile connettersi al server. Controlla la connessione.');
+        } else {
+          setError('Errore durante il caricamento del link di prenotazione.');
+        }
+      } else {
+        setError('Errore imprevisto durante il caricamento.');
+      }
       setIsLoadingLink(false);
     }
   };
@@ -138,42 +151,39 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingCalendar(true);
       
-      // TODO: Replace with actual API call
-      // const monthData = await apiService.getMonthAvailability(slug, currentDate);
-      
-      // Mock availability data
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const mockAvailability: DayAvailability[] = [];
-      
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const dateString = formatDateToString(date);
-        
-        // Mock logic: weekends not available, some weekdays have limited slots
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        const isPast = date < new Date().setHours(0, 0, 0, 0);
-        const randomlyUnavailable = Math.random() < 0.2; // 20% chance of no availability
-        
-        const totalSlots = isWeekend || isPast ? 0 : Math.floor(Math.random() * 8) + 2; // 2-10 slots
-        const bookedSlots = Math.floor(Math.random() * totalSlots * 0.6); // 0-60% booked
-        const availableSlots = Math.max(0, totalSlots - bookedSlots);
-        
-        mockAvailability.push({
-          date: dateString,
-          available: !isWeekend && !isPast && !randomlyUnavailable && availableSlots > 0,
-          totalSlots,
-          availableSlots
-        });
+      if (!slug) {
+        throw new Error('No booking slug provided');
       }
       
-      setAvailability(mockAvailability);
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1; // API expects 1-based month
+      
+      const response = await apiService.getMonthAvailability(slug, year, month);
+      
+      // Convert API response to internal format
+      const convertedAvailability: DayAvailability[] = response.availability.map(day => ({
+        date: day.date,
+        available: day.available,
+        totalSlots: day.totalSlots,
+        availableSlots: day.availableSlots
+      }));
+      
+      setAvailability(convertedAvailability);
       setIsLoadingCalendar(false);
       
     } catch (error) {
       console.error('Failed to load calendar availability:', error);
-      setError('Errore nel caricamento delle disponibilità del calendario.');
+      if (error instanceof ApiError) {
+        if (error.statusCode === 404) {
+          setError('Link di prenotazione non trovato.');
+        } else if (error.isNetworkError()) {
+          setError('Impossibile connettersi al server. Controlla la connessione.');
+        } else {
+          setError('Errore durante il caricamento delle disponibilità.');
+        }
+      } else {
+        setError('Errore imprevisto durante il caricamento del calendario.');
+      }
       setIsLoadingCalendar(false);
     }
   };
@@ -183,75 +193,38 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingSlots(true);
       
-      // TODO: Replace with actual API call
-      // const slots = await apiService.getTimeSlots(slug, selectedDate);
+      if (!slug || !selectedDate) {
+        throw new Error('Missing slug or selected date');
+      }
       
-      // Mock time slots data - only available slots
-      setTimeout(() => {
-        const mockSlots: TimeSlot[] = [
-          {
-            id: 'TS_1_001',
-            startTime: '09:00',
-            endTime: '09:30',
-            available: true
-          },
-          {
-            id: 'TS_1_003',
-            startTime: '10:00',
-            endTime: '10:30',
-            available: true
-          },
-          {
-            id: 'TS_1_004',
-            startTime: '10:30',
-            endTime: '11:00',
-            available: true
-          },
-          {
-            id: 'TS_1_005',
-            startTime: '11:00',
-            endTime: '11:30',
-            available: true
-          },
-          {
-            id: 'TS_1_006',
-            startTime: '11:30',
-            endTime: '12:00',
-            available: true
-          },
-          {
-            id: 'TS_1_009',
-            startTime: '14:30',
-            endTime: '15:00',
-            available: true
-          },
-          {
-            id: 'TS_1_010',
-            startTime: '15:00',
-            endTime: '15:30',
-            available: true
-          },
-          {
-            id: 'TS_1_012',
-            startTime: '16:00',
-            endTime: '16:30',
-            available: true
-          },
-          {
-            id: 'TS_1_013',
-            startTime: '16:30',
-            endTime: '17:00',
-            available: true
-          }
-        ];
-        
-        setTimeSlots(mockSlots);
-        setIsLoadingSlots(false);
-      }, 500);
+      const response = await apiService.getAvailableTimeSlots(slug, selectedDate);
+      
+      // Convert API response to internal format
+      const convertedSlots: TimeSlot[] = response.timeSlots.map(slot => ({
+        id: slot.id,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        available: slot.available
+      }));
+      
+      setTimeSlots(convertedSlots);
+      setIsLoadingSlots(false);
       
     } catch (error) {
       console.error('Failed to load time slots:', error);
-      setError('Errore nel caricamento degli orari disponibili.');
+      if (error instanceof ApiError) {
+        if (error.statusCode === 404) {
+          setError('Link di prenotazione non trovato.');
+        } else if (error.statusCode === 400) {
+          setError('Data selezionata non valida.');
+        } else if (error.isNetworkError()) {
+          setError('Impossibile connettersi al server. Controlla la connessione.');
+        } else {
+          setError('Errore durante il caricamento degli orari.');
+        }
+      } else {
+        setError('Errore imprevisto durante il caricamento degli orari.');
+      }
       setIsLoadingSlots(false);
     }
   };
@@ -366,7 +339,7 @@ const BookingPage: React.FC = () => {
     return null;
   };
 
-  // Handle form submission
+  // Handle form submission (without file upload for now)
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
@@ -380,27 +353,53 @@ const BookingPage: React.FC = () => {
       setIsSubmitting(true);
       setError(null);
       
-      // TODO: Implement actual API call with file upload
-      console.log('Submitting booking:', {
-        ...formData,
-        cvFile: formData.cvFile?.name
-      });
+      if (!slug) {
+        throw new Error('Missing booking slug');
+      }
       
-      // Mock submission
-      setTimeout(() => {
-        setSuccessMessage(
-          '🎉 Prenotazione confermata!\n\n' +
-          `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
-          'Riceverai una conferma via email con tutti i dettagli.\n\n' +
-          'Grazie per aver scelto di candidarti!'
-        );
-        
-        setIsSubmitting(false);
-      }, 2000);
+      // Prepare booking data for API
+      const bookingData = {
+        selectedDate: formData.selectedDate,
+        selectedTime: formData.selectedTime,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        role: formData.role,
+        notes: formData.notes || ''
+      };
+      
+      // Submit booking
+      const response = await apiService.createBooking(slug, bookingData);
+      
+      setSuccessMessage(
+        '🎉 Prenotazione confermata!\n\n' +
+        `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
+        'Riceverai una conferma via email con tutti i dettagli.\n\n' +
+        'Grazie per aver scelto di candidarti!'
+      );
+      
+      setIsSubmitting(false);
       
     } catch (error) {
       console.error('Failed to submit booking:', error);
-      setError('Errore durante l\'invio della prenotazione. Riprova più tardi.');
+      
+      if (error instanceof ApiError) {
+        if (error.statusCode === 409) {
+          setError('Questo orario non è più disponibile. Scegli un altro slot.');
+        } else if (error.statusCode === 400) {
+          setError('Dati non validi: ' + error.message);
+        } else if (error.statusCode === 404) {
+          setError('Link di prenotazione non trovato o non più attivo.');
+        } else if (error.isNetworkError()) {
+          setError('Impossibile connettersi al server. Controlla la connessione.');
+        } else {
+          setError('Errore durante l\'invio della prenotazione: ' + error.message);
+        }
+      } else {
+        setError('Errore imprevisto durante l\'invio della prenotazione.');
+      }
+      
       setIsSubmitting(false);
     }
   };
