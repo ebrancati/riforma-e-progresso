@@ -2,6 +2,7 @@ import http from 'http';
 import url from 'url';
 import { config } from './config/config.js';
 import { connectToDatabase } from './utils/database.js';
+import { handleBookingLinkRoutes } from './routes/bookingLink.js';
 import { handleTemplateRoutes } from './routes/template.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
 
@@ -21,15 +22,9 @@ async function handleRequest(req, res) {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    // Health check
-    if (pathname === '/api/health') {
-      return handleHealthCheck(req, res);
-    }
-
-    // Template routes
-    if (pathname.startsWith('/api/templates')) {
-      return await handleTemplateRoutes(req, res);
-    }
+    if (pathname === '/api/health')                return handleHealthCheck(req, res);             // Health check
+    if (pathname.startsWith('/api/booking-links')) return await handleBookingLinkRoutes(req, res); // Booking link routes
+    if (pathname.startsWith('/api/templates'))     return await handleTemplateRoutes(req, res);    // Template routes
 
     res.status(404).json({
       error: 'Endpoint not found',
@@ -73,9 +68,7 @@ function applyMiddleware(req, res, middlewares, finalHandler) {
       });
     }
 
-    if (currentIndex >= middlewares.length) {
-      return finalHandler(req, res);
-    }
+    if (currentIndex >= middlewares.length) return finalHandler(req, res);
 
     const middleware = middlewares[currentIndex++];
     middleware(req, res, next);

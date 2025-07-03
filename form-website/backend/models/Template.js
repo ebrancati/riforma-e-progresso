@@ -1,6 +1,6 @@
 import { InputSanitizer } from '../utils/sanitizer.js';
+import { IdGenerator } from '../utils/idGenerator.js';
 import { getCollection } from '../utils/database.js';
-import { ObjectId } from 'mongodb';
 import { config } from '../config/config.js';
 
 export class Template {
@@ -8,6 +8,8 @@ export class Template {
     // Validate and sanitize data before setting properties
     const sanitizedData = InputSanitizer.validateTemplateData(data);
     
+    // Generate ID if not provided
+    this.id = data.id || IdGenerator.generateTemplateId();
     this.name = sanitizedData.name;
     this.schedule = sanitizedData.schedule;
     this.createdAt = data.createdAt || new Date();
@@ -29,10 +31,19 @@ export class Template {
   }
 
   static async findById(id) {
-    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
+    // Validate ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
+
+    // Ensure it's a template ID
+    if (!IdGenerator.isTemplateId(id)) {
+      throw new Error('Invalid template ID');
+    }
 
     const collection = this.getCollection();
-    const template = await collection.findOne({ _id: new ObjectId(id) });
+    // Use ID directly as string
+    const template = await collection.findOne({ id: id });
     
     if (!template) {
       throw new Error('Template not found');
@@ -52,66 +63,97 @@ export class Template {
   async save() {
     const collection = Template.getCollection();
 
+    // Check for existing template with same name
     const existing = await Template.findByName(this.name);
-    if (existing) throw new Error('A template with this name already exists');
+    if (existing) {
+      throw new Error('A template with this name already exists');
+    }
 
-    const result = await collection.insertOne({
+    // Create document
+    const templateDoc = {
+      id: this.id,
       name: this.name,
       schedule: this.schedule,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
-    });
+    };
 
+    const result = await collection.insertOne(templateDoc);
+
+    // Return formatted template
     return Template.formatTemplate({
       _id: result.insertedId,
-      name: this.name,
-      schedule: this.schedule,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt
+      ...templateDoc
     });
   }
 
   static async updateById(id, updateData) {
+    // Validate ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
 
-    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
+    // Ensure it's a template ID
+    if (!IdGenerator.isTemplateId(id)) {
+      throw new Error('Invalid template ID');
+    }
 
     const collection = this.getCollection();
     
-    const existing = await collection.findOne({ _id: new ObjectId(id) });
-    if (!existing) throw new Error('Template not found');
+    // Find existing template using ID
+    const existing = await collection.findOne({ id: id });
+    if (!existing) {
+      throw new Error('Template not found');
+    }
 
     // Check for duplicate name (excluding current template)
     if (updateData.name) {
       const duplicate = await collection.findOne({ 
         name: updateData.name.trim(), 
-        _id: { $ne: new ObjectId(id) }
+        id: { $ne: id }  // Use custom ID for exclusion
       });
-      if (duplicate) throw new Error('Another template with this name already exists');
+      if (duplicate) {
+        throw new Error('Another template with this name already exists');
+      }
     }
 
     const updateFields = {
       updatedAt: new Date()
     };
     
-    if (updateData.name)     updateFields.name     = InputSanitizer.sanitizeTemplateName(updateData.name);
-    if (updateData.schedule) updateFields.schedule = InputSanitizer.validateSchedule(updateData.schedule);
+    if (updateData.name) {
+      updateFields.name = InputSanitizer.sanitizeTemplateName(updateData.name);
+    }
+    if (updateData.schedule) {
+      updateFields.schedule = InputSanitizer.validateSchedule(updateData.schedule);
+    }
 
+    // Update using ID
     await collection.updateOne(
-      { _id: new ObjectId(id) },
+      { id: id },
       { $set: updateFields }
     );
 
     // Return updated template
-    const updated = await collection.findOne({ _id: new ObjectId(id) });
+    const updated = await collection.findOne({ id: id });
     return this.formatTemplate(updated);
   }
 
   static async deleteById(id) {
+    // Validate ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
 
-    if (!InputSanitizer.isValidObjectId(id)) throw new Error('Invalid ID');
+    // Ensure it's a template ID
+    if (!IdGenerator.isTemplateId(id)) {
+      throw new Error('Invalid template ID');
+    }
 
     const collection = this.getCollection();
-    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    
+    // Delete using ID
+    const result = await collection.deleteOne({ id: id });
     
     if (result.deletedCount === 0) {
       throw new Error('Template not found');
@@ -123,7 +165,7 @@ export class Template {
   // Format template for API response
   static formatTemplate(template) {
     return {
-      id: template._id.toString(),
+      id: template.id,
       name: template.name,
       schedule: template.schedule,
       created: template.createdAt.toLocaleDateString('it-IT'),
@@ -168,9 +210,19 @@ export class Template {
     return errors;
   }
 
-  // Converts format time in minutes
+  // Convert time string to minutes for easy comparison
   static timeToMinutes(time) {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
+  }
+
+  // Helper method to generate new time slot ID
+  static generateTimeSlotId() {
+    return IdGenerator.generateTimeSlotId();
+  }
+
+  // Helper method to check if an ID belongs to this template type
+  static isValidTemplateId(id) {
+    return IdGenerator.isTemplateId(id);
   }
 }

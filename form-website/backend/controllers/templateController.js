@@ -7,7 +7,7 @@ export class TemplateController {
       const templates = await Template.findAll();
       res.status(200).json(templates);
     } catch (error) {
-      console.error('Error retrieving template:', error);
+      console.error('Error retrieving templates:', error);
       res.status(500).json({
         error: 'Internal Server Error',
         details: error.message
@@ -24,17 +24,25 @@ export class TemplateController {
     } catch (error) {
       console.error('Error retrieving template:', error);
       
-      if (error.message === 'Invalid ID') {
+      // Handle custom ID validation errors
+      if (error.message === 'Invalid ID format') {
         return res.status(400).json({
-          error: 'Invalid ID',
-          details: 'The ID provided is not a valid MongoDB ObjectId'
+          error: 'Invalid ID Format',
+          details: 'The ID provided is not in the correct format (PREFIX_TIMESTAMP_RANDOM)'
+        });
+      }
+      
+      if (error.message === 'Invalid template ID') {
+        return res.status(400).json({
+          error: 'Invalid Template ID',
+          details: 'The ID provided is not a valid template ID (must start with TPL_)'
         });
       }
       
       if (error.message === 'Template not found') {
         return res.status(404).json({
           error: 'Template not found',
-          details: 'No templates found with this ID'
+          details: 'No template found with this ID'
         });
       }
       
@@ -65,6 +73,16 @@ export class TemplateController {
         });
       }
       
+      // Handle validation errors from InputSanitizer
+      if (error.message.includes('sanitization') || 
+          error.message.includes('required') ||
+          error.message.includes('Invalid')) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          details: error.message
+        });
+      }
+      
       res.status(500).json({
         error: 'Internal Server Error',
         details: error.message
@@ -85,23 +103,40 @@ export class TemplateController {
     } catch (error) {
       console.error('Error updating template:', error);
       
-      if (error.message === 'Invalid ID') {
+      // Handle ID validation errors
+      if (error.message === 'Invalid ID format') {
         return res.status(400).json({
-          error: 'Invalid ID',
-          details: 'The ID provided is not a valid MongoDB ObjectId'
+          error: 'Invalid ID Format',
+          details: 'The ID provided is not in the correct format (PREFIX_TIMESTAMP_RANDOM)'
+        });
+      }
+      
+      if (error.message === 'Invalid template ID') {
+        return res.status(400).json({
+          error: 'Invalid Template ID',
+          details: 'The ID provided is not a valid template ID (must start with TPL_)'
         });
       }
       
       if (error.message === 'Template not found') {
         return res.status(404).json({
           error: 'Template not found',
-          details: 'No templates found with this ID'
+          details: 'No template found with this ID'
         });
       }
       
       if (error.message === 'Another template with this name already exists') {
         return res.status(409).json({
           error: 'Name already exists',
+          details: error.message
+        });
+      }
+      
+      // Handle validation errors
+      if (error.message.includes('sanitization') || 
+          error.message.includes('Invalid')) {
+        return res.status(400).json({
+          error: 'Validation Error',
           details: error.message
         });
       }
@@ -126,17 +161,25 @@ export class TemplateController {
     } catch (error) {
       console.error('Error deleting template:', error);
       
-      if (error.message === 'Invalid ID') {
+      // Handle ID validation errors
+      if (error.message === 'Invalid ID format') {
         return res.status(400).json({
-          error: 'Invalid ID',
-          details: 'The ID provided is not a valid MongoDB ObjectId'
+          error: 'Invalid ID Format',
+          details: 'The ID provided is not in the correct format (PREFIX_TIMESTAMP_RANDOM)'
+        });
+      }
+      
+      if (error.message === 'Invalid template ID') {
+        return res.status(400).json({
+          error: 'Invalid Template ID',
+          details: 'The ID provided is not a valid template ID (must start with TPL_)'
         });
       }
       
       if (error.message === 'Template not found') {
         return res.status(404).json({
           error: 'Template not found',
-          details: 'No templates found with this ID'
+          details: 'No template found with this ID'
         });
       }
       

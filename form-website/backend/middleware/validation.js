@@ -1,6 +1,23 @@
+import { BookingLink } from '../models/BookingLink.js';
 import { Template } from '../models/Template.js';
 import { InputSanitizer } from '../utils/sanitizer.js';
 import { config } from '../config/config.js';
+
+// Middleware to validate booking link data
+export function validateBookingLinkData(req, res, next) {
+  try {
+    // Validate using BookingLink class
+    const sanitizedData = BookingLink.validateBookingLinkData(req.body);
+    req.body = sanitizedData;
+    
+    next();
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Validation error',
+      details: error.message
+    });
+  }
+}
 
 // Middleware to validate template data
 export function validateTemplateData(req, res, next) {
@@ -37,6 +54,7 @@ export function parseJsonBody(req, res, next) {
     req.on('data', chunk => {
       body += chunk.toString();
 
+      // Security check for malicious content
       const suspiciousPatterns = ['<script', 'javascript:', '$where', '$regex'];
       const lowerBody = body.toLowerCase();
       for (const pattern of suspiciousPatterns) {

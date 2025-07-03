@@ -1,3 +1,5 @@
+import { IdGenerator } from './idGenerator.js';
+
 export class InputSanitizer {
   
   /**
@@ -149,12 +151,21 @@ export class InputSanitizer {
   }
   
   /**
-   * Validate MongoDB ObjectId format
+   * Validate custom ID format
    * @param {string} id - ID to validate
-   * @returns {boolean} True if valid ObjectId format
+   * @returns {boolean} True if valid custom ID format
    */
-  static isValidObjectId(id) {
-    return /^[0-9a-fA-F]{24}$/.test(id);
+  static isValidId(id) {
+    return IdGenerator.isValidId(id);
+  }
+  
+  /**
+   * Validate template ID specifically
+   * @param {string} id - Template ID to validate
+   * @returns {boolean} True if valid template ID
+   */
+  static isValidTemplateId(id) {
+    return IdGenerator.isTemplateId(id);
   }
   
   /**

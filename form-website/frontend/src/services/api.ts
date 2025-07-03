@@ -33,6 +33,28 @@ export interface CreateTemplateRequest {
   };
 }
 
+export interface ApiBookingLink {
+  id: string;
+  name: string;
+  templateId: string;
+  urlSlug: string;
+  duration: number;
+  requireAdvanceBooking: boolean;
+  advanceHours: number;
+  isActive: boolean;
+  created: string;
+  updatedAt: string;
+}
+
+export interface CreateBookingLinkRequest {
+  name: string;
+  templateId: string;
+  urlSlug: string;
+  duration: number;
+  requireAdvanceBooking: boolean;
+  advanceHours: number;
+}
+
 class ApiService {
   private baseUrl: string;
   private isOffline: boolean = false;
@@ -103,6 +125,8 @@ class ApiService {
     return this.isOffline;
   }
 
+  // ========== TEMPLATE METHODS ==========
+
   // Get all templates
   async getTemplates(): Promise<ApiTemplate[]> {
     return this.request<ApiTemplate[]>('/api/templates');
@@ -135,6 +159,26 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // ========== BOOKING LINK METHODS ==========
+
+  // Create new booking link
+  async createBookingLink(bookingLink: CreateBookingLinkRequest): Promise<{ 
+    message: string; 
+    bookingLink: ApiBookingLink; 
+    url: string 
+  }> {
+    return this.request<{ 
+      message: string; 
+      bookingLink: ApiBookingLink; 
+      url: string 
+    }>('/api/booking-links', {
+      method: 'POST',
+      body: JSON.stringify(bookingLink),
+    });
+  }
+
+  // ========== HEALTH CHECK ==========
 
   // Health check
   async checkHealth(): Promise<{ status: string; timestamp: string; environment: string; database: string }> {

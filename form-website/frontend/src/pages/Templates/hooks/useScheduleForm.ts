@@ -15,6 +15,13 @@ export const useScheduleForm = () => {
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [copiedDaySlots, setCopiedDaySlots] = useState<TimeSlot[] | null>(null);
 
+  // Generate custom time slot ID
+  const generateTimeSlotId = (): string => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `TS_${timestamp}_${random}`;
+  };
+
   // Convert hours to minutes for comparisons
   const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -58,7 +65,7 @@ export const useScheduleForm = () => {
     }
 
     const newSlot: TimeSlot = {
-      id: `${day}-${Date.now()}`,
+      id: generateTimeSlotId(),
       startTime,
       endTime
     };
@@ -128,12 +135,9 @@ export const useScheduleForm = () => {
 
   // Paste copied slots
   const pasteToDay = (targetDay: DayKey, slotsToUse?: TimeSlot[]) => {
-      console.log('slotsToUse:', slotsToUse);
-  console.log('copiedDaySlots:', copiedDaySlots);
-  
-  const slotsToApply = slotsToUse || copiedDaySlots;
-  console.log('slotsToApply:', slotsToApply);
-    
+
+    const slotsToApply = slotsToUse || copiedDaySlots;
+      
     if (!slotsToApply) {
       return { success: false, error: 'Nessun orario copiato' };
     }
@@ -154,9 +158,10 @@ export const useScheduleForm = () => {
       return { success: false, error: 'Alcuni degli orari copiati si sovrappongono con quelli esistenti.' };
     }
 
+    // Generate new IDs for pasted slots to avoid conflicts
     const newSlots = slotsToApply.map(slot => ({
       ...slot,
-      id: `${targetDay}-${Date.now()}-${Math.random()}`
+      id: generateTimeSlotId()
     }));
 
     setSchedule(prev => ({
@@ -192,12 +197,24 @@ export const useScheduleForm = () => {
       setEditingTemplateId(null);
     }
     
-    const sortedSchedule: DaySchedule = {};
+    // Sort slots and regenerate IDs if creating copy
+    const processedSchedule: DaySchedule = {};
     Object.keys(template.schedule).forEach(day => {
-      sortedSchedule[day] = sortTimeSlots(template.schedule[day]);
+      const daySlots = template.schedule[day];
+      
+      if (forEditing) {
+        // Keep original IDs when editing
+        processedSchedule[day] = sortTimeSlots(daySlots);
+      } else {
+        // Generate new IDs when creating copy
+        processedSchedule[day] = sortTimeSlots(daySlots.map(slot => ({
+          ...slot,
+          id: generateTimeSlotId()
+        })));
+      }
     });
     
-    setSchedule(sortedSchedule);
+    setSchedule(processedSchedule);
   };
 
   return {
@@ -213,6 +230,7 @@ export const useScheduleForm = () => {
     pasteToDay,
     clearForm,
     loadTemplate,
-    sortTimeSlots
+    sortTimeSlots,
+    generateTimeSlotId
   };
 };

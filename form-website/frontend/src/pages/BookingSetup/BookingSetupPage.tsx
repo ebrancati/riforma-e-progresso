@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiService } from '../../services/api';
+import { apiService, type CreateBookingLinkRequest, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { Template } from '../../types/schedule';
 import '../../styles/BookingSetupPage.css';
@@ -31,14 +31,14 @@ const BookingSetupPage: React.FC = () => {
   // Clear messages after timeout
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 4000);
+      const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      const timer = setTimeout(() => setSuccessMessage(null), 8000); // Longer for success
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
@@ -56,7 +56,12 @@ const BookingSetupPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to load templates:', error);
       setIsServerAvailable(false);
-      setError('Impossibile caricare i template. Verifica la connessione al server.');
+      
+      if (error instanceof ApiError && error.isNetworkError()) {
+        setError('Server non raggiungibile. Controlla la connessione.');
+      } else {
+        setError('Impossibile caricare i template. Verifica la connessione al server.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -121,12 +126,28 @@ const BookingSetupPage: React.FC = () => {
 
     try {
       setIsLoading(true);
+      setError(null);
       
-      // TODO: Implement API call to create booking link
-      console.log('Creating booking link:', formData);
+      // Prepare API request
+      const bookingLinkData: CreateBookingLinkRequest = {
+        name: formData.name.trim(),
+        templateId: formData.templateId,
+        urlSlug: formData.urlSlug.trim(),
+        duration: formData.duration,
+        requireAdvanceBooking: formData.requireAdvanceBooking,
+        advanceHours: formData.requireAdvanceBooking ? formData.advanceHours : 0
+      };
       
-      // For now, just show success message
-      setSuccessMessage(`Link creato con successo! URL: ${window.location.origin}/book/${formData.urlSlug}`);
+      // Call API
+      const response = await apiService.createBookingLink(bookingLinkData);
+      
+      // Show success with actual URL
+      setSuccessMessage(
+        `Link creato con successo!\n\n` +
+        `Nome: ${response.bookingLink.name}\n` +
+        `URL: ${response.url}\n\n` +
+        `Condividi questo link con i candidati per permettere loro di prenotare un colloquio.`
+      );
       
       // Reset form
       setFormData({
@@ -140,7 +161,27 @@ const BookingSetupPage: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to create booking link:', error);
-      setError('Errore durante la creazione del link. Riprova.');
+      
+      if (error instanceof ApiError) {
+        // Handle specific API errors
+        if (error.statusCode === 409) {
+          if (error.message.includes('URL')) {
+            setError('Questo URL è già in uso. Scegli un URL diverso.');
+          } else if (error.message.includes('name')) {
+            setError('Esiste già un colloquio con questo nome. Scegli un nome diverso.');
+          } else {
+            setError('Conflitto: ' + error.message);
+          }
+        } else if (error.statusCode === 400) {
+          setError('Errore di validazione: ' + error.message);
+        } else if (error.isNetworkError()) {
+          setError('Errore di connessione. Riprova tra qualche istante.');
+        } else {
+          setError('Errore del server. Riprova più tardi.');
+        }
+      } else {
+        setError('Errore imprevisto durante la creazione del link. Riprova.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +216,7 @@ const BookingSetupPage: React.FC = () => {
               className="retry-button"
               disabled={isLoading}
             >
-              Riprova
+              {isLoading ? 'Connessione...' : 'Riprova'}
             </button>
           )}
         </div>
@@ -191,7 +232,9 @@ const BookingSetupPage: React.FC = () => {
         {/* Loading Indicator */}
         {isLoading && (
           <div className="loading-indicator">
-            <div>Caricamento in corso...</div>
+            <div>
+              {isServerAvailable ? 'Creazione link in corso...' : 'Caricamento in corso...'}
+            </div>
           </div>
         )}
 
