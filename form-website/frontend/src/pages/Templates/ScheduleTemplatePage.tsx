@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { useTemplates } from './hooks/useTemplates';
 import { useScheduleForm } from './hooks/useScheduleForm';
@@ -234,6 +235,16 @@ const ScheduleTemplatePage: React.FC = () => {
     <div className="container">
       {/* Header */}
       <div className="header">
+        <div className="header-navigation">
+          <Link to="/admin/booking-links" className="nav-link">
+            ← Link Colloqui
+          </Link>
+          <span className="nav-separator">|</span>
+          <Link to="/admin/booking-setup" className="nav-link">
+            Crea Nuovo Link
+          </Link>
+        </div>
+
         <h1>Gestione Template Orari</h1>
         <p>Crea e gestisci i tuoi template di disponibilità settimanali</p>
         <div className="server-status">

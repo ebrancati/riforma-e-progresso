@@ -205,6 +205,12 @@ const BookingSetupPage: React.FC = () => {
     <div className="container">
       {/* Header */}
       <div className="header">
+        <div className="header-navigation">
+          <Link to="/admin/booking-links" className="nav-link">
+            ← Torna ai Link Colloqui
+          </Link>
+        </div>
+
         <h1>Genera Link Colloqui</h1>
         <p>Crea link personalizzati per permettere ai candidati di prenotare colloqui</p>
         <div className="server-status">
