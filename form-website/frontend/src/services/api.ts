@@ -1,5 +1,15 @@
 // ========== PUBLIC BOOKING INTERFACES ==========
 
+export interface PublicBookingLinkInfo {
+  name: string;
+  urlSlug: string;
+  duration: number;
+  requireAdvanceBooking: boolean;
+  advanceHours: number;
+  bookingUrl: string;
+  created: string;
+}
+
 export interface ApiDayAvailability {
   date: string;           // YYYY-MM-DD format
   available: boolean;     // Has any available slots
@@ -173,6 +183,21 @@ class ApiService {
   }
 
   // ========== PUBLIC BOOKING METHODS ==========
+
+  // Get all active booking links for public directory
+  async getActiveBookingLinks(): Promise<{
+    message: string;
+    count: number;
+    bookingLinks: PublicBookingLinkInfo[];
+    timestamp: string;
+  }> {
+    return this.request<{
+      message: string;
+      count: number;
+      bookingLinks: PublicBookingLinkInfo[];
+      timestamp: string;
+    }>('/api/public/directory');
+  }
 
   // Get booking link by URL slug (public)
   async getBookingLinkBySlug(slug: string): Promise<ApiBookingLink> {

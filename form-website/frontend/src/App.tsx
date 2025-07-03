@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import ScheduleTemplatePage from './pages/Templates/ScheduleTemplatePage';
 import BookingSetupPage     from './pages/BookingSetup/BookingSetupPage';
 import BookingLinksListPage from './pages/BookingLinks/BookingLinksListPage';
+import PublicDirectoryPage  from './pages/PublicDirectory/PublicDirectoryPage';
 import BookingPage          from './pages/Booking/BookingPage';
 import NotFoundPage         from './pages/NotFoundPage';
 import './App.css';
@@ -18,6 +19,7 @@ const App: React.FC = () => {
           <Route path="/admin/booking-links" element={<BookingLinksListPage />} />
           
           {/* Public Booking Route */}
+          <Route path="/colloqui" element={<PublicDirectoryPage />} />
           <Route path="/book/:slug" element={<BookingPage />} />
           
           {/* Redirect to time-slots for now */}

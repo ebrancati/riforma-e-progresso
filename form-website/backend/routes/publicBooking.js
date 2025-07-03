@@ -1,5 +1,6 @@
 import url from 'url';
 import { PublicBookingController } from '../controllers/publicBookingController.js';
+import { PublicDirectoryController } from '../controllers/publicDirectoryController.js';
 
 /**
  * Router to manage public booking routes
@@ -15,6 +16,11 @@ export async function handlePublicBookingRoutes(req, res) {
   req.params = {};
 
   try {
+    // GET /api/public/directory
+    // Get all active booking links for public display
+    if (pathname === '/api/public/directory' && method === 'GET') {
+      return await PublicDirectoryController.getActiveBookingLinks(req, res);
+    }
     // GET /api/public/booking/:slug
     // Get booking link information by URL slug
     const bookingInfoMatch = pathname.match(/^\/api\/public\/booking\/([^\/]+)$/);
