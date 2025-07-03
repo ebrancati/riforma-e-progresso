@@ -757,7 +757,7 @@ const BookingPage: React.FC = () => {
           )}
           
           <div className="contact-info">
-            <p><strong>Hai domande?</strong> Non esitare a contattarci per assistenza!</p>
+            <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
           </div>
         </div>
       </div>
