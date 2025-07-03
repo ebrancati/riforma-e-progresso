@@ -1,0 +1,220 @@
+/* Import existing styles from ScheduleTemplatePage */
+@import './ScheduleTemplatePage.css';
+
+/* Specific styles for BookingSetupPage */
+.form-section {
+  padding: 30px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-select {
+  width: 100%;
+  max-width: 400px;
+  padding: 15px 20px;
+  border: 2px solid #e1e8ed;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #333;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.form-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.template-selection {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.manage-templates-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.manage-templates-link:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.checkbox-group {
+  margin-bottom: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #667eea;
+  cursor: pointer;
+}
+
+.checkbox-text {
+  line-height: 1.4;
+}
+
+.advance-hours-selection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding-left: 30px;
+}
+
+.form-select.small {
+  max-width: 120px;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+.hours-label {
+  color: #666;
+  font-size: 16px;
+}
+
+.url-preview {
+  display: flex;
+  align-items: center;
+  max-width: 600px;
+  border: 2px solid #e1e8ed;
+  border-radius: 12px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.url-preview:focus-within {
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.url-base {
+  padding: 15px 20px;
+  background: #e9ecef;
+  color: #666;
+  font-size: 16px;
+  white-space: nowrap;
+  border-right: 1px solid #dee2e6;
+  font-family: 'Courier New', monospace;
+}
+
+.url-input {
+  flex: 1;
+  padding: 15px 20px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  font-family: 'Courier New', monospace;
+  min-width: 150px;
+}
+
+.url-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.url-help {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.info-section {
+  background: #f8f9fa;
+  border: 2px solid #e1e8ed;
+  border-radius: 12px;
+  padding: 30px;
+  margin: 30px;
+  margin-top: 0;
+}
+
+.info-section h3 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.info-section ol {
+  padding-left: 20px;
+  line-height: 1.8;
+  color: #555;
+}
+
+.info-section li {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .template-selection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .manage-templates-link {
+    text-align: center;
+    align-self: stretch;
+  }
+  
+  .url-preview {
+    flex-direction: column;
+  }
+  
+  .url-base {
+    border-right: none;
+    border-bottom: 1px solid #dee2e6;
+    text-align: center;
+  }
+  
+  .advance-hours-selection {
+    padding-left: 0;
+    justify-content: center;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}

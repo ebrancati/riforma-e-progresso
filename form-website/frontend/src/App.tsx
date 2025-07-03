@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ScheduleTemplatePage from './pages/Templates/ScheduleTemplatePage';
+import BookingSetupPage from './pages/BookingSetup/BookingSetupPage';
 import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
@@ -11,6 +12,9 @@ const App: React.FC = () => {
         <Routes>
           {/* Time Slots Management */}
           <Route path="/admin/time-slots" element={<ScheduleTemplatePage />} />
+          
+          {/* Booking Setup */}
+          <Route path="/admin/booking-setup" element={<BookingSetupPage />} />
           
           {/* Redirect to time-slots for now */}
           <Route path="/" element={<Navigate to="/admin/time-slots" replace />} />
