@@ -54,6 +54,14 @@ export class IdGenerator {
   static generateBookingId() {
     return this.generate('BKG', 10);
   }
+
+  /**
+   * Generate booking link ID
+   * @returns {string} Booking link ID with BL prefix
+   */
+  static generateBookingLinkId() {
+    return this.generate('BL', 8);
+  }
   
   /**
    * Generate time slot ID
@@ -161,5 +169,14 @@ export class IdGenerator {
    */
   static isBookingId(id) {
     return this.isEntityType(id, 'BKG');
+  }
+
+ /**
+  * Check if ID is booking link ID
+  * @param {string} id - Custom ID
+  * @returns {boolean} True if booking link ID
+  */
+  static isBookingLinkId(id) {
+    return this.isEntityType(id, 'BL');
   }
 }

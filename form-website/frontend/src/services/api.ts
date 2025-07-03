@@ -162,6 +162,16 @@ class ApiService {
 
   // ========== BOOKING LINK METHODS ==========
 
+  // Get all booking links
+  async getBookingLinks(): Promise<ApiBookingLink[]> {
+    return this.request<ApiBookingLink[]>('/api/booking-links');
+  }
+
+  // Get booking link by ID  
+  async getBookingLink(id: string): Promise<ApiBookingLink> {
+    return this.request<ApiBookingLink>(`/api/booking-links/${id}`);
+  }
+
   // Create new booking link
   async createBookingLink(bookingLink: CreateBookingLinkRequest): Promise<{ 
     message: string; 
@@ -175,6 +185,12 @@ class ApiService {
     }>('/api/booking-links', {
       method: 'POST',
       body: JSON.stringify(bookingLink),
+    });
+  }
+
+  async deleteBookingLink(id: string): Promise<{ message: string; deletedId: string }> {
+    return this.request<{ message: string; deletedId: string }>(`/api/booking-links/${id}`, {
+      method: 'DELETE',
     });
   }
 

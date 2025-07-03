@@ -13,12 +13,37 @@ export async function handleBookingLinkRoutes(req, res) {
   req.params = {};
 
   try {
+    // GET /api/booking-links
+    if (pathname === '/api/booking-links' && method === 'GET') {
+      return await BookingLinkController.getAllBookingLinks(req, res);
+    }
+
     // POST /api/booking-links
     if (pathname === '/api/booking-links' && method === 'POST') {
       // Apply middleware validation
       return await applyMiddleware(req, res, [validateBookingLinkData], () => {
         return BookingLinkController.createBookingLink(req, res);
       });
+    }
+
+    // Routes for single booking link (/api/booking-links/:id)
+    const bookingLinkMatch = pathname.match(/^\/api\/booking-links\/(.+)$/);
+    if (bookingLinkMatch) {
+      req.params.id = bookingLinkMatch[1];
+
+      switch (method) {
+        case 'GET':
+          return await BookingLinkController.getBookingLinkById(req, res);
+          
+        case 'DELETE':
+          return await BookingLinkController.deleteBookingLink(req, res);
+          
+        default:
+          return res.status(405).json({
+            error: 'Method not allowed',
+            details: `${method} not supported for this endpoint`
+          });
+      }
     }
 
     // Route not found

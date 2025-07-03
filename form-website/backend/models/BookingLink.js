@@ -25,6 +25,64 @@ export class BookingLink {
     return getCollection(config.collections.bookingLinks);
   }
 
+  // Get all booking links
+  static async findAll() {
+    const collection = this.getCollection();
+    const bookingLinks = await collection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    return bookingLinks.map(link => this.formatBookingLink(link));
+  }
+
+  // Get booking link by ID
+  static async findById(id) {
+    // Validate custom ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
+
+    // Ensure it's a booking link ID
+    if (!IdGenerator.isBookingLinkId(id)) {
+      throw new Error('Invalid booking link ID');
+    }
+
+    const collection = this.getCollection();
+    // Use custom ID directly as string
+    const bookingLink = await collection.findOne({ id: id });
+    
+    if (!bookingLink) {
+      throw new Error('Booking link not found');
+    }
+
+    return this.formatBookingLink(bookingLink);
+  }
+
+  // Delete booking link by ID
+  static async deleteById(id) {
+    // Validate custom ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
+
+    // Ensure it's a booking link ID
+    if (!IdGenerator.isBookingLinkId(id)) {
+      throw new Error('Invalid booking link ID');
+    }
+
+    const collection = this.getCollection();
+    
+    // Delete using custom ID
+    const result = await collection.deleteOne({ id: id });
+    
+    if (result.deletedCount === 0) {
+      throw new Error('Booking link not found');
+    }
+
+    return { deletedId: id, deletedCount: result.deletedCount };
+  }
+
   // Create new booking link
   async save() {
     const collection = BookingLink.getCollection();
