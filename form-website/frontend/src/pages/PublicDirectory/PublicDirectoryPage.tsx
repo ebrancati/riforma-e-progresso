@@ -194,9 +194,7 @@ const PublicDirectoryPage: React.FC = () => {
 
         {/* Footer */}
         <div className="directory-footer">
-          <p>
-            Hai domande? Contattaci per maggiori informazioni sulle posizioni disponibili.
-          </p>
+            <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
         </div>
       </div>
     </div>

@@ -122,6 +122,7 @@ const LoginPage: React.FC = () => {
 
         <div className="login-info">
           <p>Questa è un'area riservata per amministratori</p>
+          <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
         </div>
       </div>
     </div>
