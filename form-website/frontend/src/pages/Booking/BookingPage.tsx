@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { apiService, ApiError } from '../../services/api';
+import { publicBookingApi, ApiError } from '../../services/api';
 import BookingHeader from './components/BookingHeader';
 import CalendarGrid from './components/CalendarGrid';
 import TimeSlotList from './components/TimeSlotList';
@@ -110,7 +110,7 @@ const BookingPage: React.FC = () => {
         throw new Error('No booking slug provided');
       }
       
-      const linkInfo = await apiService.getBookingLinkBySlug(slug);
+      const linkInfo = await publicBookingApi.getBookingLinkBySlug(slug);
       
       // Convert API response to internal format
       const bookingLinkData: BookingLinkInfo = {
@@ -158,7 +158,7 @@ const BookingPage: React.FC = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1; // API expects 1-based month
       
-      const response = await apiService.getMonthAvailability(slug, year, month);
+      const response = await publicBookingApi.getMonthAvailability(slug, year, month);
       
       // Convert API response to internal format
       const convertedAvailability: DayAvailability[] = response.availability.map(day => ({
@@ -197,7 +197,7 @@ const BookingPage: React.FC = () => {
         throw new Error('Missing slug or selected date');
       }
       
-      const response = await apiService.getAvailableTimeSlots(slug, selectedDate);
+      const response = await publicBookingApi.getAvailableTimeSlots(slug, selectedDate);
       
       // Convert API response to internal format
       const convertedSlots: TimeSlot[] = response.timeSlots.map(slot => ({
@@ -370,7 +370,7 @@ const BookingPage: React.FC = () => {
       };
       
       // Submit booking
-      const response = await apiService.createBooking(slug, bookingData);
+      const response = await publicBookingApi.createBooking(slug, bookingData);
       
       setSuccessMessage(
         '🎉 Prenotazione confermata!\n\n' +

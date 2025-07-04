@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiService } from '../../services/api';
+import { templatesApi } from '../../services/api';
 import { useTemplates } from './hooks/useTemplates';
 import { useScheduleForm } from './hooks/useScheduleForm';
 import NotificationMessages from '../../components/NotificationMessages';
@@ -91,7 +91,7 @@ const ScheduleTemplatePage: React.FC = () => {
 
   const initializeApp = async () => {
     try {
-      await apiService.checkHealth();
+      await templatesApi.checkHealth();
       setIsServerAvailable(true);
       await loadTemplates();
     } catch (error) {

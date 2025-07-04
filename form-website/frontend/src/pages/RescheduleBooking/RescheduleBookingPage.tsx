@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { apiService, ApiError } from '../../services/api';
+import { cancelRescheduleApi, publicBookingApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import CalendarGrid from '../Booking/components/CalendarGrid';
 import TimeSlotList from '../Booking/components/TimeSlotList';
@@ -89,7 +89,7 @@ const RescheduleBookingPage: React.FC = () => {
         return;
       }
 
-      const response = await apiService.getBookingDetailsForCancel(bookingId, token);
+      const response = await cancelRescheduleApi.getBookingDetailsForCancel(bookingId, token);
       setBookingDetails(response);
       setError(null);
       
@@ -125,7 +125,7 @@ const RescheduleBookingPage: React.FC = () => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       
-      const response = await apiService.getMonthAvailability(
+      const response = await publicBookingApi.getMonthAvailability(
         bookingDetails.bookingLink.urlSlug, 
         year, 
         month
@@ -147,7 +147,7 @@ const RescheduleBookingPage: React.FC = () => {
       
       if (!bookingDetails || !newSelectedDate) return;
       
-      const response = await apiService.getAvailableTimeSlots(
+      const response = await publicBookingApi.getAvailableTimeSlots(
         bookingDetails.bookingLink.urlSlug, 
         newSelectedDate
       );
@@ -217,7 +217,7 @@ const RescheduleBookingPage: React.FC = () => {
         return;
       }
 
-      await apiService.rescheduleBooking(bookingId, token, newSelectedDate, newSelectedTime);
+      await cancelRescheduleApi.rescheduleBooking(bookingId, token, newSelectedDate, newSelectedTime);
       
       setIsRescheduled(true);
       

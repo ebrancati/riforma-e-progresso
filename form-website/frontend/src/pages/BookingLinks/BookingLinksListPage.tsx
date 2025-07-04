@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiService, type ApiBookingLink, ApiError } from '../../services/api';
+import { bookingLinksApi, healthApi, type ApiBookingLink, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import '../../styles/BookingLinksListPage.css';
 
@@ -36,10 +36,10 @@ const BookingLinksListPage: React.FC = () => {
   const loadBookingLinks = async () => {
     try {
       setIsLoading(true);
-      await apiService.checkHealth();
+      await healthApi.checkHealth();
       setIsServerAvailable(true);
       
-      const links = await apiService.getBookingLinks();
+      const links = await bookingLinksApi.getBookingLinks();
       setBookingLinks(links);
       setError(null);
     } catch (error) {
@@ -64,7 +64,7 @@ const BookingLinksListPage: React.FC = () => {
 
     try {
       setDeletingId(id);
-      await apiService.deleteBookingLink(id);
+      await bookingLinksApi.deleteBookingLink(id);
       
       // Remove from local state
       setBookingLinks(prev => prev.filter(link => link.id !== id));

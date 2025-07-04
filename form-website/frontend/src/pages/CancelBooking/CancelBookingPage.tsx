@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { apiService, ApiError } from '../../services/api';
+import { cancelRescheduleApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import '../../styles/CancelBookingPage.css';
@@ -59,7 +59,7 @@ const CancelBookingPage: React.FC = () => {
         return;
       }
 
-      const response = await apiService.getBookingDetailsForCancel(bookingId, token);
+      const response = await cancelRescheduleApi.getBookingDetailsForCancel(bookingId, token);
       setBookingDetails(response);
       setError(null);
       
@@ -103,7 +103,7 @@ const CancelBookingPage: React.FC = () => {
         return;
       }
 
-      await apiService.cancelBooking(bookingId, token, cancelReason);
+      await cancelRescheduleApi.cancelBooking(bookingId, token, cancelReason);
       
       setIsCancelled(true);
       setShowConfirm(false);

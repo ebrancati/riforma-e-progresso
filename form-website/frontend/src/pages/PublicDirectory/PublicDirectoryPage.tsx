@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiService, ApiError, type PublicBookingLinkInfo } from '../../services/api';
+import { publicDirectoryApi, ApiError } from '../../services/api';
+import type { PublicBookingLinkInfo } from '../../services/api/public/types';
 import NotificationMessages from '../../components/NotificationMessages';
 import '../../styles/PublicDirectoryPage.css';
 
@@ -23,7 +24,7 @@ const PublicDirectoryPage: React.FC = () => {
   const loadActiveBookingLinks = async () => {
     try {
       setIsLoading(true);
-      const response = await apiService.getActiveBookingLinks();
+      const response = await publicDirectoryApi.getActiveBookingLinks();
       setBookingLinks(response.bookingLinks);
       setError(null);
     } catch (error) {

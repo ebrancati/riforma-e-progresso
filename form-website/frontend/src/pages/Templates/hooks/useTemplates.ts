@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiService, ApiError, type ApiTemplate, type CreateTemplateRequest } from '../../../services/api';
+import { templatesApi, ApiError, type ApiTemplate, type CreateTemplateRequest } from '../../../services/api';
 import type { Template } from '../../../types/schedule';
 
 export const useTemplates = () => {
@@ -54,7 +54,7 @@ export const useTemplates = () => {
   const loadTemplates = async () => {
     try {
       setIsLoading(true);
-      const apiTemplates = await apiService.getTemplates();
+      const apiTemplates = await templatesApi.getTemplates();
       const convertedTemplates = apiTemplates.map(convertApiTemplate);
       setTemplates(convertedTemplates);
       setError(null);
@@ -71,7 +71,7 @@ export const useTemplates = () => {
     setIsLoading(true);
     try {
       const apiTemplate = convertToApiTemplate(templateData);
-      const response = await apiService.createTemplate(apiTemplate);
+      const response = await templatesApi.createTemplate(apiTemplate);
       const newTemplate = convertApiTemplate(response.template);
       
       setTemplates(prev => [...prev, newTemplate]);
@@ -91,7 +91,7 @@ export const useTemplates = () => {
     setIsLoading(true);
     try {
       const apiTemplate = convertToApiTemplate(templateData);
-      const response = await apiService.updateTemplate(id, apiTemplate);
+      const response = await templatesApi.updateTemplate(id, apiTemplate);
       const updatedTemplate = convertApiTemplate(response.template);
       
       setTemplates(prev => prev.map(t => 
@@ -113,7 +113,7 @@ export const useTemplates = () => {
   const deleteTemplate = async (id: string) => {
     setIsLoading(true);
     try {
-      await apiService.deleteTemplate(id);
+      await templatesApi.deleteTemplate(id);
       setTemplates(prev => prev.filter(t => t.id !== id));
       showSuccess('Template eliminato con successo!');
     } catch (error) {

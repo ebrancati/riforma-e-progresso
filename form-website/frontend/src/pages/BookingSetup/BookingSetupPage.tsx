@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiService, type CreateBookingLinkRequest, ApiError } from '../../services/api';
+import { templatesApi, bookingLinksApi, healthApi, ApiError, type CreateBookingLinkRequest } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { Template } from '../../types/schedule';
 import '../../styles/BookingSetupPage.css';
@@ -47,10 +47,10 @@ const BookingSetupPage: React.FC = () => {
   const loadTemplates = async () => {
     try {
       setIsLoading(true);
-      await apiService.checkHealth();
+      await healthApi.checkHealth();
       setIsServerAvailable(true);
       
-      const loadedTemplates = await apiService.getTemplates();
+      const loadedTemplates = await templatesApi.getTemplates();
       setTemplates(loadedTemplates);
       setError(null);
     } catch (error) {
@@ -139,7 +139,7 @@ const BookingSetupPage: React.FC = () => {
       };
       
       // Call API
-      const response = await apiService.createBookingLink(bookingLinkData);
+      const response = await bookingLinksApi.createBookingLink(bookingLinkData);
       
       // Show success with actual URL
       setSuccessMessage(
