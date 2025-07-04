@@ -387,8 +387,7 @@ const BookingPage: React.FC = () => {
         setSuccessMessage(
           '🎉 Prenotazione confermata!\n\n' +
           `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
-          'Riceverai una conferma via email con tutti i dettagli.\n\n' +
-          'Grazie per aver scelto di candidarti!'
+          'Riceverai una conferma via email con tutti i dettagli'
         );
         
         setIsSubmitting(false);

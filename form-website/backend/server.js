@@ -1,4 +1,3 @@
-// backend/server.js
 import http from 'http';
 import url from 'url';
 import { config } from './config/config.js';
@@ -6,6 +5,7 @@ import { connectToDatabase } from './utils/database.js';
 import { handleBookingLinkRoutes } from './routes/bookingLink.js';
 import { handleTemplateRoutes } from './routes/template.js';
 import { handlePublicBookingRoutes } from './routes/publicBooking.js';
+import { handlePublicCancelRescheduleRoutes } from './routes/publicCancelReschedule.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
 import { requireAuth, verifyAuth, logAuthAttempt } from './middleware/auth.js';
 
@@ -39,6 +39,15 @@ async function handleRequest(req, res) {
     const pathname = parsedUrl.pathname;
 
     // Public routes (no auth required)
+    if (
+      pathname.startsWith('/api/public/booking/') && 
+      (
+        pathname.includes('/details') ||
+        pathname.includes('/cancel')  ||
+        pathname.includes('/reschedule')
+      )
+    ) return await handlePublicCancelRescheduleRoutes(req, res);
+
     if (pathname === '/api/health')          return handleHealthCheck(req, res);
     if (pathname.startsWith('/api/public/')) return await handlePublicBookingRoutes(req, res);
     

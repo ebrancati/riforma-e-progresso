@@ -46,9 +46,44 @@ export interface ApiBooking {
   phone: string;
   role: string;
   notes: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  cancellationToken: string;
+  status: 'confirmed' | 'cancelled';
   createdAt: string;
   updatedAt: string;
+}
+
+// ========== CANCEL/RESCHEDULE INTERFACES ==========
+
+export interface BookingDetailsResponse {
+  booking: {
+    id: string;
+    selectedDate: string;
+    selectedTime: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    role: string;
+    notes: string;
+    status: string;
+    createdAt: string;
+  };
+  bookingLink: {
+    name: string;
+    duration: number;
+    urlSlug: string;
+  };
+}
+
+export interface CancelBookingRequest {
+  token: string;
+  reason?: string;
+}
+
+export interface RescheduleBookingRequest {
+  token: string;
+  newDate: string;
+  newTime: string;
 }
 
 // ========== TEMPLATE INTERFACES ==========
@@ -278,6 +313,56 @@ class ApiService {
     }>(`/api/public/booking/${slug}/book`, {
       method: 'POST',
       body: JSON.stringify(bookingData),
+    });
+  }
+
+  // ========== CANCEL/RESCHEDULE METHODS (NO AUTH, TOKEN REQUIRED) ==========
+
+  // Get booking details for cancel/reschedule
+  async getBookingDetailsForCancel(bookingId: string, token: string): Promise<BookingDetailsResponse> {
+    return this.request<BookingDetailsResponse>(`/api/public/booking/${bookingId}/details?token=${token}`);
+  }
+
+  // Cancel booking
+  async cancelBooking(bookingId: string, token: string, reason?: string): Promise<{
+    message: string;
+    booking: ApiBooking;
+  }> {
+    const requestData: CancelBookingRequest = { token };
+    if (reason) {
+      requestData.reason = reason;
+    }
+
+    return this.request<{
+      message: string;
+      booking: ApiBooking;
+    }>(`/api/public/booking/${bookingId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  // Reschedule booking
+  async rescheduleBooking(bookingId: string, token: string, newDate: string, newTime: string): Promise<{
+    message: string;
+    booking: ApiBooking;
+    oldDateTime: { date: string; time: string };
+    newDateTime: { date: string; time: string };
+  }> {
+    const requestData: RescheduleBookingRequest = {
+      token,
+      newDate,
+      newTime
+    };
+
+    return this.request<{
+      message: string;
+      booking: ApiBooking;
+      oldDateTime: { date: string; time: string };
+      newDateTime: { date: string; time: string };
+    }>(`/api/public/booking/${bookingId}/reschedule`, {
+      method: 'POST',
+      body: JSON.stringify(requestData),
     });
   }
 

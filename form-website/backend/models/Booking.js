@@ -1,14 +1,13 @@
 import { InputSanitizer } from '../utils/sanitizer.js';
 import { IdGenerator } from '../utils/idGenerator.js';
 import { getCollection } from '../utils/database.js';
-import { config } from '../config/config.js';
+import { randomUUID } from 'crypto';
 
 export class Booking {
   constructor(data) {
     // Validate and sanitize data before setting properties
     const sanitizedData = Booking.validateBookingData(data);
     
-    // Generate custom ID if not provided
     this.id = data.id || IdGenerator.generateBookingId();
     this.bookingLinkId = sanitizedData.bookingLinkId;
     this.selectedDate = sanitizedData.selectedDate;
@@ -19,7 +18,8 @@ export class Booking {
     this.phone = sanitizedData.phone;
     this.role = sanitizedData.role;
     this.notes = sanitizedData.notes || '';
-    this.status = data.status || 'pending'; // pending, confirmed, cancelled
+    this.cancellationToken = data.cancellationToken || randomUUID(); // Generate UUID for cancel/reschedule
+    this.status = data.status || 'confirmed';
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
   }
@@ -42,21 +42,15 @@ export class Booking {
   // Get booking by ID
   static async findById(id) {
     // Validate custom ID format
-    if (!InputSanitizer.isValidId(id)) {
-      throw new Error('Invalid ID format');
-    }
+    if (!InputSanitizer.isValidId(id)) throw new Error('Invalid ID format');
 
     // Ensure it's a booking ID
-    if (!IdGenerator.isBookingId(id)) {
-      throw new Error('Invalid booking ID');
-    }
+    if (!IdGenerator.isBookingId(id)) throw new Error('Invalid booking ID');
 
     const collection = this.getCollection();
     const booking = await collection.findOne({ id: id });
     
-    if (!booking) {
-      throw new Error('Booking not found');
-    }
+    if (!booking) throw new Error('Booking not found');
 
     return this.formatBooking(booking);
   }
@@ -135,9 +129,7 @@ export class Booking {
       this.selectedTime
     );
 
-    if (!isAvailable) {
-      throw new Error('This time slot is no longer available');
-    }
+    if (!isAvailable) throw new Error('This time slot is no longer available');
 
     // Create document with custom ID
     const bookingDoc = {
@@ -151,6 +143,7 @@ export class Booking {
       phone: this.phone,
       role: this.role,
       notes: this.notes,
+      cancellationToken: this.cancellationToken,
       status: this.status,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
@@ -167,9 +160,8 @@ export class Booking {
 
   // Update booking status
   static async updateStatus(id, newStatus) {
-    if (!['pending', 'confirmed', 'cancelled'].includes(newStatus)) {
-      throw new Error('Invalid status. Must be: pending, confirmed, or cancelled');
-    }
+    if (!['confirmed', 'cancelled'].includes(newStatus))
+      throw new Error('Invalid status. Must be: confirmed or cancelled');
 
     const collection = this.getCollection();
     
@@ -183,9 +175,32 @@ export class Booking {
       }
     );
 
-    if (result.matchedCount === 0) {
-      throw new Error('Booking not found');
-    }
+    if (result.matchedCount === 0) throw new Error('Booking not found');
+
+    const updatedBooking = await collection.findOne({ id: id });
+    return this.formatBooking(updatedBooking);
+  }
+
+  // Update booking date and time
+  static async updateBookingDateTime(id, newDate, newTime) {
+
+    if (!InputSanitizer.isValidId(id)) throw new Error('Invalid ID format');
+    if (!IdGenerator.isBookingId(id))  throw new Error('Invalid booking ID');
+
+    const collection = this.getCollection();
+    
+    const result = await collection.updateOne(
+      { id: id },
+      { 
+        $set: { 
+          selectedDate: newDate,
+          selectedTime: newTime,
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) throw new Error('Booking not found');
 
     const updatedBooking = await collection.findOne({ id: id });
     return this.formatBooking(updatedBooking);
@@ -193,23 +208,18 @@ export class Booking {
 
   // Delete booking by ID
   static async deleteById(id) {
+
     // Validate custom ID format
-    if (!InputSanitizer.isValidId(id)) {
-      throw new Error('Invalid ID format');
-    }
+    if (!InputSanitizer.isValidId(id)) throw new Error('Invalid ID format');
 
     // Ensure it's a booking ID
-    if (!IdGenerator.isBookingId(id)) {
-      throw new Error('Invalid booking ID');
-    }
+    if (!IdGenerator.isBookingId(id))  throw new Error('Invalid booking ID');
 
     const collection = this.getCollection();
     
     const result = await collection.deleteOne({ id: id });
     
-    if (result.deletedCount === 0) {
-      throw new Error('Booking not found');
-    }
+    if (result.deletedCount === 0) throw new Error('Booking not found');
 
     return { deletedId: id, deletedCount: result.deletedCount };
   }
@@ -227,6 +237,7 @@ export class Booking {
       phone: booking.phone,
       role: booking.role,
       notes: booking.notes,
+      cancellationToken: booking.cancellationToken,
       status: booking.status,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt
@@ -235,86 +246,83 @@ export class Booking {
 
   // Validate booking data
   static validateBookingData(data) {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== 'object')
       throw new Error('Booking data must be an object');
-    }
 
     const sanitized = {};
 
     // Validate booking link ID
-    if (!data.bookingLinkId || typeof data.bookingLinkId !== 'string') {
+    if (!data.bookingLinkId || typeof data.bookingLinkId !== 'string')
       throw new Error('Booking link ID is required');
-    }
-    if (!IdGenerator.isBookingLinkId(data.bookingLinkId)) {
+
+    if (!IdGenerator.isBookingLinkId(data.bookingLinkId))
       throw new Error('Invalid booking link ID format');
-    }
+
     sanitized.bookingLinkId = data.bookingLinkId;
 
     // Validate selected date (YYYY-MM-DD format)
-    if (!data.selectedDate || typeof data.selectedDate !== 'string') {
+    if (!data.selectedDate || typeof data.selectedDate !== 'string')
       throw new Error('Selected date is required');
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data.selectedDate)) {
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data.selectedDate))
       throw new Error('Invalid date format. Use YYYY-MM-DD');
-    }
+
     sanitized.selectedDate = data.selectedDate;
 
     // Validate selected time (HH:MM format)
-    if (!data.selectedTime || typeof data.selectedTime !== 'string') {
+    if (!data.selectedTime || typeof data.selectedTime !== 'string')
       throw new Error('Selected time is required');
-    }
-    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(data.selectedTime)) {
+
+    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(data.selectedTime))
       throw new Error('Invalid time format. Use HH:MM');
-    }
+
     sanitized.selectedTime = data.selectedTime;
 
     // Validate and sanitize personal data
-    if (!data.firstName || typeof data.firstName !== 'string') {
+    if (!data.firstName || typeof data.firstName !== 'string')
       throw new Error('First name is required');
-    }
+
     sanitized.firstName = InputSanitizer.sanitizeString(data.firstName.trim(), 50);
-    if (sanitized.firstName.length === 0) {
+    if (sanitized.firstName.length === 0)
       throw new Error('First name cannot be empty');
-    }
 
-    if (!data.lastName || typeof data.lastName !== 'string') {
+
+    if (!data.lastName || typeof data.lastName !== 'string')
       throw new Error('Last name is required');
-    }
-    sanitized.lastName = InputSanitizer.sanitizeString(data.lastName.trim(), 50);
-    if (sanitized.lastName.length === 0) {
-      throw new Error('Last name cannot be empty');
-    }
 
-    if (!data.email || typeof data.email !== 'string') {
+    sanitized.lastName = InputSanitizer.sanitizeString(data.lastName.trim(), 50);
+    if (sanitized.lastName.length === 0)
+      throw new Error('Last name cannot be empty');
+
+
+    if (!data.email || typeof data.email !== 'string')
       throw new Error('Email is required');
-    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
+    if (!emailRegex.test(data.email))
       throw new Error('Invalid email format');
-    }
+
     sanitized.email = data.email.trim().toLowerCase();
 
-    if (!data.phone || typeof data.phone !== 'string') {
+    if (!data.phone || typeof data.phone !== 'string')
       throw new Error('Phone number is required');
-    }
+
     const phoneRegex = /^[\d\s\+\-\(\)]{8,}$/;
-    if (!phoneRegex.test(data.phone)) {
+    if (!phoneRegex.test(data.phone))
       throw new Error('Invalid phone number format');
-    }
+
     sanitized.phone = InputSanitizer.sanitizeString(data.phone.trim(), 20);
 
-    if (!data.role || typeof data.role !== 'string') {
+    if (!data.role || typeof data.role !== 'string')
       throw new Error('Role is required');
-    }
+
     sanitized.role = InputSanitizer.sanitizeString(data.role.trim(), 100);
-    if (sanitized.role.length === 0) {
+    if (sanitized.role.length === 0)
       throw new Error('Role cannot be empty');
-    }
 
     // Optional notes
-    if (data.notes && typeof data.notes === 'string') {
+    if (data.notes && typeof data.notes === 'string')
       sanitized.notes = InputSanitizer.sanitizeString(data.notes.trim(), 500);
-    }
 
     return sanitized;
   }
