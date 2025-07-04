@@ -7,6 +7,7 @@ import { handleTemplateRoutes } from './routes/template.js';
 import { handlePublicBookingRoutes } from './routes/publicBooking.js';
 import { handlePublicCancelRescheduleRoutes } from './routes/publicCancelReschedule.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
+import { parseFormData } from './middleware/fileHandler.js';
 import { requireAuth, verifyAuth, logAuthAttempt } from './middleware/auth.js';
 
 // Health check endpoint
@@ -48,8 +49,19 @@ async function handleRequest(req, res) {
       )
     ) return await handlePublicCancelRescheduleRoutes(req, res);
 
-    if (pathname === '/api/health')          return handleHealthCheck(req, res);
-    if (pathname.startsWith('/api/public/')) return await handlePublicBookingRoutes(req, res);
+    if (pathname === '/api/health')
+      return handleHealthCheck(req, res);
+    
+    if (pathname.startsWith('/api/public/')) {
+      // Handle file upload for booking creation
+      if (pathname.match(/\/api\/public\/booking\/[^\/]+\/book$/) && req.method === 'POST') {
+        return applyMiddleware(req, res, [parseFormData], () => {
+          return handlePublicBookingRoutes(req, res);
+        });
+      }
+      
+      return await handlePublicBookingRoutes(req, res);
+    }
     
     // Auth verification endpoint
     if (pathname === '/api/auth/verify' && req.method === 'GET') {
@@ -125,7 +137,14 @@ const server = http.createServer((req, res) => {
   const globalMiddlewares = [
     setCorsHeaders,
     setJsonHeaders,
-    parseJsonBody
+    (req, res, next) => {
+    if (req.headers['content-type']?.includes('multipart/form-data')) {
+      req.body = {}; // Skip JSON parsing per multipart
+      next();
+    } else {
+      parseJsonBody(req, res, next);
+    }
+  }
   ];
 
   applyMiddleware(req, res, globalMiddlewares, handleRequest);

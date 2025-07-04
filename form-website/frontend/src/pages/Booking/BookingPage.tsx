@@ -357,49 +357,45 @@ const BookingPage: React.FC = () => {
         throw new Error('Missing booking slug');
       }
       
-      // Prepare booking data for API
-      const bookingData = {
-        selectedDate: formData.selectedDate,
-        selectedTime: formData.selectedTime,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        email: formData.email,
-        role: formData.role,
-        notes: formData.notes || ''
-      };
+      // Crea FormData
+      const formDataToSend = new FormData();
+      formDataToSend.append('selectedDate', formData.selectedDate);
+      formDataToSend.append('selectedTime', formData.selectedTime);
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('role', formData.role);
+      formDataToSend.append('notes', formData.notes || '');
       
-      // Submit booking
-      const response = await publicBookingApi.createBooking(slug, bookingData);
+      // Aggiungi CV
+      if (formData.cvFile) {
+        formDataToSend.append('cvFile', formData.cvFile);
+      }
       
+      // Invia al backend
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/public/booking/${slug}/book`, {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Errore durante l\'invio');
+      }
+
       setSuccessMessage(
         '🎉 Prenotazione confermata!\n\n' +
         `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
-        'Riceverai una conferma via email con tutti i dettagli.\n\n' +
-        'Grazie per aver scelto di candidarti!'
+        'CV ricevuto correttamente.\n\n' +
+        'Riceverai una conferma via email con tutti i dettagli.'
       );
       
       setIsSubmitting(false);
       
     } catch (error) {
       console.error('Failed to submit booking:', error);
-      
-      if (error instanceof ApiError) {
-        if (error.statusCode === 409) {
-          setError('Questo orario non è più disponibile. Scegli un altro slot.');
-        } else if (error.statusCode === 400) {
-          setError('Dati non validi: ' + error.message);
-        } else if (error.statusCode === 404) {
-          setError('Link di prenotazione non trovato o non più attivo.');
-        } else if (error.isNetworkError()) {
-          setError('Impossibile connettersi al server. Controlla la connessione.');
-        } else {
-          setError('Errore durante l\'invio della prenotazione: ' + error.message);
-        }
-      } else {
-        setError('Errore imprevisto durante l\'invio della prenotazione.');
-      }
-      
+      setError('Errore durante l\'invio: ' + (error as Error).message);
       setIsSubmitting(false);
     }
   };
