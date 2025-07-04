@@ -192,41 +192,6 @@ const PublicDirectoryPage: React.FC = () => {
           </div>
         )}
 
-        {/* Info Section */}
-        <div className="info-section">
-          <h3>💡 Come funziona</h3>
-          <div className="steps-grid">
-            <div className="step-item">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h4>Scegli la posizione</h4>
-                <p>Clicca su "Prenota Colloquio" per la posizione che ti interessa</p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h4>Seleziona data e ora</h4>
-                <p>Scegli il giorno e l'orario più comodi per te</p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h4>Compila i dati</h4>
-                <p>Inserisci le tue informazioni e carica il CV</p>
-              </div>
-            </div>
-            <div className="step-item">
-              <div className="step-number">4</div>
-              <div className="step-content">
-                <h4>Ricevi conferma</h4>
-                <p>Ti invieremo tutti i dettagli via email</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Footer */}
         <div className="directory-footer">
           <p>
