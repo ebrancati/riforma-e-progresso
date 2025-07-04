@@ -59,6 +59,111 @@ export class BookingLink {
     return this.formatBookingLink(bookingLink);
   }
 
+  // Update booking link by ID
+  static async updateById(id, updateData) {
+    // Validate custom ID format
+    if (!InputSanitizer.isValidId(id)) {
+      throw new Error('Invalid ID format');
+    }
+
+    // Ensure it's a booking link ID
+    if (!IdGenerator.isBookingLinkId(id)) {
+      throw new Error('Invalid booking link ID');
+    }
+
+    const collection = this.getCollection();
+    
+    // Check if booking link exists
+    const existingBookingLink = await collection.findOne({ id: id });
+    if (!existingBookingLink) {
+      throw new Error('Booking link not found');
+    }
+
+    // If name is being updated, check for duplicates (excluding current booking link)
+    if (updateData.name) {
+      const duplicateName = await collection.findOne({ 
+        name: updateData.name.trim(),
+        id: { $ne: id }
+      });
+      if (duplicateName) {
+        throw new Error('A booking link with this name already exists');
+      }
+    }
+
+    // Validate and sanitize the update data
+    const sanitizedData = this.validateBookingLinkUpdateData(updateData);
+    
+    // Add updated timestamp
+    sanitizedData.updatedAt = new Date();
+
+    // Perform update
+    const result = await collection.updateOne(
+      { id: id },
+      { $set: sanitizedData }
+    );
+
+    if (result.matchedCount === 0) {
+      throw new Error('Booking link not found');
+    }
+
+    // Return updated booking link
+    const updatedBookingLink = await collection.findOne({ id: id });
+    return this.formatBookingLink(updatedBookingLink);
+  }
+
+  // Validate booking link update data (only for allowed fields)
+  static validateBookingLinkUpdateData(data) {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Update data must be an object');
+    }
+
+    const sanitized = {};
+
+    // Validate name if provided
+    if (data.name !== undefined) {
+      if (typeof data.name !== 'string') {
+        throw new Error('Booking link name must be a string');
+      }
+      sanitized.name = InputSanitizer.sanitizeString(data.name.trim(), 100);
+      if (sanitized.name.length === 0) {
+        throw new Error('Booking link name cannot be empty');
+      }
+    }
+
+    // Validate template ID if provided
+    if (data.templateId !== undefined) {
+      if (typeof data.templateId !== 'string') {
+        throw new Error('Template ID must be a string');
+      }
+      if (!IdGenerator.isTemplateId(data.templateId)) {
+        throw new Error('Invalid template ID format');
+      }
+      sanitized.templateId = data.templateId;
+    }
+
+    // Validate advance booking settings if provided
+    if (data.requireAdvanceBooking !== undefined) {
+      sanitized.requireAdvanceBooking = Boolean(data.requireAdvanceBooking);
+    }
+
+    if (data.advanceHours !== undefined) {
+      if (typeof data.advanceHours !== 'number') {
+        throw new Error('Advance hours must be a number');
+      }
+      if (![0, 6, 12, 24, 48].includes(data.advanceHours)) {
+        throw new Error('Advance hours must be 0, 6, 12, 24, or 48');
+      }
+      sanitized.advanceHours = data.advanceHours;
+    }
+
+    // Validate isActive if provided
+    if (data.isActive !== undefined) {
+      sanitized.isActive = Boolean(data.isActive);
+    }
+
+    return sanitized;
+  }
+
   // Delete booking link by ID
   static async deleteById(id) {
     // Validate custom ID format

@@ -239,14 +239,13 @@ const BookingLinksListPage: React.FC = () => {
 
                   {/* Card Actions */}
                   <div className="card-actions">
-                    <button
+                    <Link
+                      to={`/admin/booking-links/${link.id}/edit`}
                       className="btn btn-secondary"
-                      onClick={() => console.log('Modifica not implemented yet')}
-                      disabled={true} // TODO: Enable when edit page is ready
-                      title="Funzionalità disponibile prossimamente"
+                      title="Modifica questo booking link"
                     >
                       Modifica
-                    </button>
+                    </Link>
                     <button
                       className="btn btn-danger"
                       onClick={() => handleDelete(link.id, link.name)}

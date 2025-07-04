@@ -6,6 +6,7 @@ import LoginPage             from './pages/LoginPage';
 import ScheduleTemplatePage  from './pages/Templates/ScheduleTemplatePage';
 import BookingSetupPage      from './pages/BookingSetup/BookingSetupPage';
 import BookingLinksListPage  from './pages/BookingLinks/BookingLinksListPage';
+import EditBookingLinkPage from './pages/BookingLinks/EditBookingLinkPage';
 import PublicDirectoryPage   from './pages/PublicDirectory/PublicDirectoryPage';
 import BookingPage           from './pages/Booking/BookingPage';
 import CancelBookingPage     from './pages/CancelBooking/CancelBookingPage';
@@ -41,6 +42,11 @@ const App: React.FC = () => {
             <Route path="/admin/booking-links" element={
               <ProtectedRoute>
                 <BookingLinksListPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/booking-links/:id/edit" element={
+              <ProtectedRoute>
+                <EditBookingLinkPage />
               </ProtectedRoute>
             } />
             

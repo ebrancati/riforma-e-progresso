@@ -56,4 +56,17 @@ export interface CreateBookingLinkResponse {
   url: string;
 }
 
+export interface UpdateBookingLinkRequest {
+  name?: string;
+  templateId?: string;
+  requireAdvanceBooking?: boolean;
+  advanceHours?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateBookingLinkResponse {
+  message: string;
+  bookingLink: ApiBookingLink;
+}
+
 export type DeleteBookingLinkResponse = ApiDeleteResponse;

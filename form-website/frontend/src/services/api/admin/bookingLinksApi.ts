@@ -3,6 +3,8 @@ import type {
   ApiBookingLink,
   CreateBookingLinkRequest,
   CreateBookingLinkResponse,
+  UpdateBookingLinkRequest,
+  UpdateBookingLinkResponse,
   DeleteBookingLinkResponse
 } from './types';
 
@@ -22,6 +24,14 @@ export class BookingLinksApiService extends BaseApiService {
   async createBookingLink(bookingLink: CreateBookingLinkRequest): Promise<CreateBookingLinkResponse> {
     return this.request<CreateBookingLinkResponse>('/api/booking-links', {
       method: 'POST',
+      body: JSON.stringify(bookingLink),
+    }, true);
+  }
+
+  // Update existing booking link
+  async updateBookingLink(id: string, bookingLink: UpdateBookingLinkRequest): Promise<UpdateBookingLinkResponse> {
+    return this.request<UpdateBookingLinkResponse>(`/api/booking-links/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(bookingLink),
     }, true);
   }

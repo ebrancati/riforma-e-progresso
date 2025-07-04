@@ -19,6 +19,97 @@ export function validateBookingLinkData(req, res, next) {
   }
 }
 
+// Middleware to validate booking link update data (only modifiable fields)
+export function validateBookingLinkUpdateData(req, res, next) {
+  try {
+    const updateData = req.body;
+    
+    if (!updateData || typeof updateData !== 'object') {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: 'Update data must be an object'
+      });
+    }
+
+    // Remove non-modifiable fields if present
+    delete updateData.urlSlug;
+    delete updateData.duration;
+    delete updateData.id;
+    delete updateData.created;
+    delete updateData.updatedAt;
+
+    // Define allowed fields for update
+    const allowedFields = ['name', 'templateId', 'requireAdvanceBooking', 'advanceHours', 'isActive'];
+    const sanitizedData = {};
+
+    // Validate only the fields that are present
+    Object.keys(updateData).forEach(field => {
+      if (allowedFields.includes(field) && updateData[field] !== undefined) {
+        sanitizedData[field] = updateData[field];
+      }
+    });
+
+    // Validate name if provided
+    if (sanitizedData.name !== undefined) {
+      if (typeof sanitizedData.name !== 'string') {
+        throw new Error('Booking link name must be a string');
+      }
+      const trimmedName = sanitizedData.name.trim();
+      if (trimmedName.length === 0) {
+        throw new Error('Booking link name cannot be empty');
+      }
+      if (trimmedName.length > 100) {
+        throw new Error('Booking link name cannot exceed 100 characters');
+      }
+      sanitizedData.name = trimmedName;
+    }
+
+    // Validate templateId if provided
+    if (sanitizedData.templateId !== undefined) {
+      if (typeof sanitizedData.templateId !== 'string') {
+        throw new Error('Template ID must be a string');
+      }
+      // Additional template ID format validation could go here
+    }
+
+    // Validate advance booking settings if provided
+    if (sanitizedData.requireAdvanceBooking !== undefined) {
+      sanitizedData.requireAdvanceBooking = Boolean(sanitizedData.requireAdvanceBooking);
+    }
+
+    if (sanitizedData.advanceHours !== undefined) {
+      const hours = parseInt(sanitizedData.advanceHours);
+      if (isNaN(hours) || ![6, 12, 24, 48].includes(hours)) {
+        throw new Error('Advance hours must be 6, 12, 24, or 48');
+      }
+      sanitizedData.advanceHours = hours;
+    }
+
+    // Validate isActive if provided
+    if (sanitizedData.isActive !== undefined) {
+      sanitizedData.isActive = Boolean(sanitizedData.isActive);
+    }
+
+    // Check that we have at least one field to update
+    if (Object.keys(sanitizedData).length === 0) {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: 'At least one valid field must be provided for update'
+      });
+    }
+
+    // Replace request body with sanitized data
+    req.body = sanitizedData;
+    
+    next();
+  } catch (error) {
+    return res.status(400).json({
+      error: 'Validation error',
+      details: error.message
+    });
+  }
+}
+
 // Middleware to validate template data
 export function validateTemplateData(req, res, next) {
   try {

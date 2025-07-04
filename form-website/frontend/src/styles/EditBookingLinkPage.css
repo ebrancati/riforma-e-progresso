@@ -1,0 +1,326 @@
+.modifiable-fields,
+.readonly-fields {
+  background: var(--white);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-3xl);
+  margin-bottom: var(--spacing-3xl);
+  transition: all var(--transition-normal);
+}
+
+.modifiable-fields {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+}
+
+.readonly-fields {
+  border-color: var(--gray-300);
+  background: var(--gray-50);
+}
+
+.modifiable-fields h3,
+.readonly-fields h3 {
+  color: var(--gray-700);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-xl);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.modifiable-fields h3::before {
+  content: '✏️';
+  font-size: var(--font-size-xl);
+}
+
+.readonly-fields h3::before {
+  content: '🔒';
+  font-size: var(--font-size-xl);
+}
+
+/* Disabled Input Styles */
+.form-input.disabled,
+.url-input.disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  border-color: var(--gray-300);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.url-preview.disabled {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.url-preview.disabled .url-base {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+/* Field Help Text */
+.field-help {
+  font-size: var(--font-size-sm);
+  color: var(--gray-500);
+  margin-top: var(--spacing-sm);
+  font-style: italic;
+  line-height: var(--line-height-relaxed);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--info);
+}
+
+/* Template Selection Enhancement */
+.template-selection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.manage-templates-link {
+  color: var(--primary-orange);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 2px solid var(--primary-orange);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.manage-templates-link:hover {
+  background: var(--primary-orange);
+  color: var(--white);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Enhanced Checkbox Styling */
+.checkbox-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-normal);
+  border: 1px solid transparent;
+}
+
+.checkbox-label:hover {
+  background-color: var(--gray-50);
+  border-color: var(--gray-200);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-orange);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.checkbox-text {
+  line-height: var(--line-height-normal);
+  user-select: none;
+}
+
+/* Advance Hours Selection */
+.advance-hours-selection {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding-left: var(--spacing-3xl);
+  animation: slideIn var(--transition-normal);
+}
+
+.form-select.small {
+  max-width: 120px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+
+.hours-label {
+  color: var(--gray-500);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-xl);
+  justify-content: center;
+  margin-top: var(--spacing-4xl);
+  padding-top: var(--spacing-3xl);
+  border-top: 2px solid var(--gray-200);
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  min-width: 180px;
+  padding: var(--spacing-lg) var(--spacing-2xl);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Info Section Enhancement */
+.info-section {
+  background: var(--gradient-light);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3xl);
+  margin: var(--spacing-3xl);
+  margin-top: 0;
+}
+
+.info-section h3 {
+  color: var(--gray-700);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.info-section h3:first-of-type::before {
+  content: '✅';
+}
+
+.info-section h3:last-of-type::before {
+  content: '🚫';
+}
+
+.info-section ul {
+  padding-left: var(--spacing-xl);
+  line-height: var(--line-height-loose);
+  color: var(--gray-600);
+  margin-bottom: var(--spacing-xl);
+}
+
+.info-section li {
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+}
+
+.info-section li::marker {
+  color: var(--primary-orange);
+  font-weight: var(--font-weight-bold);
+}
+
+.info-section strong {
+  color: var(--gray-700);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Error State Styling */
+.error-state {
+  text-align: center;
+  padding: var(--spacing-5xl) var(--spacing-xl);
+  color: var(--gray-500);
+}
+
+.error-state h3 {
+  margin-bottom: var(--spacing-lg);
+  color: var(--gray-700);
+  font-size: var(--font-size-xl);
+}
+
+.error-state p {
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Loading Enhancements */
+.loading-indicator {
+  text-align: center;
+  padding: var(--spacing-5xl);
+  background-color: var(--gray-100);
+  margin: var(--spacing-xl) 0;
+  border-radius: var(--radius-md);
+  color: var(--gray-600);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modifiable-fields,
+  .readonly-fields {
+    padding: var(--spacing-xl);
+  }
+  
+  .template-selection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .manage-templates-link {
+    text-align: center;
+    align-self: stretch;
+  }
+  
+  .advance-hours-selection {
+    padding-left: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+  
+  .info-section {
+    margin: var(--spacing-xl);
+    margin-top: 0;
+    padding: var(--spacing-xl);
+  }
+  
+  .info-section ul {
+    padding-left: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .modifiable-fields h3,
+  .readonly-fields h3 {
+    font-size: var(--font-size-lg);
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .checkbox-label {
+    font-size: var(--font-size-sm);
+  }
+  
+  .advance-hours-selection {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .info-section h3 {
+    font-size: var(--font-size-base);
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -1,6 +1,6 @@
 import url from 'url';
 import { BookingLinkController } from '../controllers/bookingLinkController.js';
-import { validateBookingLinkData } from '../middleware/validation.js';
+import { validateBookingLinkData, validateBookingLinkUpdateData } from '../middleware/validation.js';
 
 // Router to manage booking link routes
 export async function handleBookingLinkRoutes(req, res) {
@@ -34,6 +34,12 @@ export async function handleBookingLinkRoutes(req, res) {
       switch (method) {
         case 'GET':
           return await BookingLinkController.getBookingLinkById(req, res);
+          
+        case 'PUT':
+          // Apply middleware validation for update
+          return await applyMiddleware(req, res, [validateBookingLinkUpdateData], () => {
+            return BookingLinkController.updateBookingLink(req, res);
+          });
           
         case 'DELETE':
           return await BookingLinkController.deleteBookingLink(req, res);
