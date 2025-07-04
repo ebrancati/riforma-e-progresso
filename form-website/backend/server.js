@@ -24,7 +24,7 @@ async function handleRequest(req, res) {
     const pathname = parsedUrl.pathname;
 
     if (pathname === '/api/health')                 return handleHealthCheck(req, res);
-    if (pathname.startsWith('/api/public/booking')) return await handlePublicBookingRoutes(req, res);
+    if (pathname.startsWith('/api/public')) return await handlePublicBookingRoutes(req, res);
     if (pathname.startsWith('/api/booking-links'))  return await handleBookingLinkRoutes(req, res);
     if (pathname.startsWith('/api/templates'))      return await handleTemplateRoutes(req, res);
 
