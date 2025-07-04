@@ -1,3 +1,4 @@
+// backend/server.js
 import http from 'http';
 import url from 'url';
 import { config } from './config/config.js';
@@ -6,6 +7,7 @@ import { handleBookingLinkRoutes } from './routes/bookingLink.js';
 import { handleTemplateRoutes } from './routes/template.js';
 import { handlePublicBookingRoutes } from './routes/publicBooking.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
+import { requireAuth, verifyAuth, logAuthAttempt } from './middleware/auth.js';
 
 // Health check endpoint
 function handleHealthCheck(req, res) {
@@ -17,16 +19,41 @@ function handleHealthCheck(req, res) {
   });
 }
 
+// Apply auth middleware to request
+function applyAuthMiddleware(req, res, handler) {
+  return new Promise((resolve, reject) => {
+    requireAuth(req, res, (error) => {
+      if (error) {
+        reject(error);
+      } else {
+        handler(req, res).then(resolve).catch(reject);
+      }
+    });
+  });
+}
+
 // Main request handler
 async function handleRequest(req, res) {
   try {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    if (pathname === '/api/health')                 return handleHealthCheck(req, res);
-    if (pathname.startsWith('/api/public')) return await handlePublicBookingRoutes(req, res);
-    if (pathname.startsWith('/api/booking-links'))  return await handleBookingLinkRoutes(req, res);
-    if (pathname.startsWith('/api/templates'))      return await handleTemplateRoutes(req, res);
+    // Public routes (no auth required)
+    if (pathname === '/api/health')          return handleHealthCheck(req, res);
+    if (pathname.startsWith('/api/public/')) return await handlePublicBookingRoutes(req, res);
+    
+    // Auth verification endpoint
+    if (pathname === '/api/auth/verify' && req.method === 'GET') {
+      logAuthAttempt(req, res, () => {});
+      return verifyAuth(req, res);
+    }
+    
+    // Protected admin routes (require auth)
+    if (pathname.startsWith('/api/booking-links'))
+      return await applyAuthMiddleware(req, res, handleBookingLinkRoutes);
+    
+    if (pathname.startsWith('/api/templates'))
+      return await applyAuthMiddleware(req, res, handleTemplateRoutes);
 
     // Route not found
     res.status(404).json({
@@ -99,13 +126,20 @@ async function startServer() {
   try {
     await connectToDatabase();
     
+    // Log admin credentials (remove in production)
+    console.log('\n🔐 ADMIN CREDENTIALS:');
+    console.log(`Username: ${process.env.ADMIN_USERNAME || 'admin'}`);
+    console.log(`Password: ${process.env.ADMIN_PASSWORD || 'password123'}`);
+    console.log('⚠️  Change these in production via environment variables!\n');
+    
     // Start HTTP server
     server.listen(config.port, () => {
       console.log(`Server running on port ${config.port}`);
       console.log(`Environment: ${config.nodeEnv}`);
       console.log('Available endpoints:');
-      console.log('  - Admin API: /api/templates, /api/booking-links');
-      console.log('  - Public API: /api/public/booking/:slug/*');
+      console.log('  - Public API: /api/public/* (no auth)');
+      console.log('  - Admin API: /api/templates, /api/booking-links (requires auth)');
+      console.log('  - Auth: /api/auth/verify');
       console.log('  - Health: /api/health');
     });
 
@@ -115,7 +149,7 @@ async function startServer() {
   }
 }
 
-// Gestione graceful shutdown
+// Graceful shutdown handling
 process.on('SIGINT', () => {
   console.log('\nSIGINT received, server shutdown...');
   server.close(() => {

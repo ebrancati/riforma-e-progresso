@@ -120,10 +120,19 @@ class ApiService {
     this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   }
 
-  // Helper method for API calls with proper error handling
+  // Get auth headers from global function set by AuthContext
+  private getAuthHeaders(): { Authorization?: string } {
+    if (typeof window !== 'undefined' && (window as any).getAuthHeaders) {
+      return (window as any).getAuthHeaders();
+    }
+    return {};
+  }
+
+  // Helper method for API calls with proper error handling and auth
   private async request<T>(
     endpoint: string, 
-    options: RequestInit = {}
+    options: RequestInit = {},
+    requireAuth: boolean = false
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
@@ -131,11 +140,20 @@ class ApiService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
     
+    // Prepare headers
+    let headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+
+    // Add auth headers for protected endpoints
+    if (requireAuth) {
+      const authHeaders = this.getAuthHeaders();
+      headers = { ...headers, ...authHeaders };
+    }
+    
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
       signal: controller.signal, // Add abort signal
     };
@@ -182,7 +200,7 @@ class ApiService {
     return this.isOffline;
   }
 
-  // ========== PUBLIC BOOKING METHODS ==========
+  // ========== PUBLIC BOOKING METHODS (NO AUTH) ==========
 
   // Get all active booking links for public directory
   async getActiveBookingLinks(): Promise<{
@@ -263,16 +281,16 @@ class ApiService {
     });
   }
 
-  // ========== TEMPLATE METHODS ==========
+  // ========== PROTECTED ADMIN METHODS (REQUIRE AUTH) ==========
 
   // Get all templates
   async getTemplates(): Promise<ApiTemplate[]> {
-    return this.request<ApiTemplate[]>('/api/templates');
+    return this.request<ApiTemplate[]>('/api/templates', {}, true);
   }
 
   // Get template by ID
   async getTemplate(id: string): Promise<ApiTemplate> {
-    return this.request<ApiTemplate>(`/api/templates/${id}`);
+    return this.request<ApiTemplate>(`/api/templates/${id}`, {}, true);
   }
 
   // Create new template
@@ -280,7 +298,7 @@ class ApiService {
     return this.request<{ message: string; template: ApiTemplate }>('/api/templates', {
       method: 'POST',
       body: JSON.stringify(template),
-    });
+    }, true);
   }
 
   // Update existing template
@@ -288,26 +306,24 @@ class ApiService {
     return this.request<{ message: string; template: ApiTemplate }>(`/api/templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(template),
-    });
+    }, true);
   }
 
   // Delete template
   async deleteTemplate(id: string): Promise<{ message: string; deletedId: string }> {
     return this.request<{ message: string; deletedId: string }>(`/api/templates/${id}`, {
       method: 'DELETE',
-    });
+    }, true);
   }
-
-  // ========== BOOKING LINK METHODS ==========
 
   // Get all booking links
   async getBookingLinks(): Promise<ApiBookingLink[]> {
-    return this.request<ApiBookingLink[]>('/api/booking-links');
+    return this.request<ApiBookingLink[]>('/api/booking-links', {}, true);
   }
 
   // Get booking link by ID  
   async getBookingLink(id: string): Promise<ApiBookingLink> {
-    return this.request<ApiBookingLink>(`/api/booking-links/${id}`);
+    return this.request<ApiBookingLink>(`/api/booking-links/${id}`, {}, true);
   }
 
   // Create new booking link
@@ -323,13 +339,13 @@ class ApiService {
     }>('/api/booking-links', {
       method: 'POST',
       body: JSON.stringify(bookingLink),
-    });
+    }, true);
   }
 
   async deleteBookingLink(id: string): Promise<{ message: string; deletedId: string }> {
     return this.request<{ message: string; deletedId: string }>(`/api/booking-links/${id}`, {
       method: 'DELETE',
-    });
+    }, true);
   }
 
   // ========== HEALTH CHECK ==========
@@ -369,6 +385,10 @@ export class ApiError extends Error {
 
   isClientError(): boolean {
     return this.statusCode >= 400 && this.statusCode < 500;
+  }
+
+  isAuthError(): boolean {
+    return this.statusCode === 401 || this.statusCode === 403;
   }
 }
 
