@@ -400,16 +400,6 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  // Get step title
-  const getStepTitle = (): string => {
-    switch (currentStep) {
-      case 1: return 'Seleziona una data';
-      case 2: return 'Scegli un orario';
-      case 3: return 'Completa la prenotazione';
-      default: return '';
-    }
-  };
-
   // Get step subtitle
   const getStepSubtitle = (): string => {
     switch (currentStep) {
