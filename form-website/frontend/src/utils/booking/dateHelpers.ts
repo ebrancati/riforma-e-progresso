@@ -2,14 +2,20 @@
  * Format date to YYYY-MM-DD string
  */
 export const formatDateToString = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  // Use local timezone instead of UTC to avoid date shifting
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**
  * Parse date string (YYYY-MM-DD) to Date object
  */
 export const parseDateString = (dateString: string): Date => {
-  return new Date(dateString + 'T00:00:00');
+  // Create date at midnight in local timezone instead of UTC
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
 };
 
 /**
@@ -45,16 +51,20 @@ export const getDayNames = (): string[] => {
  */
 export const isToday = (date: Date): boolean => {
   const today = new Date();
-  return date.toDateString() === today.toDateString();
+  return date.getFullYear() === today.getFullYear() &&
+         date.getMonth() === today.getMonth() &&
+         date.getDate() === today.getDate();
 };
 
 /**
- * Check if date is in the past
+ * Check if date is in the past 
  */
 export const isPastDate = (date: Date): boolean => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date < today;
+  // Set today to midnight for accurate comparison
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const compareDateMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return compareDateMidnight < todayMidnight;
 };
 
 /**
@@ -91,18 +101,24 @@ export const generateCalendarDates = (year: number, month: number): Date[] => {
   
   // Add empty cells for days before month starts
   for (let i = 0; i < firstDayOfWeek; i++) {
-    dates.push(new Date(year, month, -firstDayOfWeek + i + 1));
+    // Create dates in local timezone to avoid shifting
+    const prevMonthDay = new Date(year, month, -firstDayOfWeek + i + 1);
+    dates.push(prevMonthDay);
   }
   
   // Add days of current month
   for (let day = 1; day <= daysInMonth; day++) {
-    dates.push(new Date(year, month, day));
+    // Create dates in local timezone to avoid shifting
+    const currentDate = new Date(year, month, day);
+    dates.push(currentDate);
   }
   
   // Add days from next month to complete the grid (6 weeks = 42 days)
   const remainingCells = 42 - dates.length;
   for (let i = 1; i <= remainingCells; i++) {
-    dates.push(new Date(year, month + 1, i));
+    // Create dates in local timezone to avoid shifting
+    const nextMonthDay = new Date(year, month + 1, i);
+    dates.push(nextMonthDay);
   }
   
   return dates;
@@ -159,11 +175,12 @@ export const isBusinessHours = (timeString: string): boolean => {
 };
 
 /**
- * Format date for display (e.g., "Venerdì 11 Luglio 2025")
+ * Format date for display (e.g., "Venerdi' 11 Luglio 2025")
  */
 export const formatDateForDisplay = (date: Date): string => {
   const dayNames = getDayNames();
-  const dayName = dayNames[date.getDay()];
+  // Use getDay() directly on the local date object (0=Sunday, 1=Monday, etc.)
+  const dayName = dayNames[date.getDay() === 0 ? 6 : date.getDay() - 1]; // Convert Sunday=0 to index 6, Monday=1 to index 0
   const day = date.getDate();
   const monthName = getMonthName(date.getMonth());
   const year = date.getFullYear();
@@ -198,8 +215,17 @@ export const meetsAdvanceNoticeRequirement = (
 ): boolean => {
   const now = new Date();
   const { hours, minutes } = parseTime(bookingTime);
-  const bookingDateTime = new Date(bookingDate);
-  bookingDateTime.setHours(hours, minutes, 0, 0);
+  
+  // Create booking datetime in local timezone
+  const bookingDateTime = new Date(
+    bookingDate.getFullYear(),
+    bookingDate.getMonth(),
+    bookingDate.getDate(),
+    hours,
+    minutes,
+    0,
+    0
+  );
   
   const timeDifference = bookingDateTime.getTime() - now.getTime();
   const hoursUntilBooking = timeDifference / (1000 * 60 * 60);
