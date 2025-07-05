@@ -276,7 +276,7 @@ export const useScheduleForm = () => {
                                template.bookingCutoffDate;
     
     setAdvancedSettings({
-      enableAdvanced: hasAdvancedSettings,
+      enableAdvanced: !!hasAdvancedSettings,
       blackoutDays: template.blackoutDays || [],
       bookingCutoffDate: template.bookingCutoffDate || null
     });
