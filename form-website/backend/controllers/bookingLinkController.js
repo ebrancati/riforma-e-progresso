@@ -101,31 +101,6 @@ export class BookingLinkController {
         }
       }
 
-      // Validate advance booking settings consistency
-      if (sanitizedData.requireAdvanceBooking !== undefined || sanitizedData.advanceHours !== undefined) {
-        // Get current booking link to check existing values
-        const currentBookingLink = await BookingLink.findById(id);
-        
-        const finalRequireAdvance = sanitizedData.requireAdvanceBooking !== undefined 
-          ? sanitizedData.requireAdvanceBooking 
-          : currentBookingLink.requireAdvanceBooking;
-        
-        const finalAdvanceHours = sanitizedData.advanceHours !== undefined 
-          ? sanitizedData.advanceHours 
-          : currentBookingLink.advanceHours;
-
-        if (finalRequireAdvance && ![6, 12, 24, 48].includes(finalAdvanceHours)) {
-          return res.status(400).json({
-            error: 'Invalid advance hours',
-            details: 'Advance hours must be 6, 12, 24, or 48 when advance booking is required'
-          });
-        }
-
-        if (!finalRequireAdvance) {
-          sanitizedData.advanceHours = 0;
-        }
-      }
-
       // Perform the update
       const updatedBookingLink = await BookingLink.updateById(id, sanitizedData);
 

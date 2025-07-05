@@ -42,9 +42,9 @@ export function validateBookingLinkUpdateData(req, res, next) {
     const allowedFields = ['name', 'templateId', 'requireAdvanceBooking', 'advanceHours', 'isActive'];
     const sanitizedData = {};
 
-    // Validate only the fields that are present
-    Object.keys(updateData).forEach(field => {
-      if (allowedFields.includes(field) && updateData[field] !== undefined) {
+    // Only include allowed fields
+    allowedFields.forEach(field => {
+      if (updateData[field] !== undefined) {
         sanitizedData[field] = updateData[field];
       }
     });
@@ -69,20 +69,33 @@ export function validateBookingLinkUpdateData(req, res, next) {
       if (typeof sanitizedData.templateId !== 'string') {
         throw new Error('Template ID must be a string');
       }
-      // Additional template ID format validation could go here
     }
 
-    // Validate advance booking settings if provided
+    // Validate advance booking settings
     if (sanitizedData.requireAdvanceBooking !== undefined) {
       sanitizedData.requireAdvanceBooking = Boolean(sanitizedData.requireAdvanceBooking);
     }
 
     if (sanitizedData.advanceHours !== undefined) {
       const hours = parseInt(sanitizedData.advanceHours);
-      if (isNaN(hours) || ![6, 12, 24, 48].includes(hours)) {
-        throw new Error('Advance hours must be 6, 12, 24, or 48');
+      if (isNaN(hours) || ![0, 6, 12, 24, 48].includes(hours)) {
+        throw new Error('Advance hours must be 0, 6, 12, 24, or 48');
       }
       sanitizedData.advanceHours = hours;
+    }
+
+    // Handle advance booking logic correctly
+    if (sanitizedData.requireAdvanceBooking === false) {
+      // When disabling advance booking, set hours to 0
+      sanitizedData.advanceHours = 0;
+    } else if (sanitizedData.requireAdvanceBooking === true && sanitizedData.advanceHours === undefined) {
+      // When enabling advance booking without specifying hours, default to 24
+      sanitizedData.advanceHours = 24;
+    }
+
+    // Final validation: if advance booking is required, hours must be valid
+    if (sanitizedData.requireAdvanceBooking === true && ![6, 12, 24, 48].includes(sanitizedData.advanceHours)) {
+      throw new Error('Advance hours must be 6, 12, 24, or 48 when advance booking is required');
     }
 
     // Validate isActive if provided
@@ -90,11 +103,11 @@ export function validateBookingLinkUpdateData(req, res, next) {
       sanitizedData.isActive = Boolean(sanitizedData.isActive);
     }
 
-    // Check that we have at least one field to update
+    // Check that we have something to update
     if (Object.keys(sanitizedData).length === 0) {
       return res.status(400).json({
-        error: 'Validation error',
-        details: 'At least one valid field must be provided for update'
+        error: 'No valid fields to update',
+        details: 'Please provide at least one field to update (name, templateId, requireAdvanceBooking, advanceHours, isActive)'
       });
     }
 

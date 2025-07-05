@@ -103,7 +103,19 @@ const EditBookingLinkPage: React.FC = () => {
 
   // Handle form field changes
   const handleInputChange = (field: string, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      if (field === 'requireAdvanceBooking') {
+        if (value === true && prev.advanceHours === 0) {
+          newData.advanceHours = 6;
+        } else if (value === false) {
+          newData.advanceHours = 0;
+        }
+      }
+      
+      return newData;
+    });
   };
 
   // Validate form
