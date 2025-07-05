@@ -183,7 +183,7 @@ export const useScheduleForm = () => {
     setAdvancedSettings(prev => ({ ...prev, ...settings }));
   };
 
-   const addBlackoutDay = (date: string) => {
+  const addBlackoutDay = (date: string) => {
     // Basic format validation
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return { success: false, error: 'Formato data non valido. Usa YYYY-MM-DD.' };

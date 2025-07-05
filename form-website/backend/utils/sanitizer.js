@@ -133,27 +133,42 @@ export class InputSanitizer {
     const validatedDays = [];
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     
-    for (const day of blackoutDays) {
-      if (typeof day !== 'string') {
+    for (const dayString of blackoutDays) {
+      if (typeof dayString !== 'string') {
         throw new Error('Each blackout day must be a string');
       }
       
-      const trimmedDay = day.trim();
+      const trimmedDay = dayString.trim();
       
       if (!dateRegex.test(trimmedDay)) {
         throw new Error(`Invalid date format: ${trimmedDay}. Use YYYY-MM-DD format`);
       }
       
       // Validate that it's a real date
-      const date = new Date(trimmedDay + 'T00:00:00');
-      if (isNaN(date.getTime())) {
+      const testDate = new Date(trimmedDay + 'T12:00:00'); // Use noon to avoid timezone issues
+      if (isNaN(testDate.getTime())) {
         throw new Error(`Invalid date: ${trimmedDay}`);
       }
       
-      // Check if date string matches what we parsed (catches edge cases like 2025-02-30)
-      const formattedDate = date.toISOString().split('T')[0];
-      if (formattedDate !== trimmedDay) {
-        throw new Error(`Invalid date: ${trimmedDay}`);
+      // Validate components individually
+      const [year, month, dayNumber] = trimmedDay.split('-').map(Number);
+      
+      if (year < 2024 || year > 2035) {
+        throw new Error(`Year must be between 2024 and 2035: ${year}`);
+      }
+      
+      if (month < 1 || month > 12) {
+        throw new Error(`Invalid month: ${month}`);
+      }
+      
+      if (dayNumber < 1 || dayNumber > 31) {
+        throw new Error(`Invalid day: ${dayNumber}`);
+      }
+      
+      // Check for valid day in month
+      const lastDayOfMonth = new Date(year, month, 0).getDate();
+      if (dayNumber > lastDayOfMonth) {
+        throw new Error(`Invalid day ${dayNumber} for month ${month}/${year}`);
       }
       
       validatedDays.push(trimmedDay);
@@ -187,15 +202,30 @@ export class InputSanitizer {
     }
     
     // Validate that it's a real date
-    const date = new Date(trimmedDate + 'T00:00:00');
-    if (isNaN(date.getTime())) {
+    const testDate = new Date(trimmedDate + 'T00:00:00');
+    if (isNaN(testDate.getTime())) {
       throw new Error(`Invalid cutoff date: ${trimmedDate}`);
     }
     
-    // Check if date string matches what we parsed
-    const formattedDate = date.toISOString().split('T')[0];
-    if (formattedDate !== trimmedDate) {
-      throw new Error(`Invalid cutoff date: ${trimmedDate}`);
+    // Validate components individually
+    const [year, month, dayNumber] = trimmedDate.split('-').map(Number);
+    
+    if (year < 2024 || year > 2035) {
+      throw new Error(`Year must be between 2024 and 2035: ${year}`);
+    }
+    
+    if (month < 1 || month > 12) {
+      throw new Error(`Invalid month: ${month}`);
+    }
+    
+    if (dayNumber < 1 || dayNumber > 31) {
+      throw new Error(`Invalid day: ${dayNumber}`);
+    }
+    
+    // Additional check for valid day in month
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
+    if (dayNumber > lastDayOfMonth) {
+      throw new Error(`Invalid day ${dayNumber} for month ${month}/${year}`);
     }
     
     return trimmedDate;

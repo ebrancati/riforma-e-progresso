@@ -36,6 +36,9 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
 
   // Handle adding blackout day
   const handleAddBlackoutDay = () => {
+    // Clear any previous error first
+    setBlackoutError(null);
+    
     if (!newBlackoutDate.trim()) {
       setBlackoutError('Seleziona una data');
       return;
@@ -61,10 +64,13 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
       return;
     }
 
+    // Call the parent function
     const result = onAddBlackoutDay(newBlackoutDate);
+    
     if (result.success) {
       setNewBlackoutDate('');
       setBlackoutError(null);
+      console.log('Blackout day added successfully:', newBlackoutDate); // Debug log
     } else {
       setBlackoutError(result.error || 'Errore durante l\'aggiunta');
     }
