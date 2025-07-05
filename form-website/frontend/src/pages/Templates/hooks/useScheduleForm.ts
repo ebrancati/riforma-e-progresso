@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Template, DaySchedule, TimeSlot, DayKey } from '../../../types/schedule';
+import type { Template, DaySchedule, TimeSlot, DayKey, AdvancedTemplateSettings } from '../../../types/schedule';
 
 export const useScheduleForm = () => {
   const [templateName, setTemplateName] = useState('');
@@ -14,6 +14,13 @@ export const useScheduleForm = () => {
   });
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [copiedDaySlots, setCopiedDaySlots] = useState<TimeSlot[] | null>(null);
+  
+  // Advanced settings state
+  const [advancedSettings, setAdvancedSettings] = useState<AdvancedTemplateSettings>({
+    enableAdvanced: false,
+    blackoutDays: [],
+    bookingCutoffDate: null
+  });
 
   // Generate custom time slot ID
   const generateTimeSlotId = (): string => {
@@ -135,7 +142,6 @@ export const useScheduleForm = () => {
 
   // Paste copied slots
   const pasteToDay = (targetDay: DayKey, slotsToUse?: TimeSlot[]) => {
-
     const slotsToApply = slotsToUse || copiedDaySlots;
       
     if (!slotsToApply) {
@@ -172,6 +178,37 @@ export const useScheduleForm = () => {
     return { success: true };
   };
 
+  // Advanced settings methods
+  const updateAdvancedSettings = (settings: Partial<AdvancedTemplateSettings>) => {
+    setAdvancedSettings(prev => ({ ...prev, ...settings }));
+  };
+
+  const addBlackoutDay = (date: string) => {
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return { success: false, error: 'Formato data non valido. Usa YYYY-MM-DD.' };
+    }
+
+    // Check if already exists
+    if (advancedSettings.blackoutDays.includes(date)) {
+      return { success: false, error: 'Questo giorno è già nella lista.' };
+    }
+
+    setAdvancedSettings(prev => ({
+      ...prev,
+      blackoutDays: [...prev.blackoutDays, date].sort()
+    }));
+
+    return { success: true };
+  };
+
+  const removeBlackoutDay = (date: string) => {
+    setAdvancedSettings(prev => ({
+      ...prev,
+      blackoutDays: prev.blackoutDays.filter(day => day !== date)
+    }));
+  };
+
   // Clear form
   const clearForm = () => {
     setTemplateName('');
@@ -185,6 +222,12 @@ export const useScheduleForm = () => {
       sunday: []
     });
     setEditingTemplateId(null);
+    // Reset advanced settings
+    setAdvancedSettings({
+      enableAdvanced: false,
+      blackoutDays: [],
+      bookingCutoffDate: null
+    });
   };
 
   // Load template data into form
@@ -215,6 +258,16 @@ export const useScheduleForm = () => {
     });
     
     setSchedule(processedSchedule);
+
+    // Load advanced settings
+    const hasAdvancedSettings = (template.blackoutDays && template.blackoutDays.length > 0) || 
+                               template.bookingCutoffDate;
+    
+    setAdvancedSettings({
+      enableAdvanced: hasAdvancedSettings,
+      blackoutDays: template.blackoutDays || [],
+      bookingCutoffDate: template.bookingCutoffDate || null
+    });
   };
 
   return {
@@ -223,6 +276,10 @@ export const useScheduleForm = () => {
     schedule,
     editingTemplateId,
     copiedDaySlots,
+    advancedSettings,
+    updateAdvancedSettings,
+    addBlackoutDay,
+    removeBlackoutDay,
     addTimeSlot,
     removeTimeSlot,
     updateTimeSlot,

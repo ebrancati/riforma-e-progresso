@@ -12,6 +12,8 @@ export interface Template {
   id: string;
   name: string;
   schedule: DaySchedule;
+  blackoutDays: string[];           // Array of YYYY-MM-DD dates
+  bookingCutoffDate: string | null; // YYYY-MM-DD or null
   created: string;
 }
 
@@ -19,6 +21,13 @@ export type DayKey = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' 
 
 export interface DayNames {
   [key: string]: string;
+}
+
+// Advanced settings form data
+export interface AdvancedTemplateSettings {
+  enableAdvanced: boolean;
+  blackoutDays: string[];
+  bookingCutoffDate: string | null;
 }
 
 // Result types for operations
@@ -47,6 +56,10 @@ export interface UseScheduleFormReturn {
   schedule: DaySchedule;
   editingTemplateId: string | null;
   copiedDaySlots: TimeSlot[] | null;
+  advancedSettings: AdvancedTemplateSettings;
+  updateAdvancedSettings: (settings: Partial<AdvancedTemplateSettings>) => void;
+  addBlackoutDay: (date: string) => void;
+  removeBlackoutDay: (date: string) => void;
   addTimeSlot: (day: DayKey) => void;
   removeTimeSlot: (day: DayKey, slotId: string) => void;
   updateTimeSlot: (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => OperationResult;

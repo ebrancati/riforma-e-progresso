@@ -15,6 +15,8 @@ export interface ApiTemplate {
     saturday: ApiTimeSlot[];
     sunday: ApiTimeSlot[];
   };
+  blackoutDays: string[];           // Array of YYYY-MM-DD dates
+  bookingCutoffDate: string | null; // YYYY-MM-DD or null
   created: string;
   updatedAt: string;
 }
@@ -30,6 +32,8 @@ export interface CreateTemplateRequest {
     saturday: ApiTimeSlot[];
     sunday: ApiTimeSlot[];
   };
+  blackoutDays?: string[];           // Array of YYYY-MM-DD dates
+  bookingCutoffDate?: string | null; // YYYY-MM-DD or null
 }
 
 export interface TemplateResponse {

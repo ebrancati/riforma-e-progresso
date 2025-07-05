@@ -20,13 +20,17 @@ export const useTemplates = () => {
     id: apiTemplate.id,
     name: apiTemplate.name,
     schedule: apiTemplate.schedule,
+    blackoutDays: apiTemplate.blackoutDays || [],
+    bookingCutoffDate: apiTemplate.bookingCutoffDate || null,
     created: apiTemplate.created
   });
 
   // Convert internal template to API format
   const convertToApiTemplate = (template: Omit<Template, 'id' | 'created'>): CreateTemplateRequest => ({
     name: template.name,
-    schedule: template.schedule as CreateTemplateRequest['schedule']
+    schedule: template.schedule as CreateTemplateRequest['schedule'],
+    blackoutDays: template.blackoutDays,
+    bookingCutoffDate: template.bookingCutoffDate
   });
 
   // Handle API errors consistently
@@ -75,7 +79,17 @@ export const useTemplates = () => {
       const newTemplate = convertApiTemplate(response.template);
       
       setTemplates(prev => [...prev, newTemplate]);
-      showSuccess('Template creato con successo!');
+      
+      // Enhanced success message for advanced features
+      let successMsg = 'Template creato con successo!';
+      if (templateData.blackoutDays.length > 0) {
+        successMsg += ` Inclusi ${templateData.blackoutDays.length} giorni esclusi.`;
+      }
+      if (templateData.bookingCutoffDate) {
+        successMsg += ` Data scadenza: ${templateData.bookingCutoffDate}.`;
+      }
+      
+      showSuccess(successMsg);
       return newTemplate;
     } catch (error) {
       console.error('Failed to create template:', error);
@@ -98,7 +112,16 @@ export const useTemplates = () => {
         t.id === id ? updatedTemplate : t
       ));
       
-      showSuccess('Template aggiornato con successo!');
+      // Enhanced success message for advanced features
+      let successMsg = 'Template aggiornato con successo!';
+      if (templateData.blackoutDays.length > 0) {
+        successMsg += ` Giorni esclusi: ${templateData.blackoutDays.length}.`;
+      }
+      if (templateData.bookingCutoffDate) {
+        successMsg += ` Scadenza prenotazioni: ${templateData.bookingCutoffDate}.`;
+      }
+      
+      showSuccess(successMsg);
       return updatedTemplate;
     } catch (error) {
       console.error('Failed to update template:', error);

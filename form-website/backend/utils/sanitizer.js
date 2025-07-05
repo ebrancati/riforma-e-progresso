@@ -114,6 +114,92 @@ export class InputSanitizer {
     
     return sanitizedSchedule;
   }
+
+  /**
+   * Validate and sanitize blackout days array
+   * @param {Array} blackoutDays - Array of date strings in YYYY-MM-DD format
+   * @returns {Array} Validated and sorted blackout days
+   * @throws {Error} If blackout days format is invalid
+   */
+  static validateBlackoutDays(blackoutDays) {
+    if (!blackoutDays) {
+      return [];
+    }
+    
+    if (!Array.isArray(blackoutDays)) {
+      throw new Error('Blackout days must be an array');
+    }
+    
+    const validatedDays = [];
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    
+    for (const day of blackoutDays) {
+      if (typeof day !== 'string') {
+        throw new Error('Each blackout day must be a string');
+      }
+      
+      const trimmedDay = day.trim();
+      
+      if (!dateRegex.test(trimmedDay)) {
+        throw new Error(`Invalid date format: ${trimmedDay}. Use YYYY-MM-DD format`);
+      }
+      
+      // Validate that it's a real date
+      const date = new Date(trimmedDay + 'T00:00:00');
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date: ${trimmedDay}`);
+      }
+      
+      // Check if date string matches what we parsed (catches edge cases like 2025-02-30)
+      const formattedDate = date.toISOString().split('T')[0];
+      if (formattedDate !== trimmedDay) {
+        throw new Error(`Invalid date: ${trimmedDay}`);
+      }
+      
+      validatedDays.push(trimmedDay);
+    }
+    
+    // Remove duplicates and sort
+    const uniqueDays = [...new Set(validatedDays)];
+    return uniqueDays.sort();
+  }
+
+  /**
+   * Validate and sanitize booking cutoff date
+   * @param {string|null} cutoffDate - Date string in YYYY-MM-DD format or null
+   * @returns {string|null} Validated cutoff date or null
+   * @throws {Error} If cutoff date format is invalid
+   */
+  static validateBookingCutoffDate(cutoffDate) {
+    if (!cutoffDate || cutoffDate === null || cutoffDate === '') {
+      return null;
+    }
+    
+    if (typeof cutoffDate !== 'string') {
+      throw new Error('Booking cutoff date must be a string or null');
+    }
+    
+    const trimmedDate = cutoffDate.trim();
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    
+    if (!dateRegex.test(trimmedDate)) {
+      throw new Error(`Invalid cutoff date format: ${trimmedDate}. Use YYYY-MM-DD format`);
+    }
+    
+    // Validate that it's a real date
+    const date = new Date(trimmedDate + 'T00:00:00');
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid cutoff date: ${trimmedDate}`);
+    }
+    
+    // Check if date string matches what we parsed
+    const formattedDate = date.toISOString().split('T')[0];
+    if (formattedDate !== trimmedDate) {
+      throw new Error(`Invalid cutoff date: ${trimmedDate}`);
+    }
+    
+    return trimmedDate;
+  }
   
   /**
    * Check for overlapping time slots within a day
@@ -192,6 +278,15 @@ export class InputSanitizer {
       throw new Error('Template schedule is required');
     }
     sanitized.schedule = this.validateSchedule(templateData.schedule);
+    
+    // Validate advanced settings (optional)
+    if (templateData.blackoutDays !== undefined) {
+      sanitized.blackoutDays = this.validateBlackoutDays(templateData.blackoutDays);
+    }
+    
+    if (templateData.bookingCutoffDate !== undefined) {
+      sanitized.bookingCutoffDate = this.validateBookingCutoffDate(templateData.bookingCutoffDate);
+    }
     
     return sanitized;
   }

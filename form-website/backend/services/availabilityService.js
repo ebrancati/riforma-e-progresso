@@ -62,6 +62,11 @@ export class AvailabilityService {
       // Get template schedule
       const template = await Template.findById(bookingLink.templateId);
       
+      // Check if date is blackout day or beyond cutoff
+      if (this.isDateUnavailable(template, selectedDate)) {
+        return []; // Return empty array for unavailable dates
+      }
+      
       // Get existing bookings for this date
       const existingBookings = await Booking.findByBookingLinkAndDate(bookingLinkId, selectedDate);
       
@@ -108,6 +113,16 @@ export class AvailabilityService {
       };
     }
     
+    // Check if date is blackout day or beyond cutoff
+    if (this.isDateUnavailable(template, dateString)) {
+      return {
+        date: dateString,
+        available: false,
+        totalSlots: 0,
+        availableSlots: 0
+      };
+    }
+    
     // Generate all possible slots for this day
     const allSlots = this.generateTimeSlotsForDate(template, dateString);
     
@@ -129,6 +144,31 @@ export class AvailabilityService {
       totalSlots: allSlots.length,
       availableSlots: filteredSlots.length
     };
+  }
+
+  /**
+   * Check if a date is unavailable due to blackout days or cutoff date
+   * @param {Object} template - Template object
+   * @param {string} dateString - Date in YYYY-MM-DD format
+   * @returns {boolean} True if date is unavailable
+   */
+  static isDateUnavailable(template, dateString) {
+    // Check if it's a blackout day
+    if (template.blackoutDays && template.blackoutDays.includes(dateString)) {
+      return true;
+    }
+    
+    // Check if it's beyond the cutoff date
+    if (template.bookingCutoffDate) {
+      const checkDate = new Date(dateString + 'T00:00:00');
+      const cutoffDate = new Date(template.bookingCutoffDate + 'T23:59:59');
+      
+      if (checkDate > cutoffDate) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   /**
@@ -274,6 +314,14 @@ export class AvailabilityService {
         return {
           valid: false,
           error: 'Cannot book appointments in the past'
+        };
+      }
+      
+      // Check if date is unavailable (blackout or beyond cutoff)
+      if (this.isDateUnavailable(template, selectedDate)) {
+        return {
+          valid: false,
+          error: 'This date is not available for booking'
         };
       }
       

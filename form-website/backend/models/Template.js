@@ -12,6 +12,11 @@ export class Template {
     this.id = data.id || IdGenerator.generateTemplateId();
     this.name = sanitizedData.name;
     this.schedule = sanitizedData.schedule;
+    
+    // Advanced settings (optional)
+    this.blackoutDays = sanitizedData.blackoutDays || [];
+    this.bookingCutoffDate = sanitizedData.bookingCutoffDate || null;
+    
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
   }
@@ -74,6 +79,8 @@ export class Template {
       id: this.id,
       name: this.name,
       schedule: this.schedule,
+      blackoutDays: this.blackoutDays,
+      bookingCutoffDate: this.bookingCutoffDate,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
@@ -127,6 +134,14 @@ export class Template {
     if (updateData.schedule) {
       updateFields.schedule = InputSanitizer.validateSchedule(updateData.schedule);
     }
+    
+    // Handle advanced settings
+    if (updateData.blackoutDays !== undefined) {
+      updateFields.blackoutDays = InputSanitizer.validateBlackoutDays(updateData.blackoutDays);
+    }
+    if (updateData.bookingCutoffDate !== undefined) {
+      updateFields.bookingCutoffDate = InputSanitizer.validateBookingCutoffDate(updateData.bookingCutoffDate);
+    }
 
     // Update using ID
     await collection.updateOne(
@@ -168,6 +183,8 @@ export class Template {
       id: template.id,
       name: template.name,
       schedule: template.schedule,
+      blackoutDays: template.blackoutDays || [],
+      bookingCutoffDate: template.bookingCutoffDate || null,
       created: template.createdAt.toLocaleDateString('it-IT'),
       updatedAt: template.updatedAt
     };
@@ -224,5 +241,18 @@ export class Template {
   // Helper method to check if an ID belongs to this template type
   static isValidTemplateId(id) {
     return IdGenerator.isTemplateId(id);
+  }
+
+  // Check if a date is a blackout day for this template
+  isBlackoutDay(dateString) {
+    return this.blackoutDays.includes(dateString);
+  }
+
+  // Check if bookings are still allowed (cutoff date not reached)
+  isBookingAllowed(checkDate = new Date()) {
+    if (!this.bookingCutoffDate) return true;
+    
+    const cutoffDate = new Date(this.bookingCutoffDate + 'T23:59:59');
+    return checkDate <= cutoffDate;
   }
 }
