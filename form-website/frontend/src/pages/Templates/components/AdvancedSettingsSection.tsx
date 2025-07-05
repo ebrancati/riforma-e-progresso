@@ -41,6 +41,26 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
       return;
     }
 
+    // Basic validation
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(newBlackoutDate)) {
+      setBlackoutError('Formato data non valido. Usa YYYY-MM-DD');
+      return;
+    }
+
+    // Check if date already exists
+    if (advancedSettings.blackoutDays.includes(newBlackoutDate)) {
+      setBlackoutError('Questo giorno è già nella lista');
+      return;
+    }
+
+    // Simple date validity check
+    const testDate = new Date(newBlackoutDate + 'T12:00:00');
+    if (isNaN(testDate.getTime())) {
+      setBlackoutError('Data non valida');
+      return;
+    }
+
     const result = onAddBlackoutDay(newBlackoutDate);
     if (result.success) {
       setNewBlackoutDate('');
@@ -86,11 +106,11 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
             disabled={isLoading || !isServerAvailable}
           />
           <span className="checkbox-text">
-            🔧 Abilita Impostazioni Avanzate
+            🔧 Enable Advanced Settings
           </span>
         </label>
         <div className="advanced-toggle-help">
-          Giorni esclusi e data scadenza prenotazioni
+          Blackout days and booking cutoff date
         </div>
       </div>
 
@@ -101,10 +121,10 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
           {/* Blackout Days Section */}
           <div className="advanced-section">
             <h4 className="advanced-section-title">
-              🚫 Giorni Esclusi
+              🚫 Blackout Days
             </h4>
             <p className="advanced-section-description">
-              Giorni in cui non saranno mai disponibili appuntamenti (festività, chiusure, ecc.)
+              Days when appointments will never be available (holidays, closures, etc.)
             </p>
             
             {/* Add Blackout Day */}
@@ -124,7 +144,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
                   onClick={handleAddBlackoutDay}
                   disabled={isLoading || !isServerAvailable || !newBlackoutDate}
                 >
-                  Aggiungi
+                  Add
                 </button>
               </div>
               
@@ -139,7 +159,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
             {advancedSettings.blackoutDays.length > 0 && (
               <div className="blackout-days-list">
                 <h5 className="blackout-list-title">
-                  Giorni esclusi ({advancedSettings.blackoutDays.length})
+                  Blackout Days ({advancedSettings.blackoutDays.length})
                 </h5>
                 <div className="blackout-days-grid">
                   {advancedSettings.blackoutDays.map((date) => (
@@ -157,7 +177,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
                         className="btn-icon delete blackout-remove-btn"
                         onClick={() => onRemoveBlackoutDay(date)}
                         disabled={isLoading || !isServerAvailable}
-                        title="Rimuovi giorno escluso"
+                        title="Remove blackout day"
                       >
                         🗑️
                       </button>
@@ -170,7 +190,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
             {advancedSettings.blackoutDays.length === 0 && (
               <div className="blackout-empty-state">
                 <span className="empty-state-icon">📅</span>
-                <span className="empty-state-text">Nessun giorno escluso</span>
+                <span className="empty-state-text">No blackout days</span>
               </div>
             )}
           </div>
@@ -178,10 +198,10 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
           {/* Cutoff Date Section */}
           <div className="advanced-section">
             <h4 className="advanced-section-title">
-              ⏰ Data Scadenza Prenotazioni
+              ⏰ Booking Cutoff Date
             </h4>
             <p className="advanced-section-description">
-              Dopo questa data, non sarà più possibile effettuare nuove prenotazioni
+              After this date, no new bookings will be possible
             </p>
             
             <div className="cutoff-date-section">
@@ -201,9 +221,9 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
                     className="btn btn-secondary cutoff-clear-btn"
                     onClick={() => handleCutoffDateChange('')}
                     disabled={isLoading || !isServerAvailable}
-                    title="Rimuovi data scadenza"
+                    title="Remove cutoff date"
                   >
-                    Rimuovi
+                    Remove
                   </button>
                 )}
               </div>
@@ -212,7 +232,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
                 <div className="cutoff-date-preview">
                   <span className="cutoff-preview-icon">ℹ️</span>
                   <span className="cutoff-preview-text">
-                    Le prenotazioni saranno disabilitate dopo il{' '}
+                    Bookings will be disabled after{' '}
                     <strong>{formatDateForDisplay(advancedSettings.bookingCutoffDate)}</strong>
                   </span>
                 </div>
@@ -221,7 +241,7 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
               {!advancedSettings.bookingCutoffDate && (
                 <div className="cutoff-empty-state">
                   <span className="empty-state-icon">♾️</span>
-                  <span className="empty-state-text">Nessuna scadenza impostata</span>
+                  <span className="empty-state-text">No cutoff date set</span>
                 </div>
               )}
             </div>
@@ -230,10 +250,10 @@ const AdvancedSettingsSection: React.FC<AdvancedSettingsSectionProps> = ({
           {/* Advanced Settings Info */}
           <div className="advanced-info">
             <div className="advanced-info-item">
-              <strong>💡 Nota:</strong> Le prenotazioni esistenti rimangono valide anche se aggiungete giorni esclusi o date di scadenza.
+              <strong>💡 Note:</strong> Existing bookings remain valid even if you add blackout days or cutoff dates.
             </div>
             <div className="advanced-info-item">
-              <strong>🔗 Applicazione:</strong> Queste impostazioni si applicano automaticamente a tutti i link di prenotazione che usano questo template.
+              <strong>🔗 Application:</strong> These settings automatically apply to all booking links using this template.
             </div>
           </div>
         </div>

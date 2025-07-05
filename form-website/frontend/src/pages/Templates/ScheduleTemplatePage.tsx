@@ -7,6 +7,7 @@ import NotificationMessages from '../../components/NotificationMessages';
 import DayScheduleCard from './components/DayScheduleCard';
 import TemplateCard from './components/TemplateCard';
 import EditModal from './components/EditModal';
+import AdvancedSettingsSection from './components/AdvancedSettingsSection';
 import type { DayKey, DaySchedule, TimeSlot } from '../../types/schedule';
 import '../../styles/ScheduleTemplatePage.css';
 
@@ -33,6 +34,10 @@ const ScheduleTemplatePage: React.FC = () => {
     setTemplateName,
     schedule,
     editingTemplateId,
+    advancedSettings,
+    updateAdvancedSettings,
+    addBlackoutDay,
+    removeBlackoutDay,
     addTimeSlot,
     removeTimeSlot,
     updateTimeSlot,
@@ -77,7 +82,7 @@ const ScheduleTemplatePage: React.FC = () => {
 
   const timeOptions = generateTimeOptions();
 
-  // Initialize app
+  // All the existing useEffect and handler methods remain the same...
   useEffect(() => {
     initializeApp();
   }, []);
@@ -100,30 +105,25 @@ const ScheduleTemplatePage: React.FC = () => {
     }
   };
 
-  // Handle day copy with user interaction
   const handleCopyDay = (day: DayKey) => {
     const daySlots = schedule[day];
-
     if (daySlots.length === 0) {
       setValidationError(`⚠️ Nessun orario da copiare per questo giorno`);
       return;
     }
-    
     copyDay(day);
-
     const targetDay = prompt(`Orari copiati! Inserisci il giorno dove incollare \n\nGiorni disponibili: monday, tuesday, wednesday, thursday, friday, saturday, sunday`);
     if (targetDay && targetDay !== day && Object.keys(dayNames).includes(targetDay)) {
-      pasteToDay(targetDay as DayKey, daySlots); // Passa i dati direttamente
+      pasteToDay(targetDay as DayKey, daySlots);
     }
   };
 
-  // Handle time slot update with error handling
   const handleUpdateTimeSlot = (day: DayKey, slotId: string, field: 'startTime' | 'endTime', value: string) => {
     const result = updateTimeSlot(day, slotId, field, value);
     if (!result.success) setValidationError(`⚠️ ${result.error}`);
   };
 
-  // Save or update template
+  // Save template with advanced settings
   const saveTemplate = async () => {
     if (!isServerAvailable) {
       setValidationError('Server non disponibile. Impossibile salvare il template.');
@@ -159,22 +159,27 @@ const ScheduleTemplatePage: React.FC = () => {
     }
 
     try {
-      const templateData = { name: trimmedName, schedule };
+      const templateData = { 
+        name: trimmedName, 
+        schedule,
+        blackoutDays: advancedSettings.enableAdvanced ? advancedSettings.blackoutDays : [],
+        bookingCutoffDate: advancedSettings.enableAdvanced ? advancedSettings.bookingCutoffDate : null
+      };
       
-    if (editingTemplateId) {
-      await updateTemplate(editingTemplateId, templateData);
-      setShowEditingReminder(false);
-    } else {
-      await createTemplate(templateData);
-    }
+      if (editingTemplateId) {
+        await updateTemplate(editingTemplateId, templateData);
+        setShowEditingReminder(false);
+      } else {
+        await createTemplate(templateData);
+      }
 
       clearForm();
-    } catch (error) { // Error handled by hook
+    } catch (error) {
       console.error(error)
     }
   };
 
-  // Generate template summary
+  // All other existing handler methods remain the same...
   const generateTemplateSummary = (templateSchedule: DaySchedule): string => {
     const activeDays: string[] = [];
     Object.keys(templateSchedule).forEach(day => {
@@ -182,13 +187,11 @@ const ScheduleTemplatePage: React.FC = () => {
         activeDays.push(dayAbbreviations[day as DayKey]);
       }
     });
-
     return activeDays.length > 0 
       ? `Giorni attivi: ${activeDays.join(', ')}`
       : 'Nessun orario configurato';
   };
 
-  // Modal handlers
   const handleEditTemplate = (templateId: string) => {
     setShowEditConfirm(templateId);
   };
@@ -219,21 +222,19 @@ const ScheduleTemplatePage: React.FC = () => {
     setShowEditConfirm(null);
   };
 
-  // Reset form with confirmation
   const resetForm = () => {
     if (!window.confirm('Sei sicuro di voler resettare tutto il form?')) return;
     clearForm();
     setShowEditingReminder(true);
   };
 
-  // Retry connection
   const retryConnection = () => {
     initializeApp();
   };
 
   return (
     <div className="container">
-      {/* Header */}
+      {/* Header (same as before) */}
       <div className="header">
         <div className="header-navigation">
           <Link to="/admin/booking-links" className="nav-link">
@@ -349,6 +350,15 @@ const ScheduleTemplatePage: React.FC = () => {
               );
             })}
           </div>
+
+          <AdvancedSettingsSection
+            advancedSettings={advancedSettings}
+            onUpdateSettings={updateAdvancedSettings}
+            onAddBlackoutDay={addBlackoutDay}
+            onRemoveBlackoutDay={removeBlackoutDay}
+            isLoading={isLoading}
+            isServerAvailable={isServerAvailable}
+          />
 
           {/* Action Buttons */}
           <div className="action-buttons">

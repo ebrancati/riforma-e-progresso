@@ -183,8 +183,8 @@ export const useScheduleForm = () => {
     setAdvancedSettings(prev => ({ ...prev, ...settings }));
   };
 
-  const addBlackoutDay = (date: string) => {
-    // Validate date format
+   const addBlackoutDay = (date: string) => {
+    // Basic format validation
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return { success: false, error: 'Formato data non valido. Usa YYYY-MM-DD.' };
     }
@@ -192,6 +192,18 @@ export const useScheduleForm = () => {
     // Check if already exists
     if (advancedSettings.blackoutDays.includes(date)) {
       return { success: false, error: 'Questo giorno è già nella lista.' };
+    }
+
+    // Simple date validity check (avoid timezone issues)
+    const testDate = new Date(date + 'T12:00:00'); // Use noon to avoid timezone edge cases
+    if (isNaN(testDate.getTime())) {
+      return { success: false, error: 'Data non valida.' };
+    }
+
+    // Additional check for reasonable date range
+    const year = parseInt(date.split('-')[0]);
+    if (year < 2024 || year > 2030) {
+      return { success: false, error: 'Anno deve essere tra 2024 e 2030.' };
     }
 
     setAdvancedSettings(prev => ({
