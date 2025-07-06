@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { cancelRescheduleApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
-import { Frown, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import '../../styles/CancelBookingPage.css';
 
 interface BookingDetails {

@@ -6,7 +6,7 @@ import CalendarGrid from '../Booking/components/CalendarGrid';
 import TimeSlotList from '../Booking/components/TimeSlotList';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import type { DayAvailability, TimeSlot } from '../../types/booking';
-import { Frown, Loader2, MoveLeft, Rocket, X } from "lucide-react"
+import { Loader2, MoveLeft, Rocket, X } from "lucide-react"
 import { Check, Calendar, CalendarClock, FileText } from "lucide-react";
 import '../../styles/RescheduleBookingPage.css';
 
