@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Loader2, MoveLeft } from 'lucide-react';
 import '../styles/LoginPage.css';
 
 const LoginPage: React.FC = () => {
@@ -41,10 +42,8 @@ const LoginPage: React.FC = () => {
 
     try {
       const success = await login(username.trim(), password);
-      
-      if (!success) {
-        setError('Username o password non corretti');
-      }
+
+      if (!success) setError('Username o password non corretti');
       // If success, user will be redirected by the Navigate above
     } catch (error) {
       setError('Errore durante il login. Riprova.');
@@ -61,11 +60,7 @@ const LoginPage: React.FC = () => {
           <p>Inserisci le credenziali per accedere al pannello di controllo</p>
         </div>
 
-        {error && (
-          <div className="login-error">
-            ⚠️ {error}
-          </div>
-        )}
+        {error && (<div className="login-error">{error}</div>)}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -108,21 +103,27 @@ const LoginPage: React.FC = () => {
           >
             {isLoading ? (
               <>
-                <span className="loading-spinner">⏳</span>
+                <span className="loading-spinner"><Loader2 size={20} /></span>
                 Accesso in corso...
               </>
             ) : (
               <>
-                <span className="login-icon">🔐</span>
                 Accedi
               </>
             )}
           </button>
+
+          <Link to="/colloqui" className="btn btn-secondary back-to-public">
+            <MoveLeft className='move-left-icon' size={20} /> Torna alle Opportunità
+          </Link>
         </form>
 
-        <div className="login-info">
-          <p>Questa è un'area riservata per amministratori</p>
-          <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
+
+        <div className="login-footer">
+          <div className="login-info">
+            <p>Questa è un'area riservata per amministratori</p>
+          </div>
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
         </div>
       </div>
     </div>

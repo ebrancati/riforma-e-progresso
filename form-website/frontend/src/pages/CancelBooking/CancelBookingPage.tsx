@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { cancelRescheduleApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import { Frown, X, Check } from 'lucide-react';
 import '../../styles/CancelBookingPage.css';
 
 interface BookingDetails {
@@ -162,12 +163,11 @@ const CancelBookingPage: React.FC = () => {
         </div>
         <div className="cancel-content">
           <div className="error-state">
-            <h3>😞 Oops!</h3>
+            <h3><X size={60} className="error-icon" /></h3>
             <p>Non è stato possibile accedere alla prenotazione.</p>
             <p>Il link potrebbe essere scaduto o non valido.</p>
             <div className="contact-info">
-              <p>Per assistenza, contatta:</p>
-              <p><strong>sezione.colloqui@riformaeprogresso.it</strong></p>
+              <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
             </div>
           </div>
         </div>
@@ -186,10 +186,11 @@ const CancelBookingPage: React.FC = () => {
         <div className="cancel-content">
           <div className="success-state">
             <div className="success-illustration">
-              <div className="success-icon">✅</div>
+              <div className="success-icon"><Check size={60} /></div>
             </div>
             <h3>Appuntamento cancellato.</h3>
             <p>La tua prenotazione è stata cancellata con successo.</p>
+            <p>Ora puoi chiudere questa pagina</p>
           </div>
         </div>
       </div>

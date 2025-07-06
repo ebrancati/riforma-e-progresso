@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { cancelRescheduleApi, publicBookingApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import CalendarGrid from '../Booking/components/CalendarGrid';
 import TimeSlotList from '../Booking/components/TimeSlotList';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import type { DayAvailability, TimeSlot } from '../../types/booking';
+import { Frown, Loader2, MoveLeft, Rocket, X } from "lucide-react"
+import { Check, Calendar, CalendarClock, FileText } from "lucide-react";
 import '../../styles/RescheduleBookingPage.css';
 
 interface BookingDetails {
@@ -271,12 +273,11 @@ const RescheduleBookingPage: React.FC = () => {
         </div>
         <div className="reschedule-content">
           <div className="error-state">
-            <h3>😞 Oops!</h3>
+            <h3><X size={60} className="error-icon" /></h3>
             <p>Non è stato possibile accedere alla prenotazione.</p>
             <p>Il link potrebbe essere scaduto o non valido.</p>
             <div className="contact-info">
-              <p>Per assistenza, contatta:</p>
-              <p><strong>sezione.colloqui@riformaeprogresso.it</strong></p>
+              <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
             </div>
           </div>
         </div>
@@ -298,10 +299,10 @@ const RescheduleBookingPage: React.FC = () => {
         <div className="reschedule-content">
           <div className="success-state">
             <div className="success-illustration">
-              <div className="success-icon">✅</div>
+              <div className="success-icon"><Check size={60} /></div>
             </div>
-            <h3>Appuntamento riprogrammato.</h3>
-            <p>La tua prenotazione è stata modificata con successo.</p>
+            <h3>Appuntamento riprogrammato</h3>
+            <p>La tua prenotazione è stata modificata con successo</p>
             
             <div className="reschedule-summary">
               <div className="summary-item">
@@ -313,8 +314,9 @@ const RescheduleBookingPage: React.FC = () => {
                 <p>{formatDateForDisplay(originalDate)} alle {bookingDetails.booking.selectedTime}</p>
               </div>
             </div>
-            
-            <p>Hai trovato qualche bug? Contattaci: sezione.colloqui@riformaeprogresso.it</p>
+          </div>
+          <div className="directory-footer">
+            <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
           </div>
         </div>
       </div>
@@ -336,19 +338,19 @@ const RescheduleBookingPage: React.FC = () => {
           <div className="progress-steps">
             <div className={`progress-step ${currentStep >= 1 ? 'active' : ''}`}>
               <div className="step-circle">
-                {currentStep > 1 ? '✓' : '📅'}
+                {currentStep > 1 ? <Check size={20} /> : <Calendar size={20} />}
               </div>
               <span className="step-title">Seleziona Data</span>
             </div>
             <div className={`progress-step ${currentStep >= 2 ? 'active' : ''}`}>
               <div className="step-circle">
-                {currentStep > 2 ? '✓' : '⏰'}
+                {currentStep > 2 ? <Check size={20} /> : <CalendarClock size={20} />}
               </div>
               <span className="step-title">Scegli Orario</span>
             </div>
             <div className={`progress-step ${currentStep >= 3 ? 'active' : ''}`}>
               <div className="step-circle">
-                {currentStep === 3 ? '📝' : '📝'}
+                {currentStep === 3 ? <FileText size={20} /> : <FileText size={20} />}
               </div>
               <span className="step-title">Conferma</span>
             </div>
@@ -440,7 +442,7 @@ const RescheduleBookingPage: React.FC = () => {
                   onClick={handleBackToTimeSlots}
                   disabled={isSubmitting}
                 >
-                  ← Cambia orario
+                  <MoveLeft className='move-left-icon' size={20} /> Cambia orario
                 </button>
                 
                 <button 
@@ -451,12 +453,12 @@ const RescheduleBookingPage: React.FC = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="loading-spinner">⏳</span>
+                      <span className="loading-spinner"><Loader2 size={20} /></span>
                       Riprogrammazione...
                     </>
                   ) : (
                     <>
-                      <span className="confirm-icon">🚀</span>
+                      <span className="confirm-icon"><Rocket size={20} /></span>
                       Conferma Riprogrammazione
                     </>
                   )}

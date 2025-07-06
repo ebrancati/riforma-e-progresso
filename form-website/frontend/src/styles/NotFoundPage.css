@@ -18,7 +18,7 @@
 
 .not-found-content h1 {
   font-size: 72px;
-  color: #667eea;
+  color: var(--primary-blue);
   margin: 0;
   font-weight: 700;
   line-height: 1;
@@ -60,7 +60,7 @@
 }
 
 .not-found-links .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--primary-blue);
   color: white;
 }
 

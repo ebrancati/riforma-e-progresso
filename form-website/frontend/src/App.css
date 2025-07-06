@@ -375,6 +375,10 @@ body {
   background: var(--error-dark);
 }
 
+/* Icons */
+
+.move-left-icon, .refresh-icon { margin-right: 8px; }
+
 /* Card Components */
 .card {
   background: var(--gray-50);

@@ -1,5 +1,4 @@
 .directory-container {
-  min-height: 100vh;
   background: var(--primary-orange);
   padding: var(--spacing-xl);
 }
@@ -22,7 +21,7 @@
   left: 0;
   right: 0;
   height: 5px;
-  background: var(--gradient-primary);
+  background-color: var(--primary-blue);
 }
 
 .directory-header h1 {
@@ -120,9 +119,10 @@
 /* Opportunities Grid */
 .opportunities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, 400px);
   gap: var(--spacing-xl);
   padding: var(--spacing-3xl);
+  justify-content: center;
 }
 
 .opportunity-card {
@@ -147,7 +147,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: var(--gradient-primary);
+  background-color: var(--primary-orange);
   transform: scaleX(0);
   transition: transform var(--transition-normal);
 }
@@ -191,10 +191,7 @@
 }
 
 .card-badge {
-  background: var(--success-bg);
   color: var(--success-dark);
-  border: 1px solid var(--success-border);
-  border-radius: var(--radius-full);
   padding: var(--spacing-xs) var(--spacing-md);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -273,14 +270,23 @@
 }
 
 .btn-copy {
-  width: 50px;
-  height: 50px;
-  padding: 0;
+  width: 60px;
+  height: 100%;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
+}
+
+.btn-copy:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
 }
 
 .btn-icon {

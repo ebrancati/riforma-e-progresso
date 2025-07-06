@@ -18,7 +18,7 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-xl) var(--spacing-2xl);
-  background: var(--gradient-primary);
+  background-color: var(--primary-blue);
   color: var(--white);
 }
 

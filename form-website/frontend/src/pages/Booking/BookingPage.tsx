@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { publicBookingApi, ApiError } from '../../services/api';
 import BookingHeader from './components/BookingHeader';
 import CalendarGrid from './components/CalendarGrid';
@@ -7,6 +7,7 @@ import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import { XCircle, MoveLeft, Loader2, Paperclip, Rocket } from "lucide-react";
 import '../../styles/UserBooking/BookingHeader.css';
 import '../../styles/UserBooking/CalendarGrid.css';
 import '../../styles/UserBooking/TimeSlotList.css';
@@ -106,9 +107,7 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingLink(true);
       
-      if (!slug) {
-        throw new Error('No booking slug provided');
-      }
+      if (!slug) throw new Error('No booking slug provided');
       
       const linkInfo = await publicBookingApi.getBookingLinkBySlug(slug);
       
@@ -151,9 +150,7 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingCalendar(true);
       
-      if (!slug) {
-        throw new Error('No booking slug provided');
-      }
+      if (!slug) throw new Error('No booking slug provided');
       
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1; // API expects 1-based month
@@ -193,9 +190,7 @@ const BookingPage: React.FC = () => {
     try {
       setIsLoadingSlots(true);
       
-      if (!slug || !selectedDate) {
-        throw new Error('Missing slug or selected date');
-      }
+      if (!slug || !selectedDate) throw new Error('Missing slug or selected date');
       
       const response = await publicBookingApi.getAvailableTimeSlots(slug, selectedDate);
       
@@ -211,20 +206,17 @@ const BookingPage: React.FC = () => {
       setIsLoadingSlots(false);
       
     } catch (error) {
-      console.error('Failed to load time slots:', error);
+
       if (error instanceof ApiError) {
-        if (error.statusCode === 404) {
-          setError('Link di prenotazione non trovato.');
-        } else if (error.statusCode === 400) {
-          setError('Data selezionata non valida.');
-        } else if (error.isNetworkError()) {
-          setError('Impossibile connettersi al server. Controlla la connessione.');
-        } else {
-          setError('Errore durante il caricamento degli orari.');
-        }
-      } else {
+        if      (error.statusCode === 404) setError('Link di prenotazione non trovato.');
+        else if (error.statusCode === 400) setError('Data selezionata non valida.');
+        else if (error.isNetworkError())   setError('Impossibile connettersi al server. Controlla la connessione.');
+        else                               setError('Errore durante il caricamento degli orari.');
+      }
+      else {
         setError('Errore imprevisto durante il caricamento degli orari.');
       }
+
       setIsLoadingSlots(false);
     }
   };
@@ -317,29 +309,25 @@ const BookingPage: React.FC = () => {
   // Validate form
   const validateForm = (): string | null => {
     if (!formData.firstName.trim()) return 'Il nome è obbligatorio';
-    if (!formData.lastName.trim()) return 'Il cognome è obbligatorio';
-    if (!formData.phone.trim()) return 'Il telefono è obbligatorio';
-    if (!formData.email.trim()) return 'L\'email è obbligatoria';
-    if (!formData.role.trim()) return 'Il ruolo è obbligatorio';
-    if (!formData.cvFile) return 'Il curriculum è obbligatorio';
-    if (!formData.acceptPrivacy) return 'Devi accettare la Privacy Policy per procedere';
+    if (!formData.lastName.trim())  return 'Il cognome è obbligatorio';
+    if (!formData.phone.trim())     return 'Il telefono è obbligatorio';
+    if (!formData.email.trim())     return 'L\'email è obbligatoria';
+    if (!formData.role.trim())      return 'Il ruolo è obbligatorio';
+    if (!formData.cvFile)           return 'Il curriculum è obbligatorio';
+    if (!formData.acceptPrivacy)    return 'Devi accettare la Privacy Policy per procedere';
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      return 'Formato email non valido';
-    }
+    if (!emailRegex.test(formData.email)) return 'Formato email non valido';
     
     // Validate phone format (basic)
     const phoneRegex = /^[\d\s\+\-\(\)]{8,}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      return 'Formato telefono non valido';
-    }
+    if (!phoneRegex.test(formData.phone)) return 'Formato telefono non valido';
     
     return null;
   };
 
-  // Handle form submission (without file upload for now)
+  // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
@@ -353,25 +341,21 @@ const BookingPage: React.FC = () => {
       setIsSubmitting(true);
       setError(null);
       
-      if (!slug) {
-        throw new Error('Missing booking slug');
-      }
+      if (!slug) throw new Error('Missing booking slug');
       
       // Crea FormData
       const formDataToSend = new FormData();
       formDataToSend.append('selectedDate', formData.selectedDate);
       formDataToSend.append('selectedTime', formData.selectedTime);
-      formDataToSend.append('firstName', formData.firstName);
-      formDataToSend.append('lastName', formData.lastName);
-      formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('role', formData.role);
-      formDataToSend.append('notes', formData.notes || '');
+      formDataToSend.append('firstName',    formData.firstName);
+      formDataToSend.append('lastName',     formData.lastName);
+      formDataToSend.append('phone',        formData.phone);
+      formDataToSend.append('email',        formData.email);
+      formDataToSend.append('role',         formData.role);
+      formDataToSend.append('notes',        formData.notes || '');
       
       // Aggiungi CV
-      if (formData.cvFile) {
-        formDataToSend.append('cvFile', formData.cvFile);
-      }
+      if (formData.cvFile) formDataToSend.append('cvFile', formData.cvFile);
       
       // Invia al backend
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/public/booking/${slug}/book`, {
@@ -385,10 +369,8 @@ const BookingPage: React.FC = () => {
       }
 
       setSuccessMessage(
-        '🎉 Prenotazione confermata!\n\n' +
-        `Appuntamento fissato per ${formatDateForDisplay(new Date(selectedDate))} alle ${selectedTime}.\n\n` +
-        'CV ricevuto correttamente.\n\n' +
-        'Riceverai una conferma via email con tutti i dettagli.'
+        'Prenotazione confermata!\n\n' +
+        'Riceverai tutti i dettagli via email.'
       );
       
       setIsSubmitting(false);
@@ -437,9 +419,11 @@ const BookingPage: React.FC = () => {
         </div>
         <div className="main-content">
           <div className="error-state">
-            <h3>😞 Oops!</h3>
+            <XCircle size={48} className="error-icon" />
             <p>Il link che hai seguito non è valido o è scaduto.</p>
-            <p>Contatta l'azienda per ottenere un nuovo link di prenotazione.</p>
+            <Link to="/colloqui" className="btn btn-secondary">
+              ← Torna alle Opportunità
+            </Link>
           </div>
         </div>
       </div>
@@ -501,7 +485,7 @@ const BookingPage: React.FC = () => {
               {/* Selected appointment info */}
               <div className="appointment-summary">
                 <div className="summary-card">
-                  <h3>📅 Riepilogo appuntamento</h3>
+                  <h3>Riepilogo appuntamento</h3>
                   <div className="summary-details">
                     <div className="summary-item">
                       <strong>Data:</strong> {formatDateForDisplay(new Date(selectedDate))}
@@ -635,7 +619,7 @@ const BookingPage: React.FC = () => {
                         required
                       />
                       <label htmlFor="cvFile" className="file-upload-label">
-                        <span className="file-upload-icon">📎</span>
+                        <span className="file-upload-icon"><Paperclip size={20} /></span>
                         <span className="file-upload-text">
                           {formData.cvFile ? formData.cvFile.name : 'Scegli file CV'}
                         </span>
@@ -643,7 +627,7 @@ const BookingPage: React.FC = () => {
                       </label>
                     </div>
                     <div className="file-help">
-                      Formati supportati: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx) - Max 10MB
+                      Formati supportati: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx)
                     </div>
                   </div>
 
@@ -690,7 +674,7 @@ const BookingPage: React.FC = () => {
                       onClick={handleBackToTimeSlots}
                       disabled={isSubmitting}
                     >
-                      ← Cambia orario
+                      <MoveLeft className='move-left-icon' size={20} /> Cambia orario
                     </button>
                     
                     <button 
@@ -700,12 +684,12 @@ const BookingPage: React.FC = () => {
                     >
                       {isSubmitting ? (
                         <>
-                          <span className="loading-spinner">⏳</span>
+                          <Loader2 size={20} />
                           Invio in corso...
                         </>
                       ) : (
                         <>
-                          <span className="submit-icon">🚀</span>
+                          <Rocket size={20} />
                           Conferma Prenotazione
                         </>
                       )}
@@ -718,43 +702,8 @@ const BookingPage: React.FC = () => {
         </div>
 
         {/* Info Section */}
-        <div className="info-section">
-          {currentStep === 1 && (
-            <>
-              <h3>Come prenotare</h3>
-              <ol>
-                <li><strong>Seleziona un giorno</strong> disponibile dal calendario</li>
-                <li><strong>Scegli l'orario</strong> che preferisci tra quelli liberi</li>
-                <li><strong>Compila il form</strong> e carica il curriculum</li>
-              </ol>
-            </>
-          )}
-          
-          {currentStep === 2 && (
-            <>
-              <h3>💡 Suggerimento</h3>
-              <p>
-                Dopo aver selezionato l'orario, potrai compilare i tuoi dati 
-                e caricare il curriculum per completare la prenotazione.
-              </p>
-            </>
-          )}
-          
-          {currentStep === 3 && (
-            <>
-              <h3>Cosa succede dopo?</h3>
-              <ol>
-                <li>Riceverai una <strong>conferma via email</strong> della tua prenotazione</li>
-                <li>Il nostro team <strong>esaminerà il tuo CV</strong> entro 48 ore</li>
-                <li>Ti invieremo i <strong>dettagli del colloquio</strong> (luogo/video call)</li>
-                <li>Potrai <strong>modificare o cancellare</strong> la prenotazione se necessario</li>
-              </ol>
-            </>
-          )}
-          
-          <div className="contact-info">
-            <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
-          </div>
+        <div className="contact-info">
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
         </div>
       </div>
     </div>

@@ -1,21 +1,24 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage             from './pages/LoginPage';
 import ScheduleTemplatePage  from './pages/Templates/ScheduleTemplatePage';
 import BookingSetupPage      from './pages/BookingSetup/BookingSetupPage';
 import BookingLinksListPage  from './pages/BookingLinks/BookingLinksListPage';
-import EditBookingLinkPage from './pages/BookingLinks/EditBookingLinkPage';
+import EditBookingLinkPage   from './pages/BookingLinks/EditBookingLinkPage';
 import PublicDirectoryPage   from './pages/PublicDirectory/PublicDirectoryPage';
 import BookingPage           from './pages/Booking/BookingPage';
 import CancelBookingPage     from './pages/CancelBooking/CancelBookingPage';
 import RescheduleBookingPage from './pages/RescheduleBooking/RescheduleBookingPage';
+import ContactPage           from './pages/Contact/ContactPage';
 import NotFoundPage          from './pages/NotFoundPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import Footer         from './components/Footer';
 
 import './App.css';
 
 const App: React.FC = () => {
+
   return (
     <div className="App">
       <AuthProvider>
@@ -26,6 +29,7 @@ const App: React.FC = () => {
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/booking/:bookingId/cancel" element={<CancelBookingPage />} />
             <Route path="/booking/:bookingId/reschedule" element={<RescheduleBookingPage />} />
+            <Route path="/contattaci" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* Protected Admin Routes */}
@@ -51,12 +55,14 @@ const App: React.FC = () => {
             } />
             
             {/* Default redirects */}
-            <Route path="/" element={<Navigate to="/admin/booking-links" replace />} />
+            <Route path="/" element={<Navigate to="/colloqui" replace />} />
             <Route path="/admin" element={<Navigate to="/admin/booking-links" replace />} />
             
             {/* 404 page */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+
+          <Footer />
         </Router>
       </AuthProvider>
     </div>

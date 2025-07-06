@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import type { DayAvailability } from '../../../types/booking';
 import { 
   generateCalendarDates, 
@@ -8,6 +9,7 @@ import {
   getMonthName,
   getDayAbbreviations 
 } from '../../../utils/booking/dateHelpers';
+import { Loader2, ArrowLeft, ArrowRight, MoveLeft } from "lucide-react"
 
 interface CalendarGridProps {
   year: number;
@@ -45,19 +47,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     
     let className = 'calendar-day';
     
-    if (!isCurrentMonth) {
-      className += ' other-month';
-    } else if (past) {
-      className += ' past-day';
-    } else if (dayAvailability?.available) {
-      className += ' available-day';
-    } else {
-      className += ' unavailable-day';
-    }
+    if (!isCurrentMonth)                 className += ' other-month';
+    else if (past)                       className += ' past-day';
+    else if (dayAvailability?.available) className += ' available-day';
+    else                                 className += ' unavailable-day';
     
-    if (today) {
-      className += ' today';
-    }
+    if (today) className += ' today';
     
     return className;
   };
@@ -66,9 +61,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     const dayAvailability = getDayAvailability(date);
     const isCurrentMonth = date.getMonth() === month;
     
-    if (!isCurrentMonth || isPastDate(date) || !dayAvailability?.available) {
+    if (!isCurrentMonth || isPastDate(date) || !dayAvailability?.available)
       return;
-    }
     
     onDayClick(formatDateToString(date));
   };
@@ -88,7 +82,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
           disabled={!canGoToPrevious() || isLoading}
           aria-label="Mese precedente"
         >
-          ←
+          <ArrowLeft size={20} />
         </button>
         
         <h2 className="calendar-month-year">
@@ -101,7 +95,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
           disabled={isLoading}
           aria-label="Mese successivo"
         >
-          →
+          <ArrowRight size={20} />
         </button>
       </div>
       
@@ -158,7 +152,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       {/* Loading Overlay */}
       {isLoading && (
         <div className="calendar-loading-overlay">
-          <div className="loading-spinner">⏳</div>
+          <Loader2 size={20} />
           <p>Caricamento disponibilità...</p>
         </div>
       )}
@@ -166,16 +160,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       {/* Legend */}
       <div className="calendar-legend">
         <div className="legend-item">
-          <span className="legend-indicator available"></span>
-          <span className="legend-text">Disponibile</span>
-        </div>
-        <div className="legend-item">
           <span className="legend-indicator unavailable"></span>
           <span className="legend-text">Non disponibile</span>
         </div>
         <div className="legend-item">
-          <span className="legend-indicator today"></span>
-          <span className="legend-text">Oggi</span>
+          <span className="legend-indicator available"></span>
+          <span className="legend-text">Disponibile</span>
         </div>
       </div>
     </div>

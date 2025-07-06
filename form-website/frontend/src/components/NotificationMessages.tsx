@@ -12,14 +12,14 @@ const NotificationMessages: React.FC<NotificationMessagesProps> = ({ error, succ
       {/* Error Message */}
       {error && (
         <div className="notification-error">
-          ⚠️ {error}
+          {error}
         </div>
       )}
 
       {/* Success Message */}
       {successMessage && (
         <div className="notification-success">
-          ✅ {successMessage}
+          {successMessage}
         </div>
       )}
     </>

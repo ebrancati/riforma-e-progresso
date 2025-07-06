@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BookingLinkInfo } from '../../../types/booking';
+import { Check, Calendar, CalendarClock, FileText, Clock } from "lucide-react"
 
 interface BookingHeaderProps {
   bookingLink: BookingLinkInfo | null;
@@ -18,9 +19,9 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({
 }) => {
   const getStepInfo = (step: number) => {
     const steps = [
-      { number: 1, title: 'Seleziona Data', icon: '📅' },
-      { number: 2, title: 'Scegli Orario', icon: '⏰' },
-      { number: 3, title: 'Compila Dati', icon: '📝' }
+      { number: 1, title: 'Seleziona Data', icon: <Calendar      size={20} /> },
+      { number: 2, title: 'Scegli Orario',  icon: <CalendarClock size={20} /> },
+      { number: 3, title: 'Compila Dati',   icon: <FileText      size={20} /> }
     ];
     
     return steps[step - 1];
@@ -40,7 +41,7 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({
         {bookingLink && (
           <div className="booking-info">
             <div className="booking-info-item">
-              <span className="info-icon">⏱️</span>
+              <Clock className="info-icon" size={20} />
               <span className="info-text">Durata prevista: {bookingLink.duration} minuti</span>
             </div>
           </div>
@@ -60,7 +61,7 @@ const BookingHeader: React.FC<BookingHeaderProps> = ({
                     className={`progress-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
                   >
                     <div className="step-circle">
-                      {isCompleted ? '✓' : stepInfo.icon}
+                      {isCompleted ? <Check size={20} /> : stepInfo.icon}
                     </div>
                     <span className="step-title">{stepInfo.title}</span>
                   </div>

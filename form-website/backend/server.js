@@ -6,6 +6,7 @@ import { handleBookingLinkRoutes } from './routes/bookingLink.js';
 import { handleTemplateRoutes } from './routes/template.js';
 import { handlePublicBookingRoutes } from './routes/publicBooking.js';
 import { handlePublicCancelRescheduleRoutes } from './routes/publicCancelReschedule.js';
+import { handleContactRoutes } from './routes/contact.js';
 import { parseJsonBody, setCorsHeaders, setJsonHeaders } from './middleware/validation.js';
 import { parseFormData } from './middleware/fileHandler.js';
 import { requireAuth, verifyAuth, logAuthAttempt } from './middleware/auth.js';
@@ -75,6 +76,9 @@ async function handleRequest(req, res) {
     
     if (pathname.startsWith('/api/templates'))
       return await applyAuthMiddleware(req, res, handleTemplateRoutes);
+
+    if (pathname.startsWith('/api/contact'))
+      return await handleContactRoutes(req, res);
 
     // Route not found
     res.status(404).json({
@@ -155,10 +159,10 @@ async function startServer() {
     await connectToDatabase();
     
     // Log admin credentials (remove in production)
-    console.log('\n🔐 ADMIN CREDENTIALS:');
+    console.log('\nADMIN CREDENTIALS:');
     console.log(`Username: ${process.env.ADMIN_USERNAME || 'admin'}`);
     console.log(`Password: ${process.env.ADMIN_PASSWORD || 'password123'}`);
-    console.log('⚠️  Change these in production via environment variables!\n');
+    console.log('Change these in production via environment variables!\n');
     
     // Start HTTP server
     server.listen(config.port, () => {

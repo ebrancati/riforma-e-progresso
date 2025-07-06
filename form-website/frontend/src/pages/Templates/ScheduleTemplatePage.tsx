@@ -9,6 +9,7 @@ import TemplateCard from './components/TemplateCard';
 import EditModal from './components/EditModal';
 import AdvancedSettingsSection from './components/AdvancedSettingsSection';
 import type { DayKey, DaySchedule, TimeSlot } from '../../types/schedule';
+import { InfoIcon } from 'lucide-react';
 import '../../styles/ScheduleTemplatePage.css';
 
 const ScheduleTemplatePage: React.FC = () => {
@@ -273,7 +274,7 @@ const ScheduleTemplatePage: React.FC = () => {
         {/* Editing Reminder Overlay */}
         {editingTemplateId && showEditingReminder && (
           <div className="editing-reminder-overlay">
-            ℹ️ Ricorda di premere "Aggiorna Template" per salvare le modifiche
+            <InfoIcon size={20} /> Ricorda di premere "Aggiorna Template" per salvare le modifiche
             <button 
               onClick={() => setShowEditingReminder(false)} 
               className="dismiss-reminder"

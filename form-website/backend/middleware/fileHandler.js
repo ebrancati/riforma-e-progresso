@@ -63,13 +63,13 @@ export function parseFormData(req, res, next) {
       }
 
       // Log file info
-      console.log(`\n📄 === CV RICEVUTO ===`);
-      console.log(`👤 Candidato: ${req.body.firstName} ${req.body.lastName}`);
-      console.log(`📧 Email: ${req.body.email}`);
-      console.log(`💼 Ruolo: ${req.body.role}`);
-      console.log(`📎 File: ${fileName}`);
-      console.log(`📏 Dimensione: ${formatFileSize(fileSize)}`);
-      console.log(`📅 Appuntamento: ${req.body.selectedDate} alle ${req.body.selectedTime}`);
+      console.log(`\n=== CV RICEVUTO ===`);
+      console.log(`Candidato: ${req.body.firstName} ${req.body.lastName}`);
+      console.log(`Email: ${req.body.email}`);
+      console.log(`Ruolo: ${req.body.role}`);
+      console.log(`File: ${fileName}`);
+      console.log(`Dimensione: ${formatFileSize(fileSize)}`);
+      console.log(`Appuntamento: ${req.body.selectedDate} alle ${req.body.selectedTime}`);
       console.log(`===================\n`);
 
       // Add file info to request (but don't keep the actual file data)

@@ -1,5 +1,4 @@
 .cancel-container {
-  min-height: 100vh;
   background: var(--primary-orange);
   padding: var(--spacing-xl);
 }
@@ -42,8 +41,6 @@
   background: var(--white);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
-  min-height: 400px;
 }
 
 .cancel-form {
@@ -234,6 +231,7 @@
 }
 
 .success-icon {
+  color: var(--success);
   font-size: var(--font-size-6xl);
   margin-bottom: var(--spacing-xl);
   animation: bounce 1s ease-in-out;
@@ -255,7 +253,8 @@
 /* Error State */
 .error-state {
   text-align: center;
-  padding: var(--spacing-5xl) var(--spacing-xl);
+  padding: 0;
+  padding-top: var(--spacing-5xl);
   color: var(--gray-500);
 }
 
@@ -265,17 +264,17 @@
   margin-bottom: var(--spacing-lg);
 }
 
-.error-state p {
-  line-height: var(--line-height-relaxed);
-  margin-bottom: var(--spacing-md);
+.error-icon {
+  color: var(--error);
 }
 
 .contact-info {
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
   padding: var(--spacing-xl);
-  margin-top: var(--spacing-xl);
+  margin-top: var(--spacing-4xl);
 }
 
 .contact-info p {

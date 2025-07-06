@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { publicDirectoryApi, ApiError } from '../../services/api';
 import type { PublicBookingLinkInfo } from '../../services/api/public/types';
 import NotificationMessages from '../../components/NotificationMessages';
+import { SearchX, RefreshCw, Clock, Clipboard } from "lucide-react";
 import '../../styles/PublicDirectoryPage.css';
 
 const PublicDirectoryPage: React.FC = () => {
@@ -44,43 +45,13 @@ const PublicDirectoryPage: React.FC = () => {
     }
   };
 
-  const formatAdvanceNotice = (requireAdvanceBooking: boolean, advanceHours: number): string => {
-    if (!requireAdvanceBooking) {
-      return 'Prenotazione immediata';
-    }
-    
-    if (advanceHours < 24) {
-      return `Preavviso ${advanceHours} ore`;
-    } else {
-      const days = Math.floor(advanceHours / 24);
-      return `Preavviso ${days} ${days === 1 ? 'giorno' : 'giorni'}`;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="directory-container">
-        <div className="directory-header">
-          <h1>Riforma e Progresso</h1>
-          <p>Caricamento...</p>
-        </div>
-        <div className="directory-content">
-          <div className="loading-indicator">
-            <div className="loading-spinner">⏳</div>
-            <p>Caricamento in corso...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="directory-container">
       {/* Header */}
       <div className="directory-header">
         <h1>Riforma e Progresso</h1>
         <p className="directory-subtitle">
-          Lorem Ipsum
+          Lorem ipsum dolor sit amet consectetur adipisicing elit
         </p>
         <div className="directory-stats">
           <span className="stats-item">
@@ -112,7 +83,7 @@ const PublicDirectoryPage: React.FC = () => {
         {/* Booking Links Grid */}
         {bookingLinks.length === 0 && !isLoading ? (
           <div className="empty-state">
-            <div className="empty-icon">😔</div>
+            <SearchX size={60} className="empty-icon" />
             <h3>Nessuna posizione aperta al momento</h3>
             <p>
               Non ci sono colloqui disponibili in questo momento.<br />
@@ -122,7 +93,7 @@ const PublicDirectoryPage: React.FC = () => {
               onClick={loadActiveBookingLinks}
               className="btn btn-secondary"
             >
-              🔄 Controlla di nuovo
+              <RefreshCw size={20} className="refresh-icon" /> Controlla di nuovo
             </button>
           </div>
         ) : (
@@ -145,16 +116,8 @@ const PublicDirectoryPage: React.FC = () => {
                 <div className="card-content">
                   <div className="card-info">
                     <div className="info-item">
-                      <span className="info-icon">⏱️</span>
-                      <span className="info-text">Durata: {link.duration} minuti</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-icon">📅</span>
-                      <span className="info-text">{formatAdvanceNotice(link.requireAdvanceBooking, link.advanceHours)}</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-icon">🎯</span>
-                      <span className="info-text">Colloquio individuale</span>
+                      <Clock className="info-icon" size={20} />
+                      <span className="info-text">Durata prevista: {link.duration} minuti</span>
                     </div>
                   </div>
 
@@ -164,7 +127,6 @@ const PublicDirectoryPage: React.FC = () => {
                       to={`/book/${link.urlSlug}`}
                       className="btn btn-primary btn-cta"
                     >
-                      <span className="btn-icon">🚀</span>
                       Prenota Colloquio
                     </Link>
                     
@@ -174,10 +136,10 @@ const PublicDirectoryPage: React.FC = () => {
                         // Temporary feedback - could be improved with toast
                         alert('Link copiato negli appunti!');
                       }}
-                      className="btn btn-secondary btn-copy"
+                      className="btn-copy"
                       title="Copia link"
                     >
-                      📋
+                      <Clipboard size={18} />
                     </button>
                   </div>
                 </div>
@@ -185,7 +147,7 @@ const PublicDirectoryPage: React.FC = () => {
                 {/* Card Footer */}
                 <div className="card-footer">
                   <small className="footer-text">
-                    Creato: {new Date(link.created).toLocaleDateString('it-IT')}
+                    Creato: {link.created}
                   </small>
                 </div>
               </div>
@@ -195,7 +157,7 @@ const PublicDirectoryPage: React.FC = () => {
 
         {/* Footer */}
         <div className="directory-footer">
-            <p>Contattaci per assistenza: sezione.colloqui@riformaeprogresso.it</p>
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
         </div>
       </div>
     </div>

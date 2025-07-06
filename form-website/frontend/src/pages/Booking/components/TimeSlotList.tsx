@@ -1,6 +1,7 @@
 import React from 'react';
 import type { TimeSlot } from '../../../types/booking';
 import { formatDateForDisplay } from '../../../utils/booking/dateHelpers';
+import { Loader2, MoveLeft } from 'lucide-react';
 
 interface TimeSlotListProps {
   selectedDate: string;
@@ -49,7 +50,8 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
           onClick={onBackToCalendar}
           disabled={isLoading}
         >
-          ← Torna al calendario
+          <MoveLeft className='move-left-icon' size={20} />
+          Torna al calendario
         </button>
       </div>
       
@@ -57,7 +59,7 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
       <div className="time-slots-list">
         {isLoading ? (
           <div className="time-slots-loading">
-            <div className="loading-spinner">⏳</div>
+            <div className="loading-spinner"><Loader2 size={20} /></div>
             <p>Caricamento orari disponibili...</p>
           </div>
         ) : availableSlots.length === 0 ? (
