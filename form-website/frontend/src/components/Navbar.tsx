@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu, X } from 'lucide-react';
 
 import '../styles/Navbar.css';
 
@@ -8,10 +8,6 @@ const Navbar: React.FC = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const handleLinkClick = (href: string) => {
-    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -96,9 +92,11 @@ const Navbar: React.FC = () => {
             onClick={toggleMobileMenu}
             aria-label="Toggle mobile menu"
           >
-            <span className="hamburger-bar"></span>
-            <span className="hamburger-bar"></span>
-            <span className="hamburger-bar"></span>
+            {isMobileMenuOpen ? (
+              <X size={24} className="mobile-menu-icon" />
+            ) : (
+              <Menu size={24} className="mobile-menu-icon" />
+            )}
           </button>
         </div>
       </div>
@@ -107,35 +105,35 @@ const Navbar: React.FC = () => {
       <div className={`navbar-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
         <ul className="mobile-menu-list">
           <li className="mobile-menu-item">
-            <a href="/chi-siamo" onClick={() => handleLinkClick('/chi-siamo')}>Chi siamo</a>
+            <a href="/chi-siamo">Chi siamo</a>
             <ul className="mobile-submenu">
-              <li><a href="/il-nostro-team" onClick={() => handleLinkClick('/il-nostro-team')}>Il nostro team</a></li>
-              <li><a href="/statuto" onClick={() => handleLinkClick('/statuto')}>Statuto</a></li>
-              <li><a href="/carta-dei-valori" onClick={() => handleLinkClick('/carta-dei-valori')}>Carta dei valori</a></li>
+              <li><a href="/il-nostro-team">Il nostro team</a></li>
+              <li><a href="/statuto">Statuto</a></li>
+              <li><a href="/carta-dei-valori">Carta dei valori</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
-            <a href="/programma" onClick={() => handleLinkClick('/programma')}>Programma</a>
+            <a href="/programma">Programma</a>
           </li>
           <li className="mobile-menu-item">
-            <a href="/politiche" onClick={() => handleLinkClick('/politiche')}>Posizioni</a>
+            <a href="/politiche">Posizioni</a>
           </li>
           <li className="mobile-menu-item">
             <span>Cosa facciamo</span>
             <ul className="mobile-submenu">
-              <li><a href="/collaborazioni" onClick={() => handleLinkClick('/collaborazioni')}>Collaborazioni</a></li>
-              <li><a href="/i-nostri-eventi" onClick={() => handleLinkClick('/i-nostri-eventi')}>Eventi</a></li>
+              <li><a href="/collaborazioni">Collaborazioni</a></li>
+              <li><a href="/i-nostri-eventi">Eventi</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
             <span>Trasparenza</span>
             <ul className="mobile-submenu">
-              <li><a href="/rendicontazione" onClick={() => handleLinkClick('/rendicontazione')}>Rendicontazione</a></li>
-              <li><a href="/5x1000" onClick={() => handleLinkClick('/5x1000')}>5×1000</a></li>
+              <li><a href="/rendicontazione">Rendicontazione</a></li>
+              <li><a href="/5x1000">5×1000</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
-            <a href="/contatti" onClick={() => handleLinkClick('/contatti')}>Contatti</a>
+            <a href="/contatti">Contatti</a>
           </li>
         </ul>
       </div>
