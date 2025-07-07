@@ -81,6 +81,10 @@ const PrivacyPolicyPage: React.FC = () => {
                 I tuoi dati personali vengono conservati per massimo 2 anni dalla data di creazione dell'appuntamento, 
                 dopodiché vengono completamente eliminati dai nostri sistemi.
               </p>
+              <p>
+                Conserviamo dati statistici anonimi indefinitamente per migliorare 
+                i nostri servizi, ma questi non sono riconducibili a persone specifiche.
+              </p>
             </div>
           </section>
 
