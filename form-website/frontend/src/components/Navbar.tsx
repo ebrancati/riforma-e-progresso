@@ -13,11 +13,11 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo/Branding Section */}
+
         <div className="navbar-branding">
           <a href="/" className="navbar-logo-link">
             <img 
-              src="https://riformaeprogresso.it/wp-content/uploads/2025/06/Variante-Web.png" 
+              src="/logo.jpg" 
               alt="Riforma e Progresso" 
               className="navbar-logo"
             />
@@ -45,14 +45,12 @@ const Navbar: React.FC = () => {
               </a>
             </li>
 
-            {/* Posizioni */}
             <li className="navbar-menu-item">
               <a href="https://riformaeprogresso.it/politiche" target="_blank" className="navbar-menu-link">
                 <span>Posizioni</span>
               </a>
             </li>
 
-            {/* Cosa facciamo with dropdown */}
             <li className="navbar-menu-item navbar-dropdown">
               <button className="navbar-menu-link dropdown-toggle">
                 <span>Cosa facciamo</span>
@@ -64,7 +62,6 @@ const Navbar: React.FC = () => {
               </ul>
             </li>
 
-            {/* Trasparenza with dropdown */}
             <li className="navbar-menu-item navbar-dropdown">
               <button className="navbar-menu-link dropdown-toggle">
                 <span>Trasparenza</span>
@@ -76,9 +73,8 @@ const Navbar: React.FC = () => {
               </ul>
             </li>
 
-            {/* Contatti */}
             <li className="navbar-menu-item">
-              <a href="/contatti" className="navbar-menu-link">
+              <a href="https://riformaeprogresso.it/contatti" target="_blank" className="navbar-menu-link">
                 <span>Contatti</span>
               </a>
             </li>
@@ -105,35 +101,35 @@ const Navbar: React.FC = () => {
       <div className={`navbar-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
         <ul className="mobile-menu-list">
           <li className="mobile-menu-item">
-            <a href="/chi-siamo">Chi siamo</a>
+            <a href="https://riformaeprogresso.it/chi-siamo" target="_blank">Chi siamo</a>
             <ul className="mobile-submenu">
-              <li><a href="/il-nostro-team">Il nostro team</a></li>
-              <li><a href="/statuto">Statuto</a></li>
-              <li><a href="/carta-dei-valori">Carta dei valori</a></li>
+              <li><a href="https://riformaeprogresso.it/il-nostro-team" target="_blank">Il nostro team</a></li>
+              <li><a href="https://riformaeprogresso.it/statuto" target="_blank">Statuto</a></li>
+              <li><a href="https://riformaeprogresso.it/carta-dei-valori" target="_blank">Carta dei valori</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
-            <a href="/programma">Programma</a>
+            <a href="https://riformaeprogresso.it/programma" target="_blank">Programma</a>
           </li>
           <li className="mobile-menu-item">
-            <a href="/politiche">Posizioni</a>
+            <a href="https://riformaeprogresso.it/politiche" target="_blank">Posizioni</a>
           </li>
           <li className="mobile-menu-item">
             <span>Cosa facciamo</span>
             <ul className="mobile-submenu">
-              <li><a href="/collaborazioni">Collaborazioni</a></li>
-              <li><a href="/i-nostri-eventi">Eventi</a></li>
+              <li><a href="https://riformaeprogresso.it/collaborazioni" target="_blank">Collaborazioni</a></li>
+              <li><a href="https://riformaeprogresso.it/i-nostri-eventi" target="_blank">Eventi</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
             <span>Trasparenza</span>
             <ul className="mobile-submenu">
-              <li><a href="/rendicontazione">Rendicontazione</a></li>
-              <li><a href="/5x1000">5×1000</a></li>
+              <li><a href="https://riformaeprogresso.it/rendicontazione" target="_blank">Rendicontazione</a></li>
+              <li><a href="https://riformaeprogresso.it/5x1000" target="_blank">5×1000</a></li>
             </ul>
           </li>
           <li className="mobile-menu-item">
-            <a href="/contatti">Contatti</a>
+            <a href="https://riformaeprogresso.it/contatti" target="_blank" className="navbar-menu-link">Contatti</a>
           </li>
         </ul>
       </div>
