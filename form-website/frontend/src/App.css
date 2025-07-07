@@ -146,7 +146,8 @@ body {
   color: var(--gray-700);
   background-color: var(--primary-orange);
   min-height: 100vh;
-  padding: var(--spacing-xl);
+  padding: 0;
+  margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -611,12 +612,8 @@ body {
   transform: translateY(20px);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  body {
-    padding: var(--spacing-md);
-  }
-  
+
   .header {
     padding: var(--spacing-xl);
   }

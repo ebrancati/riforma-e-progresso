@@ -13,6 +13,7 @@ import RescheduleBookingPage from './pages/RescheduleBooking/RescheduleBookingPa
 import ContactPage           from './pages/Contact/ContactPage';
 import NotFoundPage          from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Navbar         from './components/Navbar';
 import Footer         from './components/Footer';
 
 import './App.css';
@@ -22,6 +23,8 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <AuthProvider>
+        <Navbar />
+
         <Router>
           <Routes>
             {/* Public Routes */}
