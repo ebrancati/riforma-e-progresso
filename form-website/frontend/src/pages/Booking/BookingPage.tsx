@@ -703,7 +703,7 @@ const BookingPage: React.FC = () => {
 
         {/* Info Section */}
         <div className="contact-info">
-          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link></p>
         </div>
       </div>
     </div>

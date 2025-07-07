@@ -47,7 +47,6 @@
   font-size: var(--font-size-xs);
 }
 
-/* Mobile responsive */
 @media (max-width: 768px) {
   .logout-button {
     padding: var(--spacing-sm) var(--spacing-md);

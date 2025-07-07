@@ -32,18 +32,15 @@ const ContactPage: React.FC = () => {
     
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(email))
       return 'Formato email non valido';
-    }
     
     // Message validation
-    if (message.trim().length < 10) {
+    if (message.trim().length < 10)
       return 'Il messaggio deve essere di almeno 10 caratteri';
-    }
     
-    if (message.trim().length > 1000) {
+    if (message.trim().length > 1000)
       return 'Il messaggio non può superare i 1000 caratteri';
-    }
     
     return null;
   };
@@ -94,6 +91,12 @@ const ContactPage: React.FC = () => {
   return (
     <div className="contact-container">
       {/* Header */}
+      <div className="contact-breadcrumb">
+        <Link to="/colloqui" className="breadcrumb-link">
+          <Home size={16} />
+          Torna alla Home
+        </Link>
+      </div>
       <div className="contact-header">
         <h2>Contattaci</h2>
         <p>Hai domande o vuoi saperne di più? Scrivici!</p>
@@ -166,10 +169,6 @@ const ContactPage: React.FC = () => {
                   </>
                 )}
               </button>
-              <Link to="/colloqui" className="nav-link">
-                <Home size={16} />
-                Torna alla Homepage
-              </Link>
             </div>
           </form>
         </div>

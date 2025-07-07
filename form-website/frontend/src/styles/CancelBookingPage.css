@@ -285,7 +285,6 @@
   color: var(--primary-orange);
 }
 
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

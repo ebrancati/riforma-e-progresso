@@ -59,16 +59,11 @@
   transform: none;
 }
 
-/* ============================================
-   BOOKING FORM
-   ============================================ */
-
 .booking-form-section {
   background: var(--white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-3xl);
-  margin-bottom: var(--spacing-3xl);
 }
 
 .booking-form {

@@ -304,11 +304,11 @@
   margin: 0;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .cancel-container,
   .reschedule-container {
     padding: var(--spacing-md);
+    padding-bottom: var(--spacing-xl);
   }
   
   .cancel-header,

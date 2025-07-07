@@ -246,7 +246,6 @@
   }
 }
 
-/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
   .template-selection {
     flex-direction: column;

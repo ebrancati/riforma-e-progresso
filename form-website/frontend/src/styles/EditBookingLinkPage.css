@@ -257,7 +257,6 @@
   color: var(--gray-600);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .modifiable-fields,
   .readonly-fields {

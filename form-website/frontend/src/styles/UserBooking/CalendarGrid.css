@@ -74,7 +74,9 @@
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: var(--white);
+  background: var(--gray-100);
+  padding: 2px;
+  box-shadow: inset 0 0 0 2px transparent;
 }
 
 .calendar-day {
@@ -107,7 +109,7 @@
 .calendar-day.past-day {
   background: var(--gray-100);
   color: var(--gray-400);
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .calendar-day.available-day {
@@ -120,7 +122,19 @@
   background: var(--orange-pale);
   color: var(--orange-dark);
   transform: scale(1.05);
-  box-shadow: inset 0 0 0 2px var(--primary-orange);
+  position: relative;
+  z-index: 1;
+}
+
+.calendar-day.available-day:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid var(--primary-orange);
+  pointer-events: none;
 }
 
 .calendar-day.unavailable-day {

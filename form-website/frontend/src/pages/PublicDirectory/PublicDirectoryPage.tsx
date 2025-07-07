@@ -9,11 +9,19 @@ import '../../styles/PublicDirectoryPage.css';
 const PublicDirectoryPage: React.FC = () => {
   const [bookingLinks, setBookingLinks] = useState<PublicBookingLinkInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadActiveBookingLinks();
   }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   useEffect(() => {
     if (error) {
@@ -22,13 +30,29 @@ const PublicDirectoryPage: React.FC = () => {
     }
   }, [error]);
 
-  const loadActiveBookingLinks = async () => {
-    try {
-      setIsLoading(true);
-      const response = await publicDirectoryApi.getActiveBookingLinks();
-      setBookingLinks(response.bookingLinks);
-      setError(null);
-    } catch (error) {
+const loadActiveBookingLinks = async (isRefresh = false) => {
+  try {
+    setIsLoading(true);
+    const response = await publicDirectoryApi.getActiveBookingLinks();
+
+    // Check for changes on manual refresh
+    if (isRefresh) {
+      const currentUrls = bookingLinks.map(link => link.urlSlug).sort();
+      const newUrls = response.bookingLinks.map(link => link.urlSlug).sort();
+      const hasChanges = JSON.stringify(currentUrls) !== JSON.stringify(newUrls);
+
+      if (response.bookingLinks.length === 0) {
+        setSuccessMessage('Controllo completato: nessuna opportunità disponibile.');
+      } else if (hasChanges) {
+        setSuccessMessage('Nuove opportunità trovate! La pagina è stata aggiornata.');
+      } else {
+        setSuccessMessage('Nessun aggiornamento: le opportunità mostrate sono le più recenti.');
+      }
+    }
+
+    setBookingLinks(response.bookingLinks);
+    setError(null);
+  } catch (error) {
       console.error('Failed to load booking links:', error);
       
       if (error instanceof ApiError) {
@@ -47,117 +71,103 @@ const PublicDirectoryPage: React.FC = () => {
 
   return (
     <div className="directory-container">
-      {/* Header */}
-      <div className="directory-header">
-        <h1>Riforma e Progresso</h1>
-        <p className="directory-subtitle">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit
-        </p>
-        <div className="directory-stats">
-          <span className="stats-item">
-            <strong>{bookingLinks.length}</strong> {bookingLinks.length === 1 ? 'posizione aperta' : 'posizioni aperte'}
-          </span>
-        </div>
-      </div>
-
       <div className="directory-content">
         {/* Notifications */}
         <NotificationMessages 
           error={error} 
-          successMessage={null} 
+          successMessage={successMessage} 
         />
 
-        {/* Retry button for errors */}
-        {error && (
-          <div className="error-actions">
-            <button 
-              onClick={loadActiveBookingLinks}
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              🔄 Riprova
-            </button>
-          </div>
-        )}
+        <div className="opportunities-section-header">
+          <h2 className="opportunities-title">Posizioni Aperte ({bookingLinks.length})</h2>
+          <button 
+            onClick={() => loadActiveBookingLinks(true)}
+            className="refresh-button"
+            disabled={isLoading}
+            title="Aggiorna opportunità"
+          >
+            <RefreshCw size={20} className={isLoading ? 'spinning' : ''} />
+            Aggiorna
+          </button>
+        </div>
 
         {/* Booking Links Grid */}
-        {bookingLinks.length === 0 && !isLoading ? (
-          <div className="empty-state">
-            <SearchX size={60} className="empty-icon" />
-            <h3>Nessuna posizione aperta al momento</h3>
-            <p>
-              Non ci sono colloqui disponibili in questo momento.<br />
-              Torna a trovarci presto per nuove opportunità!
-            </p>
-            <button 
-              onClick={loadActiveBookingLinks}
-              className="btn btn-secondary"
-            >
-              <RefreshCw size={20} className="refresh-icon" /> Controlla di nuovo
-            </button>
-          </div>
-        ) : (
-          <div className="opportunities-grid">
-            {bookingLinks.map((link, index) => (
-              <div 
-                key={link.urlSlug} 
-                className="opportunity-card"
-                style={{ animationDelay: `${index * 0.1}s` }}
+        <div className="opportunities-grid">
+          {bookingLinks.length === 0 && !isLoading ? (
+            <div className="empty-state">
+              <SearchX size={60} className="empty-icon" />
+              <h3>Nessuna posizione aperta al momento</h3>
+              <p>
+                Non ci sono colloqui disponibili in questo momento.<br />
+                Torna a trovarci presto per nuove opportunità!
+              </p>
+              <button 
+                onClick={() => loadActiveBookingLinks(true)}
+                className="btn btn-secondary"
               >
-                {/* Card Header */}
-                <div className="card-header">
-                  <h3 className="card-title">{link.name}</h3>
-                  <div className="card-badge">
-                    <span className="badge-text">Attivo</span>
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="card-content">
-                  <div className="card-info">
-                    <div className="info-item">
-                      <Clock className="info-icon" size={20} />
-                      <span className="info-text">Durata prevista: {link.duration} minuti</span>
-                    </div>
-                  </div>
-
-                  {/* Call to Action */}
-                  <div className="card-actions">
-                    <Link 
-                      to={`/book/${link.urlSlug}`}
-                      className="btn btn-primary btn-cta"
-                    >
-                      Prenota Colloquio
-                    </Link>
-                    
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(link.bookingUrl);
-                        // Temporary feedback - could be improved with toast
-                        alert('Link copiato negli appunti!');
-                      }}
-                      className="btn-copy"
-                      title="Copia link"
-                    >
-                      <Clipboard size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="card-footer">
-                  <small className="footer-text">
-                    Creato: {link.created}
-                  </small>
+                <RefreshCw size={20} className="refresh-icon" /> Controlla di nuovo
+              </button>
+            </div>
+          ) : (
+          bookingLinks.map((link, index) => (
+            <div 
+              key={link.urlSlug} 
+              className="opportunity-card"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              {/* Card Header */}
+              <div className="card-header">
+                <h3 className="card-title">{link.name}</h3>
+                <div className="card-badge">
+                  <span className="badge-text">Attivo</span>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Card Content */}
+              <div className="card-content">
+                <div className="card-info">
+                  <div className="info-item">
+                    <Clock className="info-icon" size={20} />
+                    <span className="info-text">Durata prevista: {link.duration} minuti</span>
+                  </div>
+                </div>
+
+                {/* Call to Action */}
+                <div className="card-actions">
+                  <Link 
+                    to={`/book/${link.urlSlug}`}
+                    className="btn btn-primary btn-cta"
+                  >
+                    Prenota Colloquio
+                  </Link>
+                  
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(link.bookingUrl);
+                      setSuccessMessage('Link copiato negli appunti!');
+                    }}
+                    className="btn-copy"
+                    title="Copia link"
+                  >
+                    <Clipboard size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="card-footer">
+                <small className="footer-text">
+                  Creato: {link.created}
+                </small>
+              </div>
+            </div>
+          ))
         )}
+      </div>
 
         {/* Footer */}
         <div className="directory-footer">
-          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link></p>
         </div>
       </div>
     </div>
