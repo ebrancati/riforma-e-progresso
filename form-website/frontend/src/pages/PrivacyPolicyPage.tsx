@@ -154,10 +154,9 @@ const PrivacyPolicyPage: React.FC = () => {
               <Edit3 className="section-icon" size={24} />
               <h2>Modifiche a questa privacy policy</h2>
             </div>
-            <p>
-              Potremmo aggiornare questa privacy policy periodicamente. Ti informeremo di eventuali modifiche 
-              importanti tramite avviso sul sito.
-            </p>
+            <p>Potremmo aggiornare questa privacy policy periodicamente.</p>
+            <p>Ti informeremo di eventuali modifiche pubblicando la nuova Informativa sulla privacy su questa pagina e aggiornando la data di "Ultimo aggiornamento".</p>
+            <p>Si consiglia di consultare periodicamente la presente Informativa sulla privacy per eventuali modifiche. Le modifiche alla presente Informativa sulla privacy entreranno in vigore al momento della loro pubblicazione su questa pagina.</p>
           </section>
 
           <section className="privacy-section">
