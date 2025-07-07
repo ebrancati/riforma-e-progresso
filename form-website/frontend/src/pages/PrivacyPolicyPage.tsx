@@ -66,9 +66,8 @@ const PrivacyPolicyPage: React.FC = () => {
             </div>
             <p>Utilizziamo i tuoi dati esclusivamente per:</p>
             <ul className="privacy-list">
-              <li>Gestire la tua prenotazione e confermare l'appuntamento</li>
-              <li>Contattarti per comunicazioni relative al colloquio</li>
-              <li>Valutare la tua candidatura in base al curriculum fornito</li>
+              <li>Valutare l'assegnazione di ruoli e attività in Riforma e Progresso</li>
+              <li>Fini statistici e non nominativi</li>
             </ul>
           </section>
 

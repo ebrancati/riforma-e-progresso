@@ -185,20 +185,7 @@
   margin: 0;
 }
 
-.contact-rights {
-  background: var(--blue-pale);
-  border: 1px solid var(--primary-blue);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  margin-top: var(--spacing-xl);
-  text-align: center;
-}
-
-.contact-rights p {
-  color: var(--primary-blue);
-  font-weight: var(--font-weight-medium);
-  margin: 0;
-}
+.contact-rights { text-align: center; }
 
 /* Privacy Links */
 .privacy-link {
