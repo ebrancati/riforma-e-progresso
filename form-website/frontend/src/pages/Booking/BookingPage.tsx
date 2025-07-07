@@ -450,7 +450,6 @@ const BookingPage: React.FC = () => {
 
         {/* Step Content */}
         <div className="step-content">
-          
           {/* Step 1: Calendar */}
           {currentStep === 1 && (
             <div className="calendar-step">
@@ -462,6 +461,9 @@ const BookingPage: React.FC = () => {
                 onPreviousMonth={handlePreviousMonth}
                 onNextMonth={handleNextMonth}
                 isLoading={isLoadingCalendar}
+                showBackButton={true}
+                backButtonUrl="/colloqui"
+                backButtonText="Torna alle Opportunità"
               />
             </div>
           )}
@@ -591,7 +593,7 @@ const BookingPage: React.FC = () => {
                         type="text"
                         id="role"
                         className="form-input"
-                        placeholder="es. Grafico, Developer, Marketing Manager..."
+                        placeholder="es. Grafico, Analista Politico..."
                         value={formData.role}
                         onChange={(e) => handleInputChange('role', e.target.value)}
                         disabled={isSubmitting}
@@ -674,7 +676,8 @@ const BookingPage: React.FC = () => {
                       onClick={handleBackToTimeSlots}
                       disabled={isSubmitting}
                     >
-                      <MoveLeft className='move-left-icon' size={20} /> Cambia orario
+                      <MoveLeft className='move-left-icon' size={20} />
+                      Cambia orario
                     </button>
                     
                     <button 
@@ -682,17 +685,8 @@ const BookingPage: React.FC = () => {
                       className="btn btn-primary btn-submit"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 size={20} />
-                          Invio in corso...
-                        </>
-                      ) : (
-                        <>
-                          <Rocket size={20} />
-                          Conferma Prenotazione
-                        </>
-                      )}
+                      <Rocket size={20} />
+                      Conferma Prenotazione
                     </button>
                   </div>
                 </form>

@@ -8,6 +8,11 @@
   position: relative;
 }
 
+.calendar-wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
 .calendar-container.loading {
   opacity: 0.7;
   pointer-events: none;
@@ -47,6 +52,13 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Back Navigation */
+.calendar-back-navigation {
+  padding: var(--spacing-lg);
+  padding-left: 0;
+  background: var(--white);
 }
 
 .calendar-month-year {
@@ -256,6 +268,10 @@
 @media (max-width: 768px) {
   .calendar-container {
     margin: 0 var(--spacing-lg);
+  }
+
+  .calendar-back-navigation {
+    padding: var(--spacing-md) 0;
   }
   
   .calendar-header {

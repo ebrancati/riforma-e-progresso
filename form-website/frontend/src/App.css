@@ -354,6 +354,29 @@ body {
   font-size: var(--font-size-sm);
 }
 
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--primary-blue);
+  text-decoration: none;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 2px solid var(--primary-blue);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  background-color: transparent;
+  font-weight: var(--font-weight-medium);
+}
+
+.back-button:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
 .btn-icon:hover:not(:disabled) {
   background: var(--orange-dark);
   transform: translateY(-2px);
@@ -618,6 +641,12 @@ body {
   .form-input,
   .form-select {
     max-width: 100%;
+  }
+
+  .calendar-back-button {
+    width: 100%;
+    justify-content: center;
+    font-size: var(--font-size-sm);
   }
 }
 
