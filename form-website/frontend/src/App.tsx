@@ -17,6 +17,7 @@ import Navbar         from './components/Navbar';
 import Footer         from './components/Footer';
 
 import './App.css';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 const App: React.FC = () => {
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
             <Route path="/booking/:bookingId/reschedule" element={<RescheduleBookingPage />} />
             <Route path="/contattaci" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage /> } />
             
             {/* Protected Admin Routes */}
             <Route path="/admin/time-slots" element={
