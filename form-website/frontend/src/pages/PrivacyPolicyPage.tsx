@@ -35,7 +35,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Chi siamo</h2>
             </div>
             <p>
-              Riforma e Progresso è un'associazione che si occupa di ricerca e divulgazione in ambito politico ed economico. 
+              Riforma e Progresso è una APS che si occupa di ricerca e divulgazione in ambito politico ed economico. 
               Questo sito web gestisce un sistema di prenotazione colloqui per candidati interessati a collaborare con noi.
             </p>
           </section>
@@ -46,7 +46,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Dati Raccolti</h2>
             </div>
             <p>Quando prenoti un colloquio attraverso il nostro sito, raccogliamo:</p>
-            <ul className="data-list">
+            <ul className="privacy-list">
               <li>
                 <strong>Dati personali:</strong> nome, cognome, email, numero di telefono
               </li>
@@ -65,7 +65,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Come vengono utilizzati i dati raccolti</h2>
             </div>
             <p>Utilizziamo i tuoi dati esclusivamente per:</p>
-            <ul className="purpose-list">
+            <ul className="privacy-list">
               <li>Gestire la tua prenotazione e confermare l'appuntamento</li>
               <li>Contattarti per comunicazioni relative al colloquio</li>
               <li>Valutare la tua candidatura in base al curriculum fornito</li>
@@ -91,8 +91,9 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Con chi condividiamo i dati</h2>
             </div>
             <p>Non condividiamo, vendiamo o trasferiamo i tuoi dati personali a terze parti, eccetto:</p>
-            <ul className="sharing-list">
-                <li>Con Amazon Web Services per l'hosting e l'infrastruttura del sito, che agisce come responsabile del trattamento dei dati secondo gli standard GDPR</li>
+            <ul className="privacy-list">
+                <li>Con Amazon Web Services per hosting, database e infrastruttura del sito, che agisce come responsabile del trattamento secondo gli standard GDPR</li>
+                <li>Con Google (Gmail e Google Drive) per comunicazioni e archiviazione documenti, che agisce come responsabile del trattamento secondo gli standard GDPR</li>
                 <li>Quando richiesto dalla legge</li>
             </ul>
           </section>
