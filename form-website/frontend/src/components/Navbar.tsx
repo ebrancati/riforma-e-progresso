@@ -11,8 +11,6 @@ const Navbar: React.FC = () => {
   };
 
   const handleLinkClick = (href: string) => {
-    // In a real app, you would use React Router's navigate here
-    console.log(`Navigating to: ${href}`);
     setIsMobileMenuOpen(false);
   };
 
@@ -33,29 +31,27 @@ const Navbar: React.FC = () => {
         {/* Desktop Menu */}
         <div className="navbar-menu">
           <ul className="navbar-menu-list">
-            {/* Chi siamo with dropdown */}
             <li className="navbar-menu-item navbar-dropdown">
-              <a href="/chi-siamo" className="navbar-menu-link">
+              <a href="https://riformaeprogresso.it/chi-siamo" target="_blank" className="navbar-menu-link">
                 <span>Chi siamo</span>
                 <ChevronDown size={16} className="dropdown-icon" />
               </a>
               <ul className="navbar-submenu">
-                <li><a href="/il-nostro-team">Il nostro team</a></li>
-                <li><a href="/statuto">Statuto</a></li>
-                <li><a href="/carta-dei-valori">Carta dei valori</a></li>
+                <li><a href="https://riformaeprogresso.it/il-nostro-team" target="_blank">Il nostro team</a></li>
+                <li><a href="https://riformaeprogresso.it/statuto" target="_blank">Statuto</a></li>
+                <li><a href="https://riformaeprogresso.it/carta-dei-valori" target="_blank">Carta dei valori</a></li>
               </ul>
             </li>
 
-            {/* Programma */}
             <li className="navbar-menu-item">
-              <a href="/programma" className="navbar-menu-link">
+              <a href="https://riformaeprogresso.it/programma" target="_blank" className="navbar-menu-link">
                 <span>Programma</span>
               </a>
             </li>
 
             {/* Posizioni */}
             <li className="navbar-menu-item">
-              <a href="/politiche" className="navbar-menu-link">
+              <a href="https://riformaeprogresso.it/politiche" target="_blank" className="navbar-menu-link">
                 <span>Posizioni</span>
               </a>
             </li>
@@ -67,8 +63,8 @@ const Navbar: React.FC = () => {
                 <ChevronDown size={16} className="dropdown-icon" />
               </button>
               <ul className="navbar-submenu">
-                <li><a href="/collaborazioni">Collaborazioni</a></li>
-                <li><a href="/i-nostri-eventi">Eventi</a></li>
+                <li><a href="https://riformaeprogresso.it/collaborazioni" target="_blank">Collaborazioni</a></li>
+                <li><a href="https://riformaeprogresso.it/i-nostri-eventi" target="_blank">Eventi</a></li>
               </ul>
             </li>
 
@@ -79,8 +75,8 @@ const Navbar: React.FC = () => {
                 <ChevronDown size={16} className="dropdown-icon" />
               </button>
               <ul className="navbar-submenu">
-                <li><a href="/rendicontazione">Rendicontazione</a></li>
-                <li><a href="/5x1000">5×1000</a></li>
+                <li><a href="https://riformaeprogresso.it/rendicontazione" target="_blank">Rendicontazione</a></li>
+                <li><a href="https://riformaeprogresso.it/5x1000" target="_blank">5×1000</a></li>
               </ul>
             </li>
 
