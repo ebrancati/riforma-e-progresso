@@ -13,6 +13,7 @@ import RescheduleBookingPage from './pages/RescheduleBooking/RescheduleBookingPa
 import ContactPage           from './pages/Contact/ContactPage';
 import NotFoundPage          from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import ScrollToTop    from './components/ScrollToTop';
 import Navbar         from './components/Navbar';
 import Footer         from './components/Footer';
 
@@ -25,6 +26,12 @@ const App: React.FC = () => {
     <div className="App">
       <AuthProvider>
         <Router>
+          <ScrollToTop 
+            excludePaths={[]}
+            delay={0}
+            smooth={false}
+          />
+          
           <Navbar />
           
           <Routes>
