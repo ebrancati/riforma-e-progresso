@@ -129,54 +129,27 @@ const PrivacyPolicyPage: React.FC = () => {
               <Shield className="section-icon" size={24} />
               <h2>I tuoi diritti</h2>
             </div>
-            <p>Hai il diritto di:</p>
-            <div className="rights-grid">
-              <div className="right-item">
-                <Eye size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Accedere</h4>
-                  <p>ai dati che abbiamo su di te, richiedendo conferma dell'esistenza del trattamento e ottenendo informazioni sulle modalità e finalità</p>
-                </div>
-              </div>
-              <div className="right-item">
-                <Edit3 size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Rettificare</h4>
-                  <p>i tuoi dati personali se sono inesatti o incompleti</p>
-                </div>
-              </div>
-              <div className="right-item">
-                <Trash2 size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Cancellare</h4>
-                  <p>i tuoi dati personali quando non sono più necessari per le finalità per cui sono stati raccolti</p>
-                </div>
-              </div>
-              <div className="right-item">
-                <Lock size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Limitare</h4>
-                  <p>il trattamento dei tuoi dati in specifiche circostanze previste dalla legge</p>
-                </div>
-              </div>
-              <div className="right-item">
-                <FileText size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Portabilità</h4>
-                  <p>ricevendo i tuoi dati in formato strutturato e leggibile da dispositivo automatico</p>
-                </div>
-              </div>
-              <div className="right-item">
-                <Shield size={20} className="right-icon" />
-                <div className="right-content">
-                  <h4>Opporti</h4>
-                  <p>al trattamento dei tuoi dati per motivi legittimi</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="additional-rights">
+            <p>Hai il diritto di:</p>            
+            <div className="rights">
               <ul className="privacy-list">
+                <li>
+                  <strong>Accedere</strong> ai dati che abbiamo su di te, richiedendo conferma dell'esistenza del trattamento e ottenendo informazioni sulle modalità e finalità
+                </li>
+                <li>
+                  <strong>Rettificare</strong> i tuoi dati personali se sono inesatti o incompleti
+                </li>
+                <li>
+                  <strong>Cancellare</strong> i tuoi dati personali quando non sono più necessari per le finalità per cui sono stati raccolti
+                </li>
+                <li>
+                  <strong>Limitare</strong> il trattamento dei tuoi dati in specifiche circostanze previste dalla legge
+                </li>
+                <li>
+                  <strong>Portabilità</strong>, ricevendo i tuoi dati in formato strutturato e leggibile
+                </li>
+                <li>
+                  <strong>Opporti</strong> al trattamento dei tuoi dati per motivi legittimi
+                </li>
                 <li>
                   <strong>Revocare il consenso</strong> in qualsiasi momento, senza pregiudicare la liceità del trattamento basata sul consenso prestato prima della revoca
                 </li>
@@ -228,7 +201,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Trasferimenti verso paesi terzi</h2>
             </div>
             <p>
-              I trasferimenti di dati personali verso Google avvengono sulla base di garanzie adeguate, in particolare:
+              I trasferimenti di dati personali verso Google ed AWS (Amazon Web Services) avvengono sulla base di garanzie adeguate, in particolare:
             </p>
             <ul className="privacy-list">
               <li>
