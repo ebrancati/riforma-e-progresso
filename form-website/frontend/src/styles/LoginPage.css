@@ -199,6 +199,7 @@
 @media (max-width: 768px) {
   .login-container {
     padding: var(--spacing-lg);
+    padding-bottom: var(--spacing-xl);
   }
   
   .login-card {
@@ -223,6 +224,7 @@
 @media (max-width: 480px) {
   .login-container {
     padding: var(--spacing-md);
+    padding-bottom: var(--spacing-xl);
   }
   
   .login-card {
@@ -237,4 +239,13 @@
   .login-header p {
     font-size: var(--font-size-sm);
   }
+}
+
+@media (max-width: 320px) {
+  .login-container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .login-card { border-radius: 0; }
 }

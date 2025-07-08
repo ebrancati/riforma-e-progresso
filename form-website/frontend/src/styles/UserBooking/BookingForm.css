@@ -13,7 +13,7 @@
 .summary-card h3 {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--gray-700);
+  color: var(--primary-blue);
   margin-bottom: var(--spacing-xl);
 }
 
@@ -234,10 +234,7 @@
   transition: color var(--transition-normal);
 }
 
-.privacy-link:hover {
-  color: var(--orange-dark);
-  text-decoration: underline;
-}
+.privacy-link:hover { color: var(--orange-dark); }
 
 /* Submit Button */
 .form-actions {
@@ -320,7 +317,7 @@
   }
   
   .form-actions {
-    flex-direction: column;
+    flex-direction: column-reverse;
   }
 }
 

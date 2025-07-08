@@ -72,8 +72,8 @@
   padding: var(--spacing-lg) var(--spacing-xl);
   text-decoration: none;
   color: var(--gray-700);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
   transition: all var(--transition-normal);
   background: none;
   border: none;
@@ -84,8 +84,8 @@
 }
 
 .navbar-menu-link:hover {
-  color: var(--primary-orange);
-  background-color: var(--orange-pale);
+  color: var(--white);
+  background-color: var(--primary-blue);
   transform: translateY(-2px);
 }
 
@@ -138,12 +138,16 @@
   color: var(--gray-600);
   text-decoration: none;
   transition: all var(--transition-normal);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.navbar-submenu li:hover {
+  background: var(--primary-blue);
 }
 
 .navbar-submenu a:hover {
-  background: var(--primary-orange);
+  background: var(--primary-blue);
   color: var(--white);
   transform: translateX(5px);
 }
@@ -207,7 +211,7 @@
 }
 
 .navbar-mobile-menu.open {
-  max-height: 600px;
+  max-height: 850px;
 }
 
 .mobile-menu-list {
@@ -275,10 +279,10 @@
   transform: translateX(5px);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1038px) {
   .navbar-menu-link {
     padding: var(--spacing-md) var(--spacing-lg);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
   }
   
   .navbar-container {
@@ -286,7 +290,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 918px) {
   .navbar-menu {
     display: none;
   }
@@ -301,19 +305,7 @@
 }
 
 @media (max-width: 480px) {
-  .navbar-container {
-    padding: 0 var(--spacing-md);
-    height: 65px;
-  }
 
-  .navbar-logo {
-    height: 40px;
-  }
-
-  .navbar-mobile-toggle {
-    width: 40px;
-    height: 40px;
-  }
 
   .mobile-menu-list {
     padding: var(--spacing-lg);
@@ -322,6 +314,10 @@
   .mobile-submenu {
     padding-left: var(--spacing-lg);
   }
+}
+
+@media (max-width: 320px) {
+  .navbar { margin-bottom: 0; }
 }
 
 /* Animation for mobile menu appearance */

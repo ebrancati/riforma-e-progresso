@@ -6,7 +6,10 @@ import '../styles/Footer.css';
 const Footer: React.FC = () => {
   const location = useLocation();
   const hideAdminLink = location.pathname === '/login' || 
-                       location.pathname.startsWith('/admin');
+                        location.pathname.startsWith('/admin');
+
+  const hidePrivacyPolicyLink = location.pathname === '/privacy-policy' || 
+                                location.pathname.startsWith('/privacy-policy');
 
   return (
     <footer className="app-footer">
@@ -26,10 +29,14 @@ const Footer: React.FC = () => {
           </a>
         </div>
 
-        <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
-        {!hideAdminLink && (
-          <Link to="/login" className="footer-link">Area Amministratori</Link>
-        )}
+        <div className="footer-btn-container">
+          {!hidePrivacyPolicyLink && (
+            <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
+          )}
+          {!hideAdminLink && (
+            <Link to="/login" className="footer-link">Area Amministratori</Link>
+          )}
+        </div>
       </div>
     </footer>
   );

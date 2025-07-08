@@ -250,6 +250,11 @@
 }
 
 @media (max-width: 480px) {
+  .privacy-breadcrumb {
+    display: flex;
+    justify-content: center;
+  }
+
   .privacy-header {
     padding: var(--spacing-xl);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
@@ -314,5 +319,17 @@
   
   .contact-rights {
     padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 320px) {
+  .privacy-container {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+  }
+
+  .privacy-header {
+    border-radius: 0;
   }
 }

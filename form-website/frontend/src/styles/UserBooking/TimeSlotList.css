@@ -17,7 +17,7 @@
 .selected-date-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--gray-700);
+  color: var(--primar-blue);
   margin-bottom: var(--spacing-md);
 }
 

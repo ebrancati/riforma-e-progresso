@@ -24,9 +24,9 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <AuthProvider>
-        <Navbar />
-
         <Router>
+          <Navbar />
+          
           <Routes>
             {/* Public Routes */}
             <Route path="/colloqui" element={<PublicDirectoryPage />} />

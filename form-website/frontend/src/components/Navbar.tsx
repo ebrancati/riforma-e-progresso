@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
 
 import '../styles/Navbar.css';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,13 +16,13 @@ const Navbar: React.FC = () => {
       <div className="navbar-container">
 
         <div className="navbar-branding">
-          <a href="/" className="navbar-logo-link">
+          <Link to="/" className="navbar-logo-link">
             <img 
               src="/logo.jpg" 
               alt="Riforma e Progresso" 
               className="navbar-logo"
             />
-          </a>
+          </Link>
         </div>
 
         {/* Desktop Menu */}

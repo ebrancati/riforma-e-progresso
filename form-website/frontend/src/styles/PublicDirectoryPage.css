@@ -53,7 +53,7 @@
 }
 
 .empty-state h3 {
-  color: var(--gray-700);
+  color: var(--primary-blue);
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-lg);
 }
@@ -72,7 +72,7 @@
 }
 
 .opportunities-title {
-  color: var(--gray-700);
+  color: var(--primary-blue);
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   margin: 0;
@@ -183,7 +183,7 @@
 .card-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--gray-700);
+  color: var(--primary-blue);
   margin: 0;
   line-height: var(--line-height-tight);
   flex: 1;
@@ -327,6 +327,7 @@
   
   .opportunities-section-header {
     padding: var(--spacing-xl) var(--spacing-xl) 0;
+    margin-top: var(--spacing-xl);
     flex-direction: column;
     gap: var(--spacing-md);
     text-align: center;
@@ -371,5 +372,16 @@
 @media (max-width: 480px) {  
   .opportunity-card {
     border-radius: var(--radius-lg);
+  }
+}
+
+@media (max-width: 320px) {
+  .directory-container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .directory-content {
+    border-radius: 0;
   }
 }

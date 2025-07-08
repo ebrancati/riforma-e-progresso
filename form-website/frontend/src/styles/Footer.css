@@ -57,3 +57,14 @@
   fill: currentColor;
   transition: fill var(--transition-normal);
 }
+
+@media (max-width: 480px) {
+  .footer-link {
+    padding: 8px 12px;
+    margin: 0 var(--spacing-sm);
+  }
+}
+
+@media (max-width: 320px) {
+
+}
