@@ -98,7 +98,7 @@ const ContactPage: React.FC = () => {
         </Link>
       </div>
       <div className="contact-header">
-        <h2>Contattaci</h2>
+        <h1>Contattaci</h1>
         <p>Hai domande o vuoi saperne di più? Scrivici!</p>
       </div>
 

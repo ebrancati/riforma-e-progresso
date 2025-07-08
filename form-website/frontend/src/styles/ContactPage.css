@@ -52,7 +52,7 @@
 }
 
 .contact-header h1 {
-  color: var(--gray-700);
+  color: var(--primary-blue);
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-md);
