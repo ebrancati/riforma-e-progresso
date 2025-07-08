@@ -41,12 +41,6 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
-.empty-state {
-  text-align: center;
-  padding: var(--spacing-5xl) var(--spacing-xl);
-  color: var(--gray-500);
-}
-
 .empty-icon {
   font-size: var(--font-size-6xl);
   margin-bottom: var(--spacing-xl);
@@ -60,7 +54,6 @@
 
 .empty-state p {
   line-height: var(--line-height-relaxed);
-  margin-bottom: var(--spacing-xl);
 }
 
 .opportunities-section-header {

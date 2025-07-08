@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { publicDirectoryApi, ApiError } from '../../services/api';
 import type { PublicBookingLinkInfo } from '../../services/api/public/types';
 import NotificationMessages from '../../components/NotificationMessages';
-import { SearchX, RefreshCw, Clock, Clipboard } from "lucide-react";
+import { SearchX, RefreshCw, Clock, Clipboard, Loader2 } from "lucide-react";
 import '../../styles/PublicDirectoryPage.css';
 
 const PublicDirectoryPage: React.FC = () => {
@@ -91,79 +91,89 @@ const loadActiveBookingLinks = async (isRefresh = false) => {
           </button>
         </div>
 
-        {/* Booking Links Grid */}
-        <div className="opportunities-grid">
-          {bookingLinks.length === 0 && !isLoading ? (
-            <div className="empty-state">
-              <SearchX size={60} className="empty-icon" />
-              <h3>Nessuna posizione aperta al momento</h3>
-              <p>
-                Non ci sono colloqui disponibili in questo momento.<br />
-                Torna a trovarci presto per nuove opportunità!
-              </p>
-              <button 
-                onClick={() => loadActiveBookingLinks(true)}
-                className="btn btn-secondary"
-              >
-                <RefreshCw size={20} className="refresh-icon" /> Controlla di nuovo
-              </button>
-            </div>
-          ) : (
-          bookingLinks.map((link, index) => (
-            <div 
-              key={link.urlSlug} 
-              className="opportunity-card"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Card Header */}
-              <div className="card-header">
-                <h3 className="card-title">{link.name}</h3>
-                <div className="card-badge">
-                  <span className="badge-text">Attivo</span>
-                </div>
-              </div>
+        {/* Show loading indicator when loading */}
+        {isLoading && (
+          <div className="loading-indicator">
+            <Loader2 size={40} className="loading-spinner" />
+            <p>Caricamento opportunità in corso...</p>
+          </div>
+        )}
 
-              {/* Card Content */}
-              <div className="card-content">
-                <div className="card-info">
-                  <div className="info-item">
-                    <Clock className="info-icon" size={20} />
-                    <span className="info-text">Durata prevista: {link.duration} minuti</span>
+        {/* Booking Links Grid */}
+        {!isLoading && (
+          <div className="opportunities-grid">
+            {bookingLinks.length === 0 && !isLoading ? (
+              <div className="empty-state">
+                <SearchX size={60} className="empty-icon" />
+                <h3>Nessuna posizione aperta al momento</h3>
+                <p>
+                  Non ci sono colloqui disponibili in questo momento.<br />
+                  Torna a trovarci presto per nuove opportunità!
+                </p>
+                <button 
+                  onClick={() => loadActiveBookingLinks(true)}
+                  className="btn btn-secondary"
+                >
+                  <RefreshCw size={20} className="refresh-icon" /> Controlla di nuovo
+                </button>
+              </div>
+            ) : (
+            bookingLinks.map((link, index) => (
+              <div 
+                key={link.urlSlug} 
+                className="opportunity-card"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {/* Card Header */}
+                <div className="card-header">
+                  <h3 className="card-title">{link.name}</h3>
+                  <div className="card-badge">
+                    <span className="badge-text">Attivo</span>
                   </div>
                 </div>
 
-                {/* Call to Action */}
-                <div className="card-actions">
-                  <Link 
-                    to={`/book/${link.urlSlug}`}
-                    className="btn btn-primary btn-cta"
-                  >
-                    Prenota Colloquio
-                  </Link>
-                  
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(link.bookingUrl);
-                      setSuccessMessage('Link copiato negli appunti!');
-                    }}
-                    className="btn-copy"
-                    title="Copia link"
-                  >
-                    <Clipboard size={18} />
-                  </button>
+                {/* Card Content */}
+                <div className="card-content">
+                  <div className="card-info">
+                    <div className="info-item">
+                      <Clock className="info-icon" size={20} />
+                      <span className="info-text">Durata prevista: {link.duration} minuti</span>
+                    </div>
+                  </div>
+
+                  {/* Call to Action */}
+                  <div className="card-actions">
+                    <Link 
+                      to={`/book/${link.urlSlug}`}
+                      className="btn btn-primary btn-cta"
+                    >
+                      Prenota Colloquio
+                    </Link>
+                    
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(link.bookingUrl);
+                        setSuccessMessage('Link copiato negli appunti!');
+                      }}
+                      className="btn-copy"
+                      title="Copia link"
+                    >
+                      <Clipboard size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Card Footer */}
+                <div className="card-footer">
+                  <small className="footer-text">
+                    Creato: {link.created}
+                  </small>
                 </div>
               </div>
-
-              {/* Card Footer */}
-              <div className="card-footer">
-                <small className="footer-text">
-                  Creato: {link.created}
-                </small>
-              </div>
-            </div>
-          ))
+            ))
+          )}
+        </div>
         )}
-      </div>
 
         {/* Footer */}
         <div className="directory-footer">
