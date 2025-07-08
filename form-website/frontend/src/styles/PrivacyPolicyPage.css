@@ -393,6 +393,14 @@
     padding-top: 0;
   }
 
+  .privacy-content {
+    border-radius: 0;
+  }
+
+  .breadcrumb-link:hover {
+    transform: translateY(0px);
+  }
+
   .privacy-header {
     border-radius: 0;
   }

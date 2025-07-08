@@ -159,6 +159,14 @@ body {
   width: 100%;
 }
 
+.contact-container {
+  padding-bottom: var(--spacing-xl);
+}
+
+.login-container {
+  padding-bottom: var(--spacing-xl);
+}
+
 .header {
   background: var(--white);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
