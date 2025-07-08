@@ -249,8 +249,7 @@ body {
 
 .form-label {
   display: block;
-  margin-bottom: var(--spacing-sm);
-  color: var(--gray-600);
+  color: var(--primary-blue);
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
   text-transform: uppercase;
