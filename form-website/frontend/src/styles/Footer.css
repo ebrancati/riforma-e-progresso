@@ -5,6 +5,12 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.footer-btn-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .footer-link {
   color: var(--primary-blue);
   text-decoration: none;
@@ -65,6 +71,10 @@
   }
 }
 
-@media (max-width: 320px) {
-
+@media (max-width: 350px) {
+  .footer-btn-container {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
 }
