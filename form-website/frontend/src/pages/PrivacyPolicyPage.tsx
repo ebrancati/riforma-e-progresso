@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Mail, Shield, Clock, Users, FileText, Eye, Edit3, Trash2, Lock } from 'lucide-react';
+import { Home, Mail, ShieldCheck, Shield, Clock, Users, FileText, Eye, Edit3, Lock } from 'lucide-react';
 import '../styles/PrivacyPolicyPage.css';
 
 const PrivacyPolicyPage: React.FC = () => {
@@ -17,7 +17,7 @@ const PrivacyPolicyPage: React.FC = () => {
       {/* Header */}
       <div className="privacy-header">
         <div className="privacy-header-content">
-          <Shield size={48} className="privacy-icon" />
+          <ShieldCheck size={48} className="privacy-icon" />
           <h1>Privacy Policy</h1>
           <p>Informativa sul trattamento dei dati personali</p>
           <div className="effective-date">
