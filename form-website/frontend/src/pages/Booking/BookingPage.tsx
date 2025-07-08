@@ -7,7 +7,7 @@ import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
-import { XCircle, MoveLeft, Loader2, Paperclip, Rocket } from "lucide-react";
+import { XCircle, MoveLeft, Paperclip, Rocket } from "lucide-react";
 import '../../styles/UserBooking/BookingHeader.css';
 import '../../styles/UserBooking/CalendarGrid.css';
 import '../../styles/UserBooking/TimeSlotList.css';
