@@ -268,15 +268,6 @@
   color: var(--error);
 }
 
-.contact-info {
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  padding: var(--spacing-xl);
-  margin-top: var(--spacing-4xl);
-}
-
 .contact-info p {
   margin-bottom: var(--spacing-sm);
 }

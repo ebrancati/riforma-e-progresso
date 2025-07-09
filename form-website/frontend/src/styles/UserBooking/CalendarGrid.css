@@ -345,3 +345,58 @@
     gap: var(--spacing-sm);
   }
 }
+
+@media (max-width: 360px) {
+  .calendar-header {
+    padding: var(--spacing-sm);
+  }
+  
+  .calendar-month-year {
+    font-size: var(--font-size-sm);
+  }
+  
+  .calendar-nav-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .calendar-day-header {
+    padding: 4px;
+    font-size: 10px;
+  }
+  
+  .calendar-day {
+    min-height: 28px;
+    padding: 2px;
+  }
+  
+  .calendar-day-number {
+    font-size: 11px;
+    margin-bottom: 1px;
+  }
+  
+  .availability-indicator {
+    width: 10px;
+    height: 10px;
+    font-size: 7px;
+  }
+  
+  .slots-count {
+    font-size: 6px;
+  }
+  
+  .calendar-legend {
+    padding: var(--spacing-xs);
+    font-size: 10px;
+  }
+  
+  .legend-item {
+    font-size: 10px;
+  }
+  
+  .legend-indicator {
+    width: 8px;
+    height: 8px;
+  }
+}

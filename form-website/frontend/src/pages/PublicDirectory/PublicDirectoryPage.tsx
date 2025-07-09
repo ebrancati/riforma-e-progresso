@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { publicDirectoryApi, ApiError } from '../../services/api';
 import type { PublicBookingLinkInfo } from '../../services/api/public/types';
 import NotificationMessages from '../../components/NotificationMessages';
@@ -7,6 +7,7 @@ import { SearchX, RefreshCw, Clock, Clipboard, Loader2 } from "lucide-react";
 import '../../styles/PublicDirectoryPage.css';
 
 const PublicDirectoryPage: React.FC = () => {
+  const location = useLocation();
   const [bookingLinks, setBookingLinks] = useState<PublicBookingLinkInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -30,29 +31,35 @@ const PublicDirectoryPage: React.FC = () => {
     }
   }, [error]);
 
-const loadActiveBookingLinks = async (isRefresh = false) => {
-  try {
-    setIsLoading(true);
-    const response = await publicDirectoryApi.getActiveBookingLinks();
-
-    // Check for changes on manual refresh
-    if (isRefresh) {
-      const currentUrls = bookingLinks.map(link => link.urlSlug).sort();
-      const newUrls = response.bookingLinks.map(link => link.urlSlug).sort();
-      const hasChanges = JSON.stringify(currentUrls) !== JSON.stringify(newUrls);
-
-      if (response.bookingLinks.length === 0) {
-        setSuccessMessage('Controllo completato: nessuna opportunità disponibile.');
-      } else if (hasChanges) {
-        setSuccessMessage('Nuove opportunità trovate! La pagina è stata aggiornata.');
-      } else {
-        setSuccessMessage('Nessun aggiornamento: le opportunità mostrate sono le più recenti.');
-      }
+  useEffect(() => {
+  if (location.state?.successMessage) {
+    setSuccessMessage(location.state.successMessage);
     }
+  }, [location.state]);
 
-    setBookingLinks(response.bookingLinks);
-    setError(null);
-  } catch (error) {
+  const loadActiveBookingLinks = async (isRefresh = false) => {
+    try {
+      setIsLoading(true);
+      const response = await publicDirectoryApi.getActiveBookingLinks();
+
+      // Check for changes on manual refresh
+      if (isRefresh) {
+        const currentUrls = bookingLinks.map(link => link.urlSlug).sort();
+        const newUrls = response.bookingLinks.map(link => link.urlSlug).sort();
+        const hasChanges = JSON.stringify(currentUrls) !== JSON.stringify(newUrls);
+
+        if (response.bookingLinks.length === 0) {
+          setSuccessMessage('Controllo completato: nessuna opportunità disponibile.');
+        } else if (hasChanges) {
+          setSuccessMessage('Nuove opportunità trovate! La pagina è stata aggiornata.');
+        } else {
+          setSuccessMessage('Nessun aggiornamento: le opportunità mostrate sono le più recenti.');
+        }
+      }
+
+      setBookingLinks(response.bookingLinks);
+      setError(null);
+    } catch (error) {
       console.error('Failed to load booking links:', error);
       
       if (error instanceof ApiError) {

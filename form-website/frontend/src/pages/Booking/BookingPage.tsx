@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { publicBookingApi, ApiError } from '../../services/api';
 import BookingHeader from './components/BookingHeader';
 import CalendarGrid from './components/CalendarGrid';
@@ -16,6 +16,7 @@ import '../../styles/UserBooking/BookingPage.css';
 
 const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   
   // Current step in booking process
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -354,10 +355,10 @@ const BookingPage: React.FC = () => {
       formDataToSend.append('role',         formData.role);
       formDataToSend.append('notes',        formData.notes || '');
       
-      // Aggiungi CV
+      // Add CV file
       if (formData.cvFile) formDataToSend.append('cvFile', formData.cvFile);
       
-      // Invia al backend
+      // Send to backend
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/public/booking/${slug}/book`, {
         method: 'POST',
         body: formDataToSend
@@ -374,7 +375,15 @@ const BookingPage: React.FC = () => {
       );
       
       setIsSubmitting(false);
-      
+
+      setTimeout(() => {
+        navigate('/colloqui', { 
+          state: { 
+            successMessage: 'Prenotazione confermata! Riceverai tutti i dettagli via email.' 
+          } 
+        });
+      }, 1500);
+            
     } catch (error) {
       console.error('Failed to submit booking:', error);
       setError('Errore durante l\'invio: ' + (error as Error).message);

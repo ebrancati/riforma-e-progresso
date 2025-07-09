@@ -185,7 +185,6 @@
   }
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .time-slots-container {
     margin: 0 var(--spacing-lg);

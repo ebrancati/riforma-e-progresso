@@ -198,6 +198,11 @@ body {
   font-size: var(--font-size-base);
 }
 
+.cancel-header h1 {
+  color: var(--primary-blue);
+  padding-top: 5px;
+}
+
 /* Navigation Links in Header */
 .header-navigation {
   display: flex;
@@ -407,6 +412,14 @@ body {
 }
 
 /* Contact section */
+
+.contact-info {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  padding: var(--spacing-xl);
+}
 
 .contact-with-email { display: inline; }
 

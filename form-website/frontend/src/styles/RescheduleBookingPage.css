@@ -462,6 +462,16 @@
   }
 }
 
+@media (max-width: 320px) {
+  .cancel-container {
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .cancel-header, .cancel-content { border-radius: 0; }
+}
+
 /* Additional animations for smooth transitions */
 @keyframes slideIn {
   from {
