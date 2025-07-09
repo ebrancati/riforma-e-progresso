@@ -198,9 +198,19 @@ body {
   font-size: var(--font-size-base);
 }
 
-.cancel-header h1 {
+.cancel-header h1, .reschedule-header h1 {
   color: var(--primary-blue);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
   padding-top: 5px;
+  margin-bottom: var(--spacing-md);
+}
+
+.cancel-header h2, .reschedule-header h2 {
+  color: var(--gray-500);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  margin: 0;
 }
 
 /* Navigation Links in Header */
@@ -443,7 +453,6 @@ body {
 }
 
 /* Icons */
-
 .move-left-icon, .refresh-icon { margin-right: 8px; }
 
 /* Card Components */
@@ -564,6 +573,13 @@ body {
   line-height: var(--line-height-relaxed);
 }
 
+.error-state .breadcrumb-link {
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-5xl);
+}
+
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
@@ -673,6 +689,16 @@ body {
   .header h1 {
     font-size: var(--font-size-2xl);
   }
+
+  .cancel-header h1,
+  .reschedule-header h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .cancel-header h2,
+  .reschedule-header h2 {
+    font-size: var(--font-size-lg);
+  }
   
   .grid-auto-fit,
   .grid-auto-fill {
@@ -703,6 +729,16 @@ body {
   .header h1 {
     font-size: var(--font-size-xl);
   }
+
+  .cancel-header h1,
+  .reschedule-header h1 {
+    font-size: var(--font-size-xl);
+  }
+  
+  .cancel-header h2,
+  .reschedule-header h2 {
+    font-size: var(--font-size-base);
+  }
   
   .btn {
     padding: var(--spacing-md) var(--spacing-xl);
@@ -724,4 +760,7 @@ body {
 
 @media (max-width: 320px) {
   .container { padding: 0; }
+  .contact-info {
+    border-radius: 0;
+  }
 }

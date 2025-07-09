@@ -23,20 +23,6 @@
   background: var(--primary-blue);
 }
 
-.reschedule-header h1 {
-  color: var(--gray-700);
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-md);
-}
-
-.reschedule-header h2 {
-  color: var(--gray-500);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: var(--spacing-3xl);
-}
-
 /* Progress Steps */
 .reschedule-progress {
   margin-top: var(--spacing-xl);
@@ -311,16 +297,6 @@
     padding: var(--spacing-xl);
   }
   
-  .cancel-header h1,
-  .reschedule-header h1 {
-    font-size: var(--font-size-2xl);
-  }
-  
-  .cancel-header h2,
-  .reschedule-header h2 {
-    font-size: var(--font-size-lg);
-  }
-  
   .cancel-form,
   .step-content {
     padding: var(--spacing-xl);
@@ -383,17 +359,7 @@
   }
 }
 
-@media (max-width: 480px) {
-  .cancel-header h1,
-  .reschedule-header h1 {
-    font-size: var(--font-size-xl);
-  }
-  
-  .cancel-header h2,
-  .reschedule-header h2 {
-    font-size: var(--font-size-base);
-  }
-  
+@media (max-width: 480px) { 
   .cancel-form,
   .step-content {
     padding: var(--spacing-lg);
@@ -463,13 +429,18 @@
 }
 
 @media (max-width: 320px) {
-  .cancel-container {
+  .cancel-container, .reschedule-container {
     padding-top: 0;
     padding-left: 0;
     padding-right: 0;
   }
 
-  .cancel-header, .cancel-content { border-radius: 0; }
+  .cancel-header,
+  .cancel-content,
+  .reschedule-header,
+  .reschedule-content {
+    border-radius: 0;
+  }
 }
 
 /* Additional animations for smooth transitions */

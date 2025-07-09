@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { cancelRescheduleApi, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
-import { X, Check } from 'lucide-react';
+import { X, Check, Home } from 'lucide-react';
 import '../../styles/CancelBookingPage.css';
 
 interface BookingDetails {
@@ -166,6 +166,10 @@ const CancelBookingPage: React.FC = () => {
             <h3><X size={60} className="error-icon" /></h3>
             <p>Non è stato possibile accedere alla prenotazione.</p>
             <p>Il link potrebbe essere scaduto o non valido.</p>
+            <Link to="/colloqui" className="breadcrumb-link">
+              <Home size={16} />
+              Torna alla Home
+            </Link>
             <div className="contact-info">
               <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
             </div>

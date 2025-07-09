@@ -23,20 +23,6 @@
   background: var(--primary-blue);
 }
 
-.cancel-header h1 {
-  color: var(--gray-700);
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-md);
-}
-
-.cancel-header h2 {
-  color: var(--gray-500);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-medium);
-  margin: 0;
-}
-
 .cancel-content {
   background: var(--white);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);

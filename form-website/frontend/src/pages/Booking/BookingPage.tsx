@@ -7,7 +7,7 @@ import TimeSlotList from './components/TimeSlotList';
 import NotificationMessages from '../../components/NotificationMessages';
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
-import { XCircle, MoveLeft, Paperclip, Rocket } from "lucide-react";
+import { MoveLeft, Paperclip, Rocket, Home, X } from "lucide-react";
 import '../../styles/UserBooking/BookingHeader.css';
 import '../../styles/UserBooking/CalendarGrid.css';
 import '../../styles/UserBooking/TimeSlotList.css';
@@ -428,10 +428,11 @@ const BookingPage: React.FC = () => {
         </div>
         <div className="main-content">
           <div className="error-state">
-            <XCircle size={48} className="error-icon" />
+            <h3><X size={60} className="error-icon" /></h3>
             <p>Il link che hai seguito non è valido o è scaduto.</p>
-            <Link to="/colloqui" className="btn btn-secondary">
-              ← Torna alle Opportunità
+            <Link to="/colloqui" className="breadcrumb-link">
+              <Home size={16} />
+              Torna alla Home
             </Link>
           </div>
         </div>

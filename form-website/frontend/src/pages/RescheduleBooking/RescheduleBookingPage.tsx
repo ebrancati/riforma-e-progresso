@@ -6,7 +6,7 @@ import CalendarGrid from '../Booking/components/CalendarGrid';
 import TimeSlotList from '../Booking/components/TimeSlotList';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import type { DayAvailability, TimeSlot } from '../../types/booking';
-import { Loader2, MoveLeft, Rocket, X } from "lucide-react"
+import { Home, Loader2, MoveLeft, Rocket, X } from "lucide-react"
 import { Check, Calendar, CalendarClock, FileText } from "lucide-react";
 import '../../styles/RescheduleBookingPage.css';
 
@@ -276,6 +276,10 @@ const RescheduleBookingPage: React.FC = () => {
             <h3><X size={60} className="error-icon" /></h3>
             <p>Non è stato possibile accedere alla prenotazione.</p>
             <p>Il link potrebbe essere scaduto o non valido.</p>
+            <Link to="/colloqui" className="breadcrumb-link">
+              <Home size={16} />
+              Torna alla Home
+            </Link>
             <div className="contact-info">
               <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
             </div>
