@@ -380,7 +380,7 @@ const BookingPage: React.FC = () => {
       setIsSubmitting(false);
 
       setTimeout(() => {
-        navigate('/colloqui', { 
+        navigate('/', { 
           state: { 
             successMessage: 'Prenotazione confermata! Riceverai tutti i dettagli via email.' 
           } 
@@ -433,7 +433,7 @@ const BookingPage: React.FC = () => {
           <div className="error-state">
             <h3><X size={60} className="error-icon" /></h3>
             <p>Il link che hai seguito non è valido o è scaduto.</p>
-            <Link to="/colloqui" className="breadcrumb-link">
+            <Link to="/" className="breadcrumb-link">
               <Home size={16} />
               Torna alla Home
             </Link>
@@ -475,7 +475,7 @@ const BookingPage: React.FC = () => {
                 onNextMonth={handleNextMonth}
                 isLoading={isLoadingCalendar}
                 showBackButton={true}
-                backButtonUrl="/colloqui"
+                backButtonUrl="/"
                 backButtonText="Torna alle Opportunità"
               />
             </div>

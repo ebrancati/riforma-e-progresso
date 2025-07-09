@@ -36,7 +36,7 @@ const App: React.FC = () => {
           
           <Routes>
             {/* Public Routes */}
-            <Route path="/colloqui" element={<PublicDirectoryPage />} />
+            <Route path="/" element={<PublicDirectoryPage />} />
             <Route path="/book/:slug" element={<BookingPage />} />
             <Route path="/booking/:bookingId/cancel" element={<CancelBookingPage />} />
             <Route path="/booking/:bookingId/reschedule" element={<RescheduleBookingPage />} />
@@ -67,7 +67,6 @@ const App: React.FC = () => {
             } />
             
             {/* Default redirects */}
-            <Route path="/" element={<Navigate to="/colloqui" replace />} />
             <Route path="/admin" element={<Navigate to="/admin/booking-links" replace />} />
             
             {/* 404 page */}

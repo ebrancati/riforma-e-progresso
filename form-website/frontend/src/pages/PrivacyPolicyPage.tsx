@@ -8,7 +8,7 @@ const PrivacyPolicyPage: React.FC = () => {
     <div className="privacy-container">
       {/* Breadcrumb Navigation */}
       <div className="privacy-breadcrumb">
-        <Link to="/colloqui" className="breadcrumb-link">
+        <Link to="/" className="breadcrumb-link">
           <Home size={16} />
           Torna alla Home
         </Link>

@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
             )}
           </button>
 
-          <Link to="/colloqui" className="btn btn-secondary back-to-public">
+          <Link to="/" className="btn btn-secondary back-to-public">
             <MoveLeft className='move-left-icon' size={20} /> Torna alle Opportunità
           </Link>
         </form>

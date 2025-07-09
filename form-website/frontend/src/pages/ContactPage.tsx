@@ -92,7 +92,7 @@ const ContactPage: React.FC = () => {
     <div className="contact-container">
       {/* Header */}
       <div className="contact-breadcrumb">
-        <Link to="/colloqui" className="breadcrumb-link">
+        <Link to="/" className="breadcrumb-link">
           <Home size={16} />
           Torna alla Home
         </Link>

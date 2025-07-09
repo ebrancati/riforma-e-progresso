@@ -11,7 +11,7 @@ const NotFoundPage: React.FC = () => {
         <h2>Pagina non trovata</h2>
         <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link></p>
 
-        <Link to="/colloqui" className="btn btn-secondary back-to-public">
+        <Link to="/" className="btn btn-secondary back-to-public">
           Torna alla Home
         </Link>
       </div>

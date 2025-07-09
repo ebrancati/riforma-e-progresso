@@ -289,7 +289,7 @@ const RescheduleBookingPage: React.FC = () => {
             <h3><X size={60} className="error-icon" /></h3>
             <p>Non è stato possibile accedere alla prenotazione.</p>
             <p>Il link potrebbe essere scaduto o non valido.</p>
-            <Link to="/colloqui" className="breadcrumb-link">
+            <Link to="/" className="breadcrumb-link">
               <Home size={16} />
               Torna alla Home
             </Link>
