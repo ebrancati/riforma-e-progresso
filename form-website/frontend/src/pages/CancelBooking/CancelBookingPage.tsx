@@ -170,8 +170,13 @@ const CancelBookingPage: React.FC = () => {
               <Home size={16} />
               Torna alla Home
             </Link>
-            <div className="contact-info">
-              <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
+            <div className="contact-footer">
+              <span className="contact-with-email">
+                Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link>
+              </span>
+              <Link to="/contattaci" className="contact-link-mobile">
+                Contattaci per assistenza
+              </Link>
             </div>
           </div>
         </div>
@@ -291,6 +296,15 @@ const CancelBookingPage: React.FC = () => {
               {isSubmitting ? 'Cancellazione...' : 'Annulla Appuntamento'}
             </button>
           </div>
+        </div>
+        
+        <div className="contact-footer">
+          <span className="contact-with-email">
+            Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link>
+          </span>
+          <Link to="/contattaci" className="contact-link-mobile">
+            Contattaci per assistenza
+          </Link>
         </div>
       </div>
     </div>

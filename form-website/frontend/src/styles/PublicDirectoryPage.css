@@ -301,21 +301,6 @@
   font-size: var(--font-size-xs);
 }
 
-/* Directory Footer */
-.directory-footer {
-  text-align: center;
-  padding: var(--spacing-3xl);
-  color: var(--gray-500);
-  border-top: 1px solid var(--gray-200);
-  background: var(--gray-50);
-}
-
-.directory-footer p {
-  margin: 0;
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
-}
-
 @media (max-width: 768px) {
   .directory-container {
     padding: var(--spacing-md);
@@ -401,7 +386,8 @@
     padding: 0;
   }
 
-  .directory-content {
+  .directory-content,
+  .opportunity-card {
     border-radius: 0;
   }
 }

@@ -580,6 +580,24 @@ body {
   margin-bottom: var(--spacing-5xl);
 }
 
+/* Contact us Footer */
+.contact-footer {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  color: var(--gray-500);
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  border-bottom-left-radius: var(--radius-2xl);
+  border-bottom-right-radius: var(--radius-2xl);
+}
+
+.contact-footer p {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-left { text-align: left; }
@@ -746,8 +764,7 @@ body {
   }
 }
 
-
-@media (max-width: 380px) {
+@media (max-width: 410px) {
   .contact-with-email {
     display: none !important;
   }
@@ -760,7 +777,5 @@ body {
 
 @media (max-width: 320px) {
   .container { padding: 0; }
-  .contact-info {
-    border-radius: 0;
-  }
+  .contact-info { border-radius: 0; }
 }

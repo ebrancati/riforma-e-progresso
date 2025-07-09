@@ -224,7 +224,6 @@
   }
 }
 
-/* Mobile responsiveness */
 @media (max-width: 768px) {
   .notification-error,
   .notification-success,

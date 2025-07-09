@@ -77,4 +77,8 @@
     gap: var(--spacing-md);
     align-items: center;
   }
+
+  .footer-link {
+    width: 80vw;
+  }
 }

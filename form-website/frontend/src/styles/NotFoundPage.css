@@ -40,7 +40,7 @@ body {
 .not-found-content p {
   color: #666;
   font-size: 16px;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
   line-height: 1.5;
 }
 
@@ -85,15 +85,23 @@ body {
   transform: translateY(-2px);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .not-found-content {
-    padding: 40px 20px;
+    padding: 40px 10px;
+    border-radius: 0;
   }
   
   .not-found-content h1 {
     font-size: 48px;
   }
   
+  .not-found-content p {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    margin-bottom: var(--spacing-md);
+  }
+
   .not-found-links {
     flex-direction: column;
   }
