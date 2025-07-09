@@ -5,6 +5,7 @@
   box-shadow: var(--shadow-lg);
   position: relative;
   overflow: hidden;
+  padding-top: 35px;
 }
 
 .booking-header::before {
@@ -140,6 +141,7 @@
 @media (max-width: 768px) {
   .booking-header {
     padding: var(--spacing-xl);
+    padding-top: 25px;
   }
   
   .booking-title {

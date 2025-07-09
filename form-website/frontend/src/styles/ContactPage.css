@@ -34,7 +34,8 @@
 .contact-header {
   background: var(--white);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  padding: var(--spacing-4xl) var(--spacing-3xl);
+  padding: 50px var(--spacing-3xl);
+  padding-bottom: var(--spacing-4xl);
   text-align: center;
   box-shadow: var(--shadow-lg);
   position: relative;
@@ -200,10 +201,12 @@
   
   .contact-header {
     padding: var(--spacing-3xl) var(--spacing-xl);
+    padding-top: var(--spacing-4xl);
   }
   
   .contact-header h1 {
     font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-sm);
   }
   
   .contact-header h2 {
@@ -226,12 +229,19 @@
 }
 
 @media (max-width: 480px) {
+  .contact-breadcrumb {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .contact-container {
     padding: var(--spacing-sm);
   }
   
   .contact-header {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    padding-top: var(--spacing-2xl);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   }
   
@@ -259,5 +269,17 @@
   
   .form-textarea {
     min-height: 120px;
+  }
+}
+
+@media (max-width: 320px) {
+  .contact-container {
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 0;
+  }
+
+  .contact-header, .contact-content {
+    border-radius: 0;
   }
 }
