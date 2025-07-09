@@ -6,8 +6,8 @@ import CalendarGrid from '../Booking/components/CalendarGrid';
 import TimeSlotList from '../Booking/components/TimeSlotList';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
 import type { DayAvailability, TimeSlot } from '../../types/booking';
-import { Home, Loader2, MoveLeft, Rocket, X } from "lucide-react"
-import { Check, Calendar, CalendarClock, FileText } from "lucide-react";
+import { Check, Home, Loader2, MoveLeft, Rocket, X } from "lucide-react"
+import BookingHeader from '../Booking/components/BookingHeader';
 import '../../styles/RescheduleBookingPage.css';
 
 interface BookingDetails {
@@ -246,6 +246,15 @@ const RescheduleBookingPage: React.FC = () => {
     }
   };
 
+  const getStepSubtitle = (): string => {
+    switch (currentStep) {
+      case 1: return 'Seleziona una nuova data dal calendario';
+      case 2: return `Scegli un nuovo orario per ${formatDateForDisplay(new Date(newSelectedDate + 'T00:00:00'))}`;
+      case 3: return 'Conferma la riprogrammazione del tuo appuntamento';
+      default: return '';
+    }
+  };
+
   // Loading state for booking details
   if (isLoadingDetails) {
     return (
@@ -333,36 +342,26 @@ const RescheduleBookingPage: React.FC = () => {
   return (
     <div className="reschedule-container">
       {/* Header */}
-      <div className="reschedule-header">
-        <h1>Riforma e Progresso</h1>
-        <h2>Riprogramma Appuntamento</h2>
-        
-        {/* Progress indicator */}
-        <div className="reschedule-progress">
-          <div className="progress-steps">
-            <div className={`progress-step ${currentStep >= 1 ? 'active' : ''}`}>
-              <div className="step-circle">
-                {currentStep > 1 ? <Check size={20} /> : <Calendar size={20} />}
-              </div>
-              <span className="step-title">Seleziona Data</span>
-            </div>
-            <div className={`progress-step ${currentStep >= 2 ? 'active' : ''}`}>
-              <div className="step-circle">
-                {currentStep > 2 ? <Check size={20} /> : <CalendarClock size={20} />}
-              </div>
-              <span className="step-title">Scegli Orario</span>
-            </div>
-            <div className={`progress-step ${currentStep >= 3 ? 'active' : ''}`}>
-              <div className="step-circle">
-                {currentStep === 3 ? <FileText size={20} /> : <FileText size={20} />}
-              </div>
-              <span className="step-title">Conferma</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BookingHeader 
+        bookingLink={{
+          id: bookingDetails.bookingLink.urlSlug,
+          name: bookingDetails.bookingLink.name,
+          templateId: '',
+          urlSlug: bookingDetails.bookingLink.urlSlug,
+          duration: bookingDetails.bookingLink.duration,
+          requireAdvanceBooking: false,
+          advanceHours: 0,
+          isActive: true,
+          created: '',
+          updatedAt: ''
+        }}
+        title={`Riprogramma ${bookingDetails.bookingLink.name}`}
+        subtitle={getStepSubtitle()}
+        showProgress={true}
+        currentStep={currentStep}
+      />
 
-      <div className="reschedule-content">
+      <div className="main-content">
         {/* Notifications */}
         <NotificationMessages 
           error={error} 
@@ -470,6 +469,11 @@ const RescheduleBookingPage: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Info Section */}
+        <div className="contact-info">
+          <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso</Link></p>
         </div>
       </div>
     </div>

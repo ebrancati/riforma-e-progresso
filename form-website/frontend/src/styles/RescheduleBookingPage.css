@@ -23,60 +23,6 @@
   background: var(--primary-blue);
 }
 
-/* Progress Steps */
-.reschedule-progress {
-  margin-top: var(--spacing-xl);
-}
-
-.progress-steps {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-4xl);
-  margin-bottom: var(--spacing-lg);
-}
-
-.progress-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  color: var(--gray-400);
-  transition: all var(--transition-normal);
-}
-
-.progress-step.active {
-  color: var(--primary-orange);
-  transform: scale(1.1);
-}
-
-.step-circle {
-  width: 50px;
-  height: 50px;
-  border-radius: var(--radius-full);
-  background: var(--gray-200);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  transition: all var(--transition-normal);
-  border: 3px solid var(--gray-200);
-}
-
-.progress-step.active .step-circle {
-  background: var(--primary-orange);
-  color: var(--white);
-  border-color: var(--primary-orange);
-  box-shadow: 0 0 0 4px rgba(245, 121, 32, 0.2);
-}
-
-.step-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .reschedule-content {
   background: var(--white);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
@@ -292,8 +238,7 @@
     padding-bottom: var(--spacing-xl);
   }
   
-  .cancel-header,
-  .reschedule-header {
+  .cancel-header {
     padding: var(--spacing-xl);
   }
   
@@ -305,20 +250,6 @@
   .booking-details {
     grid-template-columns: 1fr;
     gap: var(--spacing-md);
-  }
-  
-  .progress-steps {
-    gap: var(--spacing-xl);
-  }
-  
-  .step-circle {
-    width: 40px;
-    height: 40px;
-    font-size: var(--font-size-base);
-  }
-  
-  .step-title {
-    font-size: var(--font-size-xs);
   }
   
   .current-booking {
@@ -379,16 +310,6 @@
   
   .step-content h3 {
     font-size: var(--font-size-lg);
-  }
-  
-  .progress-steps {
-    gap: var(--spacing-lg);
-  }
-  
-  .step-circle {
-    width: 35px;
-    height: 35px;
-    font-size: var(--font-size-sm);
   }
   
   .current-booking-details p:first-child {

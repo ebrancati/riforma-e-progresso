@@ -168,13 +168,28 @@
 }
 
 @media (max-width: 320px) {
-  .container {
+  .cancel-container, .reschedule-container {
+    padding-top: 0;
     padding-left: 0;
     padding-right: 0;
-    padding-top: 0;
+  }
+
+  .cancel-header,
+  .cancel-content,
+  .reschedule-header,
+  .reschedule-content {
+    border-radius: 0;
   }
   
-  .container .main-content {
-    border-radius: 0;
+  .booking-summary h3,
+  .booking-datetime,
+  .detail-item,
+  .cancel-form,
+  .success-state,
+  .error-state,
+  .contact-info {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 }
