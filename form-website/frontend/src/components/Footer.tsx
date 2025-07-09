@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { InstagramIcon, FacebookIcon, YoutubeIcon, LinkedinIcon } from './icons/SocialIcons';
-import '../styles/Footer.css';
+import '../styles/components/Footer.css';
 
 const Footer: React.FC = () => {
   const location = useLocation();

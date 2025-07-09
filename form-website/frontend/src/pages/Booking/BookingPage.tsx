@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { publicBookingApi, ApiError } from '../../services/api';
-import BookingHeader from './components/BookingHeader';
-import CalendarGrid from './components/CalendarGrid';
-import TimeSlotList from './components/TimeSlotList';
-import NotificationMessages from '../../components/NotificationMessages';
+
 import type { BookingLinkInfo, DayAvailability, TimeSlot, BookingFormData } from '../../types/booking';
+import { publicBookingApi, ApiError } from '../../services/api';
 import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
+
+import BookingHeader        from './components/BookingHeader';
+import CalendarGrid         from './components/CalendarGrid';
+import TimeSlotList         from './components/TimeSlotList';
+import NotificationMessages from '../../components/NotificationMessages';
+
 import { MoveLeft, Paperclip, Rocket, Home, X } from "lucide-react";
-import '../../styles/UserBooking/BookingHeader.css';
-import '../../styles/UserBooking/CalendarGrid.css';
-import '../../styles/UserBooking/TimeSlotList.css';
-import '../../styles/UserBooking/BookingForm.css';
-import '../../styles/UserBooking/BookingPage.css';
+import '../../styles/pages/BookingPage.css';
+import '../../styles/components/BookingHeader.css';
+import '../../styles/components/CalendarGrid.css';
+import '../../styles/components/TimeSlotList.css';
+import '../../styles/components/BookingForm.css';
 
 const BookingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();

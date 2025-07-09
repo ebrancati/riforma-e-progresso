@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/NotificationMessages.css';
+import '../styles/components/NotificationMessages.css';
 
 interface NotificationMessagesProps {
   error: string | null;

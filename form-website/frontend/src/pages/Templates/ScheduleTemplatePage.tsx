@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { templatesApi } from '../../services/api';
-import { useTemplates } from './hooks/useTemplates';
-import { useScheduleForm } from './hooks/useScheduleForm';
-import NotificationMessages from '../../components/NotificationMessages';
-import DayScheduleCard from './components/DayScheduleCard';
-import TemplateCard from './components/TemplateCard';
-import EditModal from './components/EditModal';
-import AdvancedSettingsSection from './components/AdvancedSettingsSection';
 import type { DayKey, DaySchedule, TimeSlot } from '../../types/schedule';
+
+import { useTemplates }    from './hooks/useTemplates';
+import { useScheduleForm } from './hooks/useScheduleForm';
+
+import NotificationMessages    from '../../components/NotificationMessages';
+import DayScheduleCard         from './components/DayScheduleCard';
+import TemplateCard            from './components/TemplateCard';
+import EditModal               from './components/EditModal';
+import AdvancedSettingsSection from './components/AdvancedSettingsSection';
+
 import { InfoIcon } from 'lucide-react';
-import '../../styles/ScheduleTemplatePage.css';
+
+import '../../styles/pages/ScheduleTemplatePage.css';
 
 const ScheduleTemplatePage: React.FC = () => {
   const [isServerAvailable, setIsServerAvailable] = useState(false);

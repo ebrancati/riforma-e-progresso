@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { templatesApi, bookingLinksApi, healthApi, ApiError, type UpdateBookingLinkRequest } from '../../services/api';
-import NotificationMessages from '../../components/NotificationMessages';
 import type { Template } from '../../types/schedule';
 import type { ApiBookingLink } from '../../services/api';
-import '../../styles/EditBookingLinkPage.css';
+import NotificationMessages from '../../components/NotificationMessages';
+
+import '../../styles/pages/EditBookingLinkPage.css';
 
 const EditBookingLinkPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

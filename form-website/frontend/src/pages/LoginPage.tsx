@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, MoveLeft } from 'lucide-react';
-import '../styles/LoginPage.css';
+
+import '../styles/pages/LoginPage.css';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');

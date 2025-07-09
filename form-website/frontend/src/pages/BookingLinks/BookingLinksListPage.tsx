@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { bookingLinksApi, healthApi, type ApiBookingLink, ApiError } from '../../services/api';
 import NotificationMessages from '../../components/NotificationMessages';
-import '../../styles/BookingLinksListPage.css';
+import '../../styles/pages/BookingLinksListPage.css';
 
 const BookingLinksListPage: React.FC = () => {
   const [bookingLinks, setBookingLinks] = useState<ApiBookingLink[]>([]);

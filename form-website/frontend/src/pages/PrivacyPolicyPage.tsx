@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, Mail, ShieldCheck, Shield, Clock, Users, FileText, Eye, Edit3, Lock } from 'lucide-react';
-import '../styles/PrivacyPolicyPage.css';
+import '../styles/pages/PrivacyPolicyPage.css';
 
 const PrivacyPolicyPage: React.FC = () => {
   return (

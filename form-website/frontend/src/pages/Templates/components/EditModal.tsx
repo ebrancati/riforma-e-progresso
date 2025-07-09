@@ -1,4 +1,3 @@
-// src/components/EditModal.tsx
 import React from 'react';
 
 interface EditModalProps {

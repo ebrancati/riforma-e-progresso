@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { cancelRescheduleApi, publicBookingApi, ApiError } from '../../services/api';
-import NotificationMessages from '../../components/NotificationMessages';
-import CalendarGrid from '../Booking/components/CalendarGrid';
-import TimeSlotList from '../Booking/components/TimeSlotList';
-import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
-import type { DayAvailability, TimeSlot } from '../../types/booking';
+
+import { cancelRescheduleApi, publicBookingApi, ApiError } from '../services/api';
+import { formatDateForDisplay } from '../utils/booking/dateHelpers';
+import type { DayAvailability, TimeSlot } from '../types/booking';
+
+import NotificationMessages from '../components/NotificationMessages';
+import BookingHeader        from './Booking/components/BookingHeader';
+import CalendarGrid         from './Booking/components/CalendarGrid';
+import TimeSlotList         from './Booking/components/TimeSlotList';
+
 import { Check, Home, Loader2, MoveLeft, Rocket, X } from "lucide-react"
-import BookingHeader from '../Booking/components/BookingHeader';
-import '../../styles/RescheduleBookingPage.css';
+
+import '../styles/pages/RescheduleBookingPage.css';
 
 interface BookingDetails {
   booking: {

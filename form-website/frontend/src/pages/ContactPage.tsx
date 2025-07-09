@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import NotificationMessages from '../../components/NotificationMessages';
-import { Home, Loader2, Send } from 'lucide-react';
-import '../../styles/ContactPage.css';
 import { Link } from 'react-router-dom';
+import NotificationMessages from '../components/NotificationMessages';
+import { Home, Loader2, Send } from 'lucide-react';
+import '../styles/pages/ContactPage.css';
 
 const ContactPage: React.FC = () => {
   const [email, setEmail] = useState('');

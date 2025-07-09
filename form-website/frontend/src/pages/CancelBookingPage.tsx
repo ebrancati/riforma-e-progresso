@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { cancelRescheduleApi, ApiError } from '../../services/api';
-import NotificationMessages from '../../components/NotificationMessages';
-import { formatDateForDisplay } from '../../utils/booking/dateHelpers';
+import { cancelRescheduleApi, ApiError } from '../services/api';
+import { formatDateForDisplay } from '../utils/booking/dateHelpers';
+import NotificationMessages from '../components/NotificationMessages';
 import { X, Check, Home } from 'lucide-react';
-import '../../styles/CancelBookingPage.css';
+
+import '../styles/pages/CancelBookingPage.css';
 
 interface BookingDetails {
   booking: {

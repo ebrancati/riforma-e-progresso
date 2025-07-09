@@ -1,7 +1,6 @@
-// frontend/src/components/LogoutButton.tsx
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/LogoutButton.css';
+import '../styles/components/LogoutButton.css';
 
 interface LogoutButtonProps {
   className?: string;

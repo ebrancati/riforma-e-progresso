@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { publicDirectoryApi, ApiError } from '../../services/api';
-import type { PublicBookingLinkInfo } from '../../services/api/public/types';
-import NotificationMessages from '../../components/NotificationMessages';
+
+import { publicDirectoryApi, ApiError } from '../services/api';
+import type { PublicBookingLinkInfo }   from '../services/api/public/types';
+
+import NotificationMessages from '../components/NotificationMessages';
+
 import { SearchX, RefreshCw, Clock, Clipboard, Loader2 } from "lucide-react";
-import '../../styles/PublicDirectoryPage.css';
+import '../styles/pages/PublicDirectoryPage.css';
 
 const PublicDirectoryPage: React.FC = () => {
   const location = useLocation();

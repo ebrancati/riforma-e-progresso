@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { templatesApi, bookingLinksApi, healthApi, ApiError, type CreateBookingLinkRequest } from '../../services/api';
-import NotificationMessages from '../../components/NotificationMessages';
 import type { Template } from '../../types/schedule';
-import '../../styles/BookingSetupPage.css';
+import NotificationMessages from '../../components/NotificationMessages';
+import '../../styles/pages/BookingSetupPage.css';
 
 const BookingSetupPage: React.FC = () => {
   // Form state
