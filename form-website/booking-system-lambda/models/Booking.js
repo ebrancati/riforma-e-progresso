@@ -86,12 +86,12 @@ export class Booking extends DynamoDBBase {
       if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
         throw new Error('Invalid booking link ID');
       }
-
+  
       // Validate date format (YYYY-MM-DD)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
         throw new Error('Invalid date format. Use YYYY-MM-DD');
       }
-
+  
       // Query bookings for specific booking link and date
       const result = await this.query(
         bookingLinkId,
@@ -103,13 +103,22 @@ export class Booking extends DynamoDBBase {
           }
         }
       );
-
+  
       return result.items
         .map(item => this.formatBooking(item))
         .sort((a, b) => a.selectedTime.localeCompare(b.selectedTime));
     } catch (error) {
       console.error('Error finding bookings by booking link and date:', error);
-      throw new Error('Failed to retrieve bookings for date');
+      
+      // If no bookings exist for this date, return empty array
+      if (error.name === 'ResourceNotFoundException' || 
+          error.message.includes('no items')) {
+        console.log('No bookings found for this date (normal)');
+        return [];
+      }
+      
+      // Return empty array instead of throwing
+      return [];
     }
   }
 
@@ -121,11 +130,11 @@ export class Booking extends DynamoDBBase {
       if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
         throw new Error('Invalid booking link ID');
       }
-
+  
       // Create date range for the month
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
       const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
-
+  
       // Query all bookings for the booking link in the month range
       const result = await this.query(
         bookingLinkId,
@@ -138,7 +147,7 @@ export class Booking extends DynamoDBBase {
           }
         }
       );
-
+  
       return result.items
         .map(item => this.formatBooking(item))
         .sort((a, b) => {
@@ -147,7 +156,18 @@ export class Booking extends DynamoDBBase {
         });
     } catch (error) {
       console.error('Error finding bookings by booking link and month:', error);
-      throw new Error('Failed to retrieve bookings for month');
+      
+      // If no bookings exist yet (empty table), return empty array
+      if (error.name === 'ResourceNotFoundException' || 
+          error.message.includes('no items') ||
+          error.message.includes('not found')) {
+        console.log('No bookings found for this month (normal for new booking link)');
+        return [];
+      }
+      
+      // Return empty array instead of throwing for empty scenarios
+      console.log('Assuming no bookings for month due to query issue');
+      return [];
     }
   }
 

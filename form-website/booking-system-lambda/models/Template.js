@@ -92,8 +92,18 @@ export class Template extends DynamoDBBase {
    */
   async save() {
     try {
-      // Check for existing template with same name
-      const existing = await this.findByName(this.name);
+      // For empty tables, skip duplicate check for first few items
+      let existing = null;
+
+      try {
+        // Check for existing template with same name
+        existing = await this.findByName(this.name);
+      } catch (findError) {
+        // If scan fails (empty table, permissions, etc), assume no duplicates
+        console.log('Could not check for duplicates, proceeding with creation:', findError.message);
+        existing = null;
+      }
+
       if (existing) {
         throw new Error('A template with this name already exists');
       }

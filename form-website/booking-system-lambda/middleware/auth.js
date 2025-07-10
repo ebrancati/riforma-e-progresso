@@ -79,8 +79,8 @@ export async function requireAuth(req) {
   const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
   console.log(`[AUTH SUCCESS] ${credentials.username} authenticated from ${ip}`);
   
-  // Return null to indicate auth passed
-  return null;
+  // Auth passed
+  return { statusCode: 200, authenticated: true };;
 }
 
 /**
