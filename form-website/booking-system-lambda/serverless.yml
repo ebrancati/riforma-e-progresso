@@ -95,9 +95,9 @@ resources:
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
-        TimeToLiveSpecification:
-          AttributeName: TTL
-          Enabled: true
+        # Data backup ( optional )
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
 
 plugins:
   - serverless-offline

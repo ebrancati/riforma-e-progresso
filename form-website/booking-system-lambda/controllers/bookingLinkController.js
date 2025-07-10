@@ -1,7 +1,7 @@
 import { BookingLink } from '../models/BookingLink.js';
 import { Template } from '../models/Template.js';
-import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
 import { AvailabilityService } from '../services/availabilityService.js';
+import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
 
 export class BookingLinkController {
   /**
@@ -168,7 +168,7 @@ export class BookingLinkController {
 
   /**
    * PUT /api/booking-links/:id
-   * Update existing booking link
+   * Update existing booking link and invalidate cache if needed
    */
   static async updateBookingLink(req) {
     try {
@@ -223,15 +223,23 @@ export class BookingLinkController {
       const bookingLink = new BookingLink(dynamodb);
       const updatedBookingLink = await bookingLink.updateById(id, sanitizedData);
 
-      // If template changed, invalidate availability cache
-      if (sanitizedData.templateId || sanitizedData.requireAdvanceBooking !== undefined || sanitizedData.advanceHours !== undefined) {
+      // EVENT-DRIVEN CACHE INVALIDATION: Check if cache-affecting fields changed
+      const cacheAffectingFields = ['templateId', 'requireAdvanceBooking', 'advanceHours', 'isActive'];
+      const cacheNeedsInvalidation = cacheAffectingFields.some(field => sanitizedData[field] !== undefined);
+
+      if (cacheNeedsInvalidation) {
+        console.log(`🔄 Booking link ${id} updated with cache-affecting changes, invalidating availability cache...`);
+        
         const availabilityService = new AvailabilityService(dynamodb);
-        const today = new Date();
-        const affectedMonths = availabilityService.getAffectedMonths(
-          availabilityService.formatDateToString(today), 
-          6
-        );
-        await availabilityService.invalidateAvailabilityCache(id, affectedMonths);
+        
+        // Run cache invalidation in background (don't block response)
+        availabilityService.invalidateCacheForBookingLinkChange(id).catch(error => {
+          console.error('Background cache invalidation failed:', error);
+        });
+        
+        console.log(`✅ Booking link updated, cache invalidation initiated in background`);
+      } else {
+        console.log(`📝 Booking link ${id} updated with non-cache-affecting changes (name only)`);
       }
 
       return createSuccessResponse(200, 
@@ -278,21 +286,27 @@ export class BookingLinkController {
 
   /**
    * DELETE /api/booking-links/:id
-   * Delete booking link
+   * Delete booking link and invalidate cache
    */
   static async deleteBookingLink(dynamodb, id) {
     try {
+      // EVENT-DRIVEN CACHE INVALIDATION: Invalidate cache before deletion
+      console.log(`Booking link ${id} being deleted, invalidating availability cache...`);
+      
+      const availabilityService = new AvailabilityService(dynamodb);
+      
+      // Run cache invalidation before deletion
+      try {
+        await availabilityService.invalidateCacheForBookingLinkChange(id);
+        console.log(`✅ Cache invalidated before booking link deletion`);
+      } catch (cacheError) {
+        console.error('Cache invalidation failed before deletion:', cacheError);
+        // Continue with deletion even if cache invalidation fails
+      }
+      
+      // Delete booking link
       const bookingLink = new BookingLink(dynamodb);
       const result = await bookingLink.deleteById(id);
-      
-      // Invalidate availability cache for this booking link
-      const availabilityService = new AvailabilityService(dynamodb);
-      const today = new Date();
-      const affectedMonths = availabilityService.getAffectedMonths(
-        availabilityService.formatDateToString(today), 
-        6
-      );
-      await availabilityService.invalidateAvailabilityCache(id, affectedMonths);
       
       return createSuccessResponse(200, 
         { deletedId: result.deletedId }, 
@@ -387,6 +401,7 @@ export class BookingLinkController {
         }
       }
       
+      // Use static validation from BookingLink model
       const bookingLink = new BookingLink();
       bookingLink.validateBookingLinkUpdateData(data);
       return { isValid: true, errors: [] };

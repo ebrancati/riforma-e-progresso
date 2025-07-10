@@ -9,7 +9,7 @@ export class AvailabilityService extends DynamoDBBase {
   }
 
   /**
-   * Get availability for a specific month (using pre-calculated data)
+   * Get availability for a specific month
    * @param {string} bookingLinkId - Booking link ID
    * @param {number} year - Year (e.g., 2025)
    * @param {number} month - Month (1-12)
@@ -20,65 +20,21 @@ export class AvailabilityService extends DynamoDBBase {
       const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
       const pk = `MONTH#${bookingLinkId}#${monthKey}`;
       
-      // Try to get pre-calculated availability
+      // Try to get cached availability
       let availabilityData = await this.getItem(pk, config.sortKeys.overview);
       
-      // If no pre-calculated data or data is stale, calculate fresh
-      if (!availabilityData || this.isDataStale(availabilityData)) {
+      // If no cached data exists, calculate and cache it
+      if (!availabilityData) {
         console.log(`Calculating fresh availability for ${bookingLinkId} - ${monthKey}`);
         availabilityData = await this.calculateAndCacheMonthAvailability(bookingLinkId, year, month);
+      } else {
+        console.log(`Using cached availability for ${bookingLinkId} - ${monthKey}`);
       }
 
       return this.formatMonthAvailability(availabilityData.data, year, month);
     } catch (error) {
       console.error('Error getting month availability:', error);
       throw new Error('Failed to get month availability: ' + error.message);
-    }
-  }
-
-  /**
-   * Get available time slots for a specific date (real-time calculation)
-   * @param {string} bookingLinkId - Booking link ID
-   * @param {string} selectedDate - Date in YYYY-MM-DD format
-   * @returns {Array} Array of available time slots
-   */
-  async getAvailableTimeSlots(bookingLinkId, selectedDate) {
-    try {
-      // Get booking link and template
-      const bookingLink = new BookingLink(this.client);
-      const bookingLinkData = await bookingLink.findById(bookingLinkId);
-      
-      const template = new Template(this.client);
-      const templateData = await template.findById(bookingLinkData.templateId);
-      
-      // Check if date is unavailable
-      if (this.isDateUnavailable(templateData, selectedDate)) {
-        return [];
-      }
-      
-      // Get existing bookings for this date
-      const booking = new Booking(this.client);
-      const existingBookings = await booking.findByBookingLinkAndDate(bookingLinkId, selectedDate);
-      
-      // Generate all possible time slots for this date
-      const allSlots = this.generateTimeSlotsForDate(templateData, selectedDate);
-      
-      // Filter out booked slots
-      const bookedTimes = existingBookings.map(booking => booking.selectedTime);
-      const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot.startTime));
-      
-      // Apply advance booking restrictions
-      const filteredSlots = this.applyAdvanceBookingFilter(
-        availableSlots,
-        selectedDate,
-        bookingLinkData.requireAdvanceBooking,
-        bookingLinkData.advanceHours
-      );
-      
-      return filteredSlots;
-    } catch (error) {
-      console.error('Error getting available time slots:', error);
-      throw new Error('Failed to get available time slots: ' + error.message);
     }
   }
 
@@ -137,10 +93,11 @@ export class AvailabilityService extends DynamoDBBase {
         month: month,
         data: monthData,
         lastUpdated: new Date().toISOString(),
-        TTL: this.generateTTL(180) // 6 months TTL
+        cacheVersion: this.generateCacheVersion() // Version for debugging
       };
       
       await this.putItem(cacheItem);
+      console.log(`Cached month availability: ${pk}`);
       return cacheItem;
     } catch (error) {
       console.error('Error calculating month availability:', error);
@@ -149,13 +106,246 @@ export class AvailabilityService extends DynamoDBBase {
   }
 
   /**
-   * Calculate availability for a single day
-   * @param {Object} templateData - Template data
-   * @param {Object} bookingLinkData - Booking link data
-   * @param {string} dateString - Date in YYYY-MM-DD format
-   * @param {Array} dayBookings - Existing bookings for this day
-   * @returns {Object} Day availability object
+   * Event-driven cache invalidation for booking changes
+   * Called when bookings are created, cancelled, or rescheduled
+   * @param {string} bookingLinkId - Booking link ID
+   * @param {string} affectedDate - Date in YYYY-MM-DD format
+   * @param {string} eventType - 'create', 'cancel', 'reschedule'
+   * @param {string} oldDate - Old date for reschedule events
    */
+  async invalidateCacheForBookingEvent(bookingLinkId, affectedDate, eventType = 'update', oldDate = null) {
+    try {
+      const affectedDates = [affectedDate];
+      
+      // For reschedule events, also include the old date
+      if (eventType === 'reschedule' && oldDate && oldDate !== affectedDate) {
+        affectedDates.push(oldDate);
+      }
+
+      const affectedMonths = new Set();
+      
+      // Determine which months need cache invalidation
+      affectedDates.forEach(dateString => {
+        const date = new Date(dateString + 'T00:00:00');
+        const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        affectedMonths.add(monthKey);
+      });
+
+      // Delete cached availability for affected months
+      const deletePromises = Array.from(affectedMonths).map(monthKey => {
+        const pk = `MONTH#${bookingLinkId}#${monthKey}`;
+        return this.deleteItem(pk, config.sortKeys.overview).catch(() => {
+          // Ignore errors if cache doesn't exist
+          console.log(`Cache not found for ${pk} (normal if first booking)`);
+        });
+      });
+
+      await Promise.all(deletePromises);
+      
+      console.log(`Cache invalidated for booking ${eventType} event:`, {
+        bookingLinkId,
+        affectedDates,
+        affectedMonths: Array.from(affectedMonths)
+      });
+
+    } catch (error) {
+      console.error('Error invalidating cache for booking event:', error);
+      // Don't throw - cache invalidation is not critical for functionality
+    }
+  }
+
+  /**
+   * Event-driven cache invalidation for template changes
+   * Called when templates are updated
+   * @param {string} templateId - Template ID that was changed
+   */
+  async invalidateCacheForTemplateChange(templateId) {
+    try {
+      // Find all booking links using this template
+      const bookingLink = new BookingLink(this.client);
+      const allBookingLinks = await bookingLink.findAll();
+      const affectedBookingLinks = allBookingLinks.filter(bl => bl.templateId === templateId);
+      
+      if (affectedBookingLinks.length === 0) {
+        console.log(`No booking links found for template ${templateId}`);
+        return;
+      }
+
+      // Get current and future months to invalidate (next 12 months)
+      const today = new Date();
+      const monthsToInvalidate = [];
+      
+      for (let i = 0; i < 12; i++) {
+        const targetDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const monthKey = `${targetDate.getFullYear()}-${(targetDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        monthsToInvalidate.push(monthKey);
+      }
+
+      // Delete cache for all affected booking links and months
+      const deletePromises = [];
+      
+      affectedBookingLinks.forEach(bl => {
+        monthsToInvalidate.forEach(monthKey => {
+          const pk = `MONTH#${bl.id}#${monthKey}`;
+          deletePromises.push(
+            this.deleteItem(pk, config.sortKeys.overview).catch(() => {
+              // Ignore errors if cache doesn't exist
+            })
+          );
+        });
+      });
+
+      await Promise.all(deletePromises);
+      
+      console.log(`Template change cache invalidation completed:`, {
+        templateId,
+        affectedBookingLinks: affectedBookingLinks.length,
+        monthsInvalidated: monthsToInvalidate.length
+      });
+
+    } catch (error) {
+      console.error('Error invalidating cache for template change:', error);
+      // Don't throw - this runs in background
+    }
+  }
+
+  /**
+   * Event-driven cache invalidation for booking link changes
+   * Called when booking link settings are updated (advance booking, etc.)
+   * @param {string} bookingLinkId - Booking link ID that was changed
+   */
+  async invalidateCacheForBookingLinkChange(bookingLinkId) {
+    try {
+      // Get current and future months to invalidate (next 12 months)
+      const today = new Date();
+      const monthsToInvalidate = [];
+      
+      for (let i = 0; i < 12; i++) {
+        const targetDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const monthKey = `${targetDate.getFullYear()}-${(targetDate.getMonth() + 1).toString().padStart(2, '0')}`;
+        monthsToInvalidate.push(monthKey);
+      }
+
+      // Delete cache for all months
+      const deletePromises = monthsToInvalidate.map(monthKey => {
+        const pk = `MONTH#${bookingLinkId}#${monthKey}`;
+        return this.deleteItem(pk, config.sortKeys.overview).catch(() => {
+          // Ignore errors if cache doesn't exist
+        });
+      });
+
+      await Promise.all(deletePromises);
+      
+      console.log(`Booking link change cache invalidation completed:`, {
+        bookingLinkId,
+        monthsInvalidated: monthsToInvalidate.length
+      });
+
+    } catch (error) {
+      console.error('Error invalidating cache for booking link change:', error);
+      // Don't throw - this runs in background
+    }
+  }
+
+  /**
+   * Bulk cache warming for a booking link
+   * Pre-calculate availability for next N months
+   * @param {string} bookingLinkId - Booking link ID
+   * @param {number} monthsAhead - Number of months to pre-calculate (default: 6)
+   */
+  async warmCache(bookingLinkId, monthsAhead = 6) {
+    try {
+      const today = new Date();
+      const warmingPromises = [];
+      
+      for (let i = 0; i < monthsAhead; i++) {
+        const targetDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const year = targetDate.getFullYear();
+        const month = targetDate.getMonth() + 1;
+        
+        // Check if cache already exists
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        const pk = `MONTH#${bookingLinkId}#${monthKey}`;
+        const existingCache = await this.getItem(pk, config.sortKeys.overview);
+        
+        if (!existingCache) {
+          console.log(`Warming cache for ${bookingLinkId} - ${monthKey}`);
+          warmingPromises.push(
+            this.calculateAndCacheMonthAvailability(bookingLinkId, year, month)
+          );
+        }
+      }
+      
+      if (warmingPromises.length > 0) {
+        await Promise.all(warmingPromises);
+        console.log(`Cache warming completed for ${bookingLinkId}: ${warmingPromises.length} months calculated`);
+      } else {
+        console.log(`Cache already warm for ${bookingLinkId}`);
+      }
+
+    } catch (error) {
+      console.error('Error warming cache:', error);
+      // Don't throw - cache warming is optional
+    }
+  }
+
+  /**
+   * Get cache statistics for monitoring
+   * @param {string} bookingLinkId - Booking link ID
+   * @returns {Object} Cache statistics
+   */
+  async getCacheStats(bookingLinkId) {
+    try {
+      const today = new Date();
+      const stats = {
+        bookingLinkId,
+        cachedMonths: 0,
+        uncachedMonths: 0,
+        cacheDetails: []
+      };
+      
+      // Check next 12 months
+      for (let i = 0; i < 12; i++) {
+        const targetDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const year = targetDate.getFullYear();
+        const month = targetDate.getMonth() + 1;
+        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+        const pk = `MONTH#${bookingLinkId}#${monthKey}`;
+        
+        const existingCache = await this.getItem(pk, config.sortKeys.overview);
+        
+        if (existingCache) {
+          stats.cachedMonths++;
+          stats.cacheDetails.push({
+            month: monthKey,
+            cached: true,
+            lastUpdated: existingCache.lastUpdated
+          });
+        } else {
+          stats.uncachedMonths++;
+          stats.cacheDetails.push({
+            month: monthKey,
+            cached: false
+          });
+        }
+      }
+      
+      return stats;
+    } catch (error) {
+      console.error('Error getting cache stats:', error);
+      return { error: error.message };
+    }
+  }
+
+  /**
+   * Generate cache version for debugging
+   * @returns {string} Cache version string
+   */
+  generateCacheVersion() {
+    return `v${Date.now()}`;
+  }
+
+  // Keep all the existing helper methods unchanged
   async calculateDayAvailability(templateData, bookingLinkData, dateString, dayBookings) {
     const date = new Date(dateString + 'T00:00:00');
     
@@ -199,104 +389,46 @@ export class AvailabilityService extends DynamoDBBase {
     };
   }
 
-  /**
-   * Invalidate cached availability for a booking link
-   * @param {string} bookingLinkId - Booking link ID
-   * @param {Array} affectedMonths - Array of {year, month} objects
-   */
-  async invalidateAvailabilityCache(bookingLinkId, affectedMonths) {
+  async getAvailableTimeSlots(bookingLinkId, selectedDate) {
     try {
-      const deletePromises = affectedMonths.map(({ year, month }) => {
-        const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
-        const pk = `MONTH#${bookingLinkId}#${monthKey}`;
-        return this.deleteItem(pk, config.sortKeys.overview).catch(() => {
-          // Ignore errors if item doesn't exist
-        });
-      });
-
-      await Promise.all(deletePromises);
-      console.log(`Invalidated availability cache for ${bookingLinkId}:`, affectedMonths);
-    } catch (error) {
-      console.error('Error invalidating availability cache:', error);
-      // Don't throw - this is not critical
-    }
-  }
-
-  /**
-   * Update specific day availability after booking change
-   * @param {string} bookingLinkId - Booking link ID
-   * @param {string} dateString - Date in YYYY-MM-DD format
-   */
-  async updateDayAvailability(bookingLinkId, dateString) {
-    try {
-      const date = new Date(dateString + 'T00:00:00');
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      
-      // Get the month cache
-      const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
-      const pk = `MONTH#${bookingLinkId}#${monthKey}`;
-      
-      const availabilityData = await this.getItem(pk, config.sortKeys.overview);
-      
-      if (!availabilityData) {
-        // No cache exists, will be calculated on next request
-        return;
-      }
-
-      // Recalculate just this day
+      // Get booking link and template
       const bookingLink = new BookingLink(this.client);
       const bookingLinkData = await bookingLink.findById(bookingLinkId);
       
       const template = new Template(this.client);
       const templateData = await template.findById(bookingLinkData.templateId);
       
+      // Check if date is unavailable
+      if (this.isDateUnavailable(templateData, selectedDate)) {
+        return [];
+      }
+      
+      // Get existing bookings for this date
       const booking = new Booking(this.client);
-      const dayBookings = await booking.findByBookingLinkAndDate(bookingLinkId, dateString);
+      const existingBookings = await booking.findByBookingLinkAndDate(bookingLinkId, selectedDate);
       
-      const dayAvailability = await this.calculateDayAvailability(
-        templateData,
-        bookingLinkData,
-        dateString,
-        dayBookings
+      // Generate all possible time slots for this date
+      const allSlots = this.generateTimeSlotsForDate(templateData, selectedDate);
+      
+      // Filter out booked slots
+      const bookedTimes = existingBookings.map(booking => booking.selectedTime);
+      const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot.startTime));
+      
+      // Apply advance booking restrictions
+      const filteredSlots = this.applyAdvanceBookingFilter(
+        availableSlots,
+        selectedDate,
+        bookingLinkData.requireAdvanceBooking,
+        bookingLinkData.advanceHours
       );
       
-      // Update the specific day in the cache
-      const dayKey = date.getDate().toString().padStart(2, '0');
-      const updateExpression = 'SET #data.#dayKey = :dayData, lastUpdated = :updated';
-      const expressionValues = {
-        ':dayData': {
-          available: dayAvailability.available,
-          slotsCount: dayAvailability.availableSlots
-        },
-        ':updated': new Date().toISOString()
-      };
-      const expressionAttributeNames = {
-        '#data': 'data',
-        '#dayKey': dayKey
-      };
-
-      await this.updateItem(
-        pk,
-        config.sortKeys.overview,
-        updateExpression,
-        expressionValues
-      );
-
-      console.log(`Updated day availability: ${bookingLinkId} - ${dateString}`);
+      return filteredSlots;
     } catch (error) {
-      console.error('Error updating day availability:', error);
-      // Don't throw - this is not critical
+      console.error('Error getting available time slots:', error);
+      throw new Error('Failed to get available time slots: ' + error.message);
     }
   }
 
-  /**
-   * Validate if a booking can be made (comprehensive check)
-   * @param {string} bookingLinkId - Booking link ID
-   * @param {string} selectedDate - Date in YYYY-MM-DD format
-   * @param {string} selectedTime - Time in HH:MM format
-   * @returns {Object} Validation result
-   */
   async validateBookingSlot(bookingLinkId, selectedDate, selectedTime) {
     try {
       // Get booking link and template
@@ -381,28 +513,6 @@ export class AvailabilityService extends DynamoDBBase {
     }
   }
 
-  /**
-   * Check if cached data is stale (older than 1 hour)
-   * @param {Object} availabilityData - Cached availability data
-   * @returns {boolean} True if data is stale
-   */
-  isDataStale(availabilityData) {
-    if (!availabilityData.lastUpdated) return true;
-    
-    const lastUpdated = new Date(availabilityData.lastUpdated);
-    const now = new Date();
-    const hoursSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
-    
-    return hoursSinceUpdate > 1; // Consider stale after 1 hour
-  }
-
-  /**
-   * Format month availability data for API response
-   * @param {Object} monthData - Raw month data
-   * @param {number} year - Year
-   * @param {number} month - Month
-   * @returns {Array} Formatted availability array
-   */
   formatMonthAvailability(monthData, year, month) {
     const daysInMonth = new Date(year, month, 0).getDate();
     const availability = [];
@@ -425,12 +535,6 @@ export class AvailabilityService extends DynamoDBBase {
     return availability;
   }
 
-  /**
-   * Check if a date is unavailable due to blackout days or cutoff date
-   * @param {Object} templateData - Template data
-   * @param {string} dateString - Date in YYYY-MM-DD format
-   * @returns {boolean} True if date is unavailable
-   */
   isDateUnavailable(templateData, dateString) {
     // Check if it's a blackout day
     if (templateData.blackoutDays && templateData.blackoutDays.includes(dateString)) {
@@ -450,12 +554,6 @@ export class AvailabilityService extends DynamoDBBase {
     return false;
   }
 
-  /**
-   * Generate 30-minute time slots from template schedule for a specific date
-   * @param {Object} templateData - Template data with schedule
-   * @param {string} dateString - Date in YYYY-MM-DD format
-   * @returns {Array} Array of time slot objects
-   */
   generateTimeSlotsForDate(templateData, dateString) {
     const date = new Date(dateString + 'T00:00:00');
     const dayOfWeek = this.getDayOfWeekKey(date);
@@ -490,14 +588,6 @@ export class AvailabilityService extends DynamoDBBase {
     return slots;
   }
 
-  /**
-   * Apply advance booking restrictions to time slots
-   * @param {Array} slots - Array of time slots
-   * @param {string} selectedDate - Date in YYYY-MM-DD format
-   * @param {boolean} requireAdvanceBooking - Whether advance booking is required
-   * @param {number} advanceHours - Minimum advance hours required
-   * @returns {Array} Filtered array of time slots
-   */
   applyAdvanceBookingFilter(slots, selectedDate, requireAdvanceBooking, advanceHours) {
     if (!requireAdvanceBooking) {
       return slots;
@@ -514,42 +604,22 @@ export class AvailabilityService extends DynamoDBBase {
     });
   }
 
-  /**
-   * Get day of week key for template schedule
-   * @param {Date} date - Date object
-   * @returns {string} Day key (monday, tuesday, etc.)
-   */
   getDayOfWeekKey(date) {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     return days[date.getDay()];
   }
 
-  /**
-   * Convert time string to minutes since midnight
-   * @param {string} timeString - Time in HH:MM format
-   * @returns {number} Minutes since midnight
-   */
   timeToMinutes(timeString) {
     const [hours, minutes] = timeString.split(':').map(Number);
     return hours * 60 + minutes;
   }
 
-  /**
-   * Convert minutes since midnight to time string
-   * @param {number} minutes - Minutes since midnight
-   * @returns {string} Time in HH:MM format
-   */
   minutesToTime(minutes) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   }
 
-  /**
-   * Format date to YYYY-MM-DD string
-   * @param {Date} date - Date object
-   * @returns {string} Date in YYYY-MM-DD format
-   */
   formatDateToString(date) {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -557,64 +627,9 @@ export class AvailabilityService extends DynamoDBBase {
     return `${year}-${month}-${day}`;
   }
 
-  /**
-   * Check if date is in the past
-   * @param {Date} date - Date to check
-   * @returns {boolean} True if date is in the past
-   */
   isPastDate(date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return date < today;
-  }
-
-  /**
-   * Get affected months for cache invalidation
-   * @param {string} dateString - Date in YYYY-MM-DD format
-   * @param {number} monthsAhead - How many months ahead to include
-   * @returns {Array} Array of {year, month} objects
-   */
-  getAffectedMonths(dateString, monthsAhead = 6) {
-    const date = new Date(dateString + 'T00:00:00');
-    const months = [];
-    
-    for (let i = 0; i < monthsAhead; i++) {
-      const targetDate = new Date(date.getFullYear(), date.getMonth() + i, 1);
-      months.push({
-        year: targetDate.getFullYear(),
-        month: targetDate.getMonth() + 1
-      });
-    }
-    
-    return months;
-  }
-
-  /**
-   * Recalculate availability for all booking links using a template
-   * @param {string} templateId - Template ID
-   */
-  async recalculateAvailabilityForTemplate(templateId) {
-    try {
-      // Find all booking links using this template
-      const bookingLink = new BookingLink(this.client);
-      const allBookingLinks = await bookingLink.findAll();
-      const affectedBookingLinks = allBookingLinks.filter(bl => bl.templateId === templateId);
-      
-      // Get months to recalculate (next 6 months)
-      const today = new Date();
-      const affectedMonths = this.getAffectedMonths(this.formatDateToString(today), 6);
-      
-      // Invalidate cache for all affected booking links
-      const invalidationPromises = affectedBookingLinks.map(bl => 
-        this.invalidateAvailabilityCache(bl.id, affectedMonths)
-      );
-      
-      await Promise.all(invalidationPromises);
-      
-      console.log(`Recalculated availability for template ${templateId}, affecting ${affectedBookingLinks.length} booking links`);
-    } catch (error) {
-      console.error('Error recalculating availability for template:', error);
-      // Don't throw - this runs in background
-    }
   }
 }

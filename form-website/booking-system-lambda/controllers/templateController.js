@@ -1,4 +1,5 @@
 import { Template } from '../models/Template.js';
+import { AvailabilityService } from '../services/availabilityService.js';
 import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
 import { InputSanitizer } from '../utils/sanitizer.js';
 
@@ -115,6 +116,9 @@ export class TemplateController {
       const template = new Template(dynamodb, body);
       const savedTemplate = await template.save();
       
+      // No cache invalidation needed for new templates
+      // Cache will be created on-demand when booking links use this template
+      
       return createSuccessResponse(201, 
         { template: savedTemplate }, 
         'Template created successfully'
@@ -139,7 +143,7 @@ export class TemplateController {
 
   /**
    * PUT /api/templates/:id
-   * Update existing template
+   * Update existing template and invalidate related cache
    */
   static async updateTemplate(req) {
     try {
@@ -155,6 +159,18 @@ export class TemplateController {
       // Update template
       const template = new Template(dynamodb);
       const updatedTemplate = await template.updateById(id, body);
+      
+      // EVENT-DRIVEN CACHE INVALIDATION: Template changes affect all related booking links
+      console.log(`Template ${id} updated, invalidating related availability cache...`);
+      
+      const availabilityService = new AvailabilityService(dynamodb);
+      
+      // Run cache invalidation in background (don't block response)
+      availabilityService.invalidateCacheForTemplateChange(id).catch(error => {
+        console.error('Background cache invalidation failed:', error);
+      });
+      
+      console.log(`✅ Template updated, cache invalidation initiated in background`);
       
       return createSuccessResponse(200, 
         { template: updatedTemplate }, 
@@ -195,10 +211,25 @@ export class TemplateController {
 
   /**
    * DELETE /api/templates/:id
-   * Delete template
+   * Delete template and invalidate related cache
    */
   static async deleteTemplate(dynamodb, id) {
     try {
+      // Invalidate cache before deletion
+      console.log(`Template ${id} being deleted, invalidating related availability cache...`);
+      
+      const availabilityService = new AvailabilityService(dynamodb);
+      
+      // Run cache invalidation before deletion (don't block too much)
+      try {
+        await availabilityService.invalidateCacheForTemplateChange(id);
+        console.log(`✅ Cache invalidated before template deletion`);
+      } catch (cacheError) {
+        console.error('Cache invalidation failed before deletion:', cacheError);
+        // Continue with deletion even if cache invalidation fails
+      }
+      
+      // Delete template
       const template = new Template(dynamodb);
       const result = await template.deleteById(id);
       

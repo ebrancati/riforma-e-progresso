@@ -115,7 +115,7 @@ export class PublicCancelRescheduleController {
 
   /**
    * POST /api/public/booking/{bookingId}/cancel
-   * Cancel a booking
+   * Cancel a booking and invalidate cache
    */
   static async cancelBooking(req, bookingId) {
     try {
@@ -150,15 +150,22 @@ export class PublicCancelRescheduleController {
           'Cannot cancel bookings that have already occurred');
       }
       
+      // Store original date for cache invalidation
+      const originalDate = foundBooking.selectedDate;
+      const bookingLinkId = foundBooking.bookingLinkId;
+      
       // Update booking status to cancelled
       const updatedBooking = await booking.updateStatus(bookingId, 'cancelled');
       
-      // Update availability cache after cancellation
+      // Invalidate cache after cancellation
       const availabilityService = new AvailabilityService(dynamodb);
-      await availabilityService.updateDayAvailability(
-        foundBooking.bookingLinkId,
-        foundBooking.selectedDate
+      await availabilityService.invalidateCacheForBookingEvent(
+        bookingLinkId,
+        originalDate,
+        'cancel'
       );
+      
+      console.log(`Cache invalidated after booking cancellation: ${bookingLinkId} - ${originalDate}`);
       
       // Log the cancellation reason
       console.log(`Booking ${bookingId} cancelled. Reason: ${reason || 'No reason provided'}`);
@@ -182,7 +189,7 @@ export class PublicCancelRescheduleController {
 
   /**
    * POST /api/public/booking/{bookingId}/reschedule
-   * Reschedule a booking to new date/time
+   * Reschedule a booking to new date/time and invalidate cache
    */
   static async rescheduleBooking(req, bookingId) {
     try {
@@ -248,15 +255,22 @@ export class PublicCancelRescheduleController {
         return createErrorResponse(409, 'Time slot not available', validation.error);
       }
       
-      // Store original date/time for cache updates
+      // Store original date/time for cache invalidation
       const originalDate = foundBooking.selectedDate;
+      const bookingLinkId = foundBooking.bookingLinkId;
       
       // Update the booking with new date/time
       const updatedBooking = await booking.updateBookingDateTime(bookingId, newDate, newTime);
       
-      // Update availability cache for both old and new dates
-      await availabilityService.updateDayAvailability(foundBooking.bookingLinkId, originalDate);
-      await availabilityService.updateDayAvailability(foundBooking.bookingLinkId, newDate);
+      // Invalidate cache for both dates
+      await availabilityService.invalidateCacheForBookingEvent(
+        bookingLinkId,
+        newDate,
+        'reschedule',
+        originalDate
+      );
+      
+      console.log(`Cache invalidated after booking reschedule: ${bookingLinkId} - ${originalDate} → ${newDate}`);
       
       return createSuccessResponse(200, {
         booking: updatedBooking,

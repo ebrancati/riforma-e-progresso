@@ -148,7 +148,7 @@ export class PublicBookingController {
 
   /**
    * GET /api/public/booking/:slug/availability/:year/:month
-   * Get availability for a specific month
+   * Get availability for a specific month (using persistent cache)
    */
   static async getMonthAvailability(dynamodb, slug, year, month) {
     try {
@@ -172,7 +172,7 @@ export class PublicBookingController {
           'No active booking link found with this URL');
       }
       
-      // Calculate availability for the month using AvailabilityService
+      // Get availability using persistent cache
       const availabilityService = new AvailabilityService(dynamodb);
       const availability = await availabilityService.getMonthAvailability(
         foundBookingLink.id,
@@ -184,7 +184,8 @@ export class PublicBookingController {
         year: year,
         month: month,
         bookingLinkId: foundBookingLink.id,
-        availability: availability
+        availability: availability,
+        cached: true // Indicate this comes from cache
       });
       
     } catch (error) {
@@ -200,7 +201,7 @@ export class PublicBookingController {
 
   /**
    * GET /api/public/booking/:slug/slots/:date
-   * Get available time slots for a specific date
+   * Get available time slots for a specific date (real-time)
    */
   static async getAvailableTimeSlots(dynamodb, slug, date) {
     try {
@@ -229,7 +230,7 @@ export class PublicBookingController {
           'No active booking link found with this URL');
       }
       
-      // Get available time slots using AvailabilityService
+      // Get available time slots (always real-time for accuracy)
       const availabilityService = new AvailabilityService(dynamodb);
       const timeSlots = await availabilityService.getAvailableTimeSlots(
         foundBookingLink.id,
@@ -255,7 +256,7 @@ export class PublicBookingController {
 
   /**
    * POST /api/public/booking/:slug/book
-   * Create a new booking
+   * Create a new booking and invalidate cache
    */
   static async createBooking(req, slug) {
     try {
@@ -292,11 +293,14 @@ export class PublicBookingController {
       const booking = new Booking(dynamodb, completeBookingData);
       const savedBooking = await booking.save();
       
-      // Update day availability cache after successful booking
-      await availabilityService.updateDayAvailability(
+      // EVENT-DRIVEN CACHE INVALIDATION: Invalidate cache after successful booking
+      await availabilityService.invalidateCacheForBookingEvent(
         foundBookingLink.id,
-        body.selectedDate
+        body.selectedDate,
+        'create'
       );
+      
+      console.log(`✅ Cache invalidated after booking creation: ${foundBookingLink.id} - ${body.selectedDate}`);
       
       return createSuccessResponse(201, 
         { booking: savedBooking }, 
