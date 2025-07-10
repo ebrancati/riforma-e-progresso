@@ -104,7 +104,9 @@ const LoginPage: React.FC = () => {
           >
             {isLoading ? (
               <>
-                <span className="loading-spinner"><Loader2 size={20} /></span>
+                <span className="btn-loading-spinner-container">
+                  <Loader2 size={20} />
+                </span>
                 Accesso in corso...
               </>
             ) : (
@@ -118,7 +120,6 @@ const LoginPage: React.FC = () => {
             <MoveLeft className='move-left-icon' size={20} /> Torna alle Opportunità
           </Link>
         </form>
-
 
         <div className="login-footer">
           <div className="login-info">

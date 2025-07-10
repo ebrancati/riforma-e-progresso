@@ -9,8 +9,11 @@ const NotFoundPage: React.FC = () => {
       <div className="not-found-content">
         <h1>Errore 404</h1>
         <h2>Pagina non trovata</h2>
-        <p>Contattaci per assistenza: <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link></p>
-
+        <div>
+          <p>Contattaci per assistenza</p>
+          <Link to="/contattaci" className="contact-link">sezione.colloqui@riformaeprogresso.it</Link>
+        </div>
+ 
         <Link to="/" className="btn btn-secondary back-to-public">
           Torna alla Home
         </Link>

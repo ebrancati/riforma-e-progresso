@@ -470,7 +470,9 @@ const RescheduleBookingPage: React.FC = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="loading-spinner"><Loader2 size={20} /></span>
+                      <span className="btn-loading-spinner-container">
+                        <Loader2 size={20} />
+                      </span>
                       Riprogrammazione...
                     </>
                   ) : (

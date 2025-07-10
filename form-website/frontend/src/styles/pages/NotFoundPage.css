@@ -37,11 +37,16 @@ body {
   font-weight: 600;
 }
 
-.not-found-content p {
+.not-found-content div {
   color: #666;
   font-size: 16px;
   margin-bottom: 10px;
   line-height: 1.5;
+}
+
+.not-found-container div .contact-link {
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .not-found-links {

@@ -157,6 +157,8 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  padding: var(--spacing-xl);
+  padding-bottom: 0;
 }
 
 .contact-container {
@@ -555,6 +557,18 @@ body {
   color: var(--gray-600);
 }
 
+.loading-spinner, .btn-loading-spinner-container {
+  font-size: var(--font-size-xl);
+  animation: spin 1s linear infinite;
+}
+
+.btn-loading-spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -777,5 +791,10 @@ body {
 
 @media (max-width: 320px) {
   .container { padding: 0; }
-  .contact-info { border-radius: 0; }
+
+  .header,
+  .main-content,
+  .contact-info {
+    border-radius: 0;
+  }
 }

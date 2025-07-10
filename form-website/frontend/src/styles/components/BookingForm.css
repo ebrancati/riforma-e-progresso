@@ -276,10 +276,6 @@
   font-size: var(--font-size-xl);
 }
 
-.loading-spinner {
-  animation: spin 1s linear infinite;
-}
-
 @media (max-width: 768px) {
   .booking-form-section {
     padding: var(--spacing-xl);

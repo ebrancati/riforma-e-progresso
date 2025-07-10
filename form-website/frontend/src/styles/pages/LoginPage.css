@@ -167,14 +167,6 @@
   left: 100%;
 }
 
-.loading-spinner {
-  font-size: var(--font-size-xl);
-}
-
-.loading-spinner {
-  animation: spin 1s linear infinite;
-}
-
 .login-footer {
   text-align: center;
   padding: var(--spacing-xl);

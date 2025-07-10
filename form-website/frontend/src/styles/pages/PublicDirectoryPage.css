@@ -31,7 +31,6 @@
 .loading-spinner {
   font-size: var(--font-size-3xl);
   margin-bottom: var(--spacing-lg);
-  animation: spin 1s linear infinite;
 }
 
 /* Error States */

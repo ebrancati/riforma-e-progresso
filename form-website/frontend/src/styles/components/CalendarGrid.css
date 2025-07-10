@@ -223,7 +223,6 @@
 .loading-spinner {
   font-size: var(--font-size-2xl);
   margin-bottom: var(--spacing-md);
-  animation: spin 1s linear infinite;
 }
 
 .calendar-legend {

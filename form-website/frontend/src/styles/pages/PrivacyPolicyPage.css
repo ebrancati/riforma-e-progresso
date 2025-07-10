@@ -252,7 +252,6 @@
   border-bottom: 1px solid transparent;
   word-break: break-word;
   overflow-wrap: break-word;
-  hyphens: auto;
 }
 
 .privacy-link:hover {
@@ -329,7 +328,6 @@
   .complaint-right p {
     word-break: break-word;
     overflow-wrap: break-word;
-    hyphens: auto;
   }
 }
 
@@ -415,7 +413,6 @@
   .complaint-right {
     overflow-wrap: break-word;
     word-break: break-word;
-    hyphens: auto;
   }
   
   .privacy-link {

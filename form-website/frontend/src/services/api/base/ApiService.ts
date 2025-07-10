@@ -6,7 +6,7 @@ export class BaseApiService {
   private _isOffline: boolean = false; // Renamed to avoid collision
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://46e949dbqe.execute-api.eu-central-1.amazonaws.com/prod';
   }
 
   // Get auth headers from global function set by AuthContext
