@@ -96,14 +96,16 @@ export class Booking extends DynamoDBBase {
       const result = await this.query(
         bookingLinkId,
         {
-          expression: 'begins_with(SK, :datePrefix) AND #status <> :cancelled',
+          expression: 'begins_with(SK, :datePrefix)', // Only KeyCondition here
           values: {
             ':datePrefix': `BOOKING#${selectedDate}`,
             ':cancelled': 'cancelled'
           },
           attributeNames: {
             '#status': 'status'
-          }
+          },
+          // Add FilterExpression for status filtering
+          filterExpression: '#status <> :cancelled'
         }
       );
 
@@ -142,7 +144,7 @@ export class Booking extends DynamoDBBase {
       const result = await this.query(
         bookingLinkId,
         {
-          expression: 'SK BETWEEN :startDate AND :endDate AND #status <> :cancelled',
+          expression: 'SK BETWEEN :startDate AND :endDate', // Only KeyCondition here
           values: {
             ':startDate': `BOOKING#${startDate}`,
             ':endDate': `BOOKING#${endDate}#99:99`, // Ensure we capture all times
@@ -150,7 +152,9 @@ export class Booking extends DynamoDBBase {
           },
           attributeNames: {
             '#status': 'status'
-          }
+          },
+          // Add FilterExpression for status filtering
+          filterExpression: '#status <> :cancelled'
         }
       );
 

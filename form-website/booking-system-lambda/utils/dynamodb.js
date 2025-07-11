@@ -188,6 +188,11 @@ export class DynamoDBBase {
         if (skCondition.attributeNames) {
           params.ExpressionAttributeNames = skCondition.attributeNames;
         }
+
+        // FIXED: Add support for FilterExpression
+        if (skCondition.filterExpression) {
+          params.FilterExpression = skCondition.filterExpression;
+        }
       }
 
       if (indexName) {
@@ -215,21 +220,28 @@ export class DynamoDBBase {
   /**
    * Scan table with filters
    */
-  async scan(filterExpression = null, expressionValues = null, limit = null) {
+  async scan(filterExpression = null, expressionValues = null, limit = null, expressionAttributeNames = null) {
     try {
       const params = {
         TableName: this.tableName
       };
-
+  
       if (filterExpression) {
         params.FilterExpression = filterExpression;
-        params.ExpressionAttributeValues = expressionValues;
+        
+        if (expressionValues) {
+          params.ExpressionAttributeValues = expressionValues;
+        }
+        
+        if (expressionAttributeNames) {
+          params.ExpressionAttributeNames = expressionAttributeNames;
+        }
       }
-
+  
       if (limit) {
         params.Limit = limit;
       }
-
+  
       const command = new DocScanCommand(params);
       const response = await this.client.send(command);
       

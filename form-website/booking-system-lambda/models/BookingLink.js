@@ -180,7 +180,7 @@ export class BookingLink extends DynamoDBBase {
         },
         null, // limit
         {
-          '#name': 'name'
+          '#name': 'name' // ExpressionAttributeNames parameter
         }
       );
   
