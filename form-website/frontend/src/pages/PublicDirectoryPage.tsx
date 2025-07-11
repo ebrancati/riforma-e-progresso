@@ -6,7 +6,7 @@ import type { PublicBookingLinkInfo }   from '../services/api/public/types';
 
 import NotificationMessages from '../components/NotificationMessages';
 
-import { SearchX, RefreshCw, Clock, Clipboard, Loader2 } from "lucide-react";
+import { SearchX, Loader2, RefreshCw, Clock, Clipboard, Check } from "lucide-react";
 import '../styles/pages/PublicDirectoryPage.css';
 
 const PublicDirectoryPage: React.FC = () => {
@@ -14,6 +14,7 @@ const PublicDirectoryPage: React.FC = () => {
   const [bookingLinks, setBookingLinks] = useState<PublicBookingLinkInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,6 +77,21 @@ const PublicDirectoryPage: React.FC = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCopyUrl = async (urlSlug: string) => {
+    const fullUrl = `${window.location.origin}/book/${urlSlug}`;
+    
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setSuccessMessage(`Link copiato negli appunti!`);
+      
+      setCopiedLinkId(urlSlug);
+      setTimeout(() => setCopiedLinkId(null), 1000);
+      
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
     }
   };
 
@@ -160,15 +176,13 @@ const PublicDirectoryPage: React.FC = () => {
                       Prenota Colloquio
                     </Link>
                     
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(link.bookingUrl);
-                        setSuccessMessage('Link copiato negli appunti!');
-                      }}
+                    <button
+                      onClick={
+                        () => handleCopyUrl(link.urlSlug)
+                      }
                       className="btn-copy"
-                      title="Copia link"
-                    >
-                      <Clipboard size={18} />
+                      title="Copia link">
+                      {copiedLinkId === link.urlSlug ? <Check size={18} /> : <Clipboard size={18} />}
                     </button>
                   </div>
                 </div>

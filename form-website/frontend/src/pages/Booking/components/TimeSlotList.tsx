@@ -59,7 +59,7 @@ const TimeSlotList: React.FC<TimeSlotListProps> = ({
       <div className="time-slots-list">
         {isLoading ? (
           <div className="time-slots-loading">
-            <div className="loading-spinner"><Loader2 size={20} /></div>
+            <Loader2 size={20} className="loading-spinner" />
             <p>Caricamento orari disponibili...</p>
           </div>
         ) : availableSlots.length === 0 ? (

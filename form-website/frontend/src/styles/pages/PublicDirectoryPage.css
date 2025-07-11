@@ -119,6 +119,18 @@
   margin: 0 auto;
 }
 
+.opportunities-grid:has(.opportunity-card:only-child) {
+  grid-template-columns: 1fr;
+  justify-items: center;
+}
+
+.opportunities-grid:has(.opportunity-card:only-child) .opportunity-card {
+  width: 100%;
+  min-width: 100px;
+  max-width: 500px;
+  padding: var(--spacing-2xl);
+}
+
 .opportunity-card {
   background: var(--gray-50);
   border: 2px solid var(--gray-200);

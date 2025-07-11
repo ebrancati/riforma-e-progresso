@@ -106,6 +106,10 @@ const BookingPage: React.FC = () => {
     }
   }, [successMessage]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentStep]);
+
   // Load booking link information
   const loadBookingLinkInfo = async () => {
     try {

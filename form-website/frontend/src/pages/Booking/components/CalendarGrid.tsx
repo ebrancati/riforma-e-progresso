@@ -169,7 +169,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
         {/* Loading Overlay */}
         {isLoading && (
           <div className="calendar-loading-overlay">
-            <Loader2 size={20} />
+            <Loader2 size={20} className="loading-spinner" />
             <p>Caricamento disponibilità...</p>
           </div>
         )}
