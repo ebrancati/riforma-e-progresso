@@ -184,6 +184,10 @@ export class DynamoDBBase {
       if (skCondition) {
         params.KeyConditionExpression += ` AND ${skCondition.expression}`;
         Object.assign(params.ExpressionAttributeValues, skCondition.values);
+        
+        if (skCondition.attributeNames) {
+          params.ExpressionAttributeNames = skCondition.attributeNames;
+        }
       }
 
       if (indexName) {

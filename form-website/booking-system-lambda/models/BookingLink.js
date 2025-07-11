@@ -177,6 +177,10 @@ export class BookingLink extends DynamoDBBase {
         {
           ':name': name,
           ':entityType': 'BOOKING_LINK'
+        },
+        null, // limit
+        {
+          '#name': 'name'
         }
       );
   

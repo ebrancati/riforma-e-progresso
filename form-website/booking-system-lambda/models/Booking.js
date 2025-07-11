@@ -86,12 +86,12 @@ export class Booking extends DynamoDBBase {
       if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
         throw new Error('Invalid booking link ID');
       }
-  
+
       // Validate date format (YYYY-MM-DD)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
         throw new Error('Invalid date format. Use YYYY-MM-DD');
       }
-  
+
       // Query bookings for specific booking link and date
       const result = await this.query(
         bookingLinkId,
@@ -100,10 +100,13 @@ export class Booking extends DynamoDBBase {
           values: {
             ':datePrefix': `BOOKING#${selectedDate}`,
             ':cancelled': 'cancelled'
+          },
+          attributeNames: {
+            '#status': 'status'
           }
         }
       );
-  
+
       return result.items
         .map(item => this.formatBooking(item))
         .sort((a, b) => a.selectedTime.localeCompare(b.selectedTime));
@@ -130,11 +133,11 @@ export class Booking extends DynamoDBBase {
       if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
         throw new Error('Invalid booking link ID');
       }
-  
+
       // Create date range for the month
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
       const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
-  
+
       // Query all bookings for the booking link in the month range
       const result = await this.query(
         bookingLinkId,
@@ -144,10 +147,13 @@ export class Booking extends DynamoDBBase {
             ':startDate': `BOOKING#${startDate}`,
             ':endDate': `BOOKING#${endDate}#99:99`, // Ensure we capture all times
             ':cancelled': 'cancelled'
+          },
+          attributeNames: {
+            '#status': 'status'
           }
         }
       );
-  
+
       return result.items
         .map(item => this.formatBooking(item))
         .sort((a, b) => {
