@@ -269,7 +269,7 @@ const EditBookingLinkPage: React.FC = () => {
                   type="text"
                   id="interviewName"
                   className="form-input"
-                  placeholder="es. Colloquio Grafici, Colloquio Developer, ..."
+                  placeholder="es. Grafico, Analista Politico, ..."
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   disabled={isLoading || !isServerAvailable}
