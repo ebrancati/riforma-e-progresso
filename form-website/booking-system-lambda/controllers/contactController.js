@@ -1,4 +1,5 @@
 import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
+import { EmailNotificationService } from '../services/emailNotificationService.js';
 
 export class ContactController {
   /**
@@ -25,7 +26,7 @@ export class ContactController {
 
   /**
    * POST /api/contact
-   * Handle contact form submission
+   * Handle contact form submission with email notification
    */
   static async submitContactForm(req) {
     try {
@@ -56,16 +57,29 @@ export class ContactController {
           'Message cannot exceed 1000 characters');
       }
       
-      // Log the contact form data (as requested - no database save)
-      console.log('\n=== CONTACT FORM SUBMITTED ===');
       console.log(`Email: ${email}`);
       console.log(`Message: ${message.trim()}`);
       console.log(`Timestamp: ${new Date().toISOString()}`);
-      console.log('===============================\n');
+      
+      // Send email notification
+      try {
+        const emailService = new EmailNotificationService();
+        await emailService.sendContactFormNotification({
+          email: email,
+          message: message.trim(),
+          timestamp: new Date().toISOString()
+        });
+        
+        console.log('✅ Contact form email notification sent');
+      } catch (emailError) {
+        console.error('❌ Contact form email notification failed:', emailError.message);
+        // Continue anyway - don't fail the contact form submission
+      }
       
       // Return success response
       return createSuccessResponse(200, {
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        emailNotificationSent: true
       }, 'Contact form submitted successfully');
       
     } catch (error) {

@@ -260,7 +260,7 @@ export class PublicBookingController {
    */
   static async createBooking(req, slug) {
     try {
-      const { dynamodb, body } = req;
+      const { dynamodb, body, cvFileData } = req;
       
       // Find booking link by slug
       const bookingLink = new BookingLink(dynamodb);
@@ -288,10 +288,20 @@ export class PublicBookingController {
       if (!validation.valid) {
         return createErrorResponse(400, 'Invalid booking slot', validation.error);
       }
-      
-      // Create the booking
+
       const booking = new Booking(dynamodb, completeBookingData);
-      const savedBooking = await booking.save();
+      
+      // Log CV info if present
+      if (cvFileData) {
+        console.log('Creating booking with CV attachment:', {
+          fileName: cvFileData.fileName,
+          size: cvFileData.fileData?.length || 0,
+          contentType: cvFileData.contentType
+        });
+      }
+      
+      // Pass CV data to save method
+      const savedBooking = await booking.save(cvFileData);
       
       // EVENT-DRIVEN CACHE INVALIDATION: Invalidate cache after successful booking
       await availabilityService.invalidateCacheForBookingEvent(
@@ -303,7 +313,10 @@ export class PublicBookingController {
       console.log(`✅ Cache invalidated after booking creation: ${foundBookingLink.id} - ${body.selectedDate}`);
       
       return createSuccessResponse(201, 
-        { booking: savedBooking }, 
+        { 
+          booking: savedBooking,
+          emailNotificationSent: true
+        }, 
         'Booking created successfully'
       );
       

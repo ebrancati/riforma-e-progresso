@@ -4,7 +4,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs20.x
   region: ${opt:region, 'eu-central-1'}
   stage: ${opt:stage, 'dev'}
   
@@ -14,6 +14,9 @@ provider:
     ADMIN_USERNAME: ${env:ADMIN_USERNAME, 'admin'}
     ADMIN_PASSWORD: ${env:ADMIN_PASSWORD, 'rep2025@'}
     CORS_ORIGINS: ${env:CORS_ORIGINS, '*'}
+    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID, ''}
+    GOOGLE_CLIENT_SECRET: ${env:GOOGLE_CLIENT_SECRET, ''}
+    ENABLE_GOOGLE_INTEGRATION: ${env:ENABLE_GOOGLE_INTEGRATION, 'false'}
   
   iam:
     role:
@@ -31,7 +34,11 @@ provider:
           Resource:
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*"
-
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: "*"
 functions:
   api:
     handler: lambda-handler.handler

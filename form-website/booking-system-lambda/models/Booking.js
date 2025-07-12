@@ -1,13 +1,14 @@
 import { DynamoDBBase, config } from '../utils/dynamodb.js';
 import { InputSanitizer } from '../utils/sanitizer.js';
 import { IdGenerator } from '../utils/idGenerator.js';
+import { GoogleOAuthService } from '../services/googleOAuthService.js';
+import { EmailNotificationService } from '../services/emailNotificationService.js';
 import { randomUUID } from 'crypto';
 
 export class Booking extends DynamoDBBase {
   constructor(dynamoClient, data = {}) {
     super(dynamoClient);
-    
-    // Validate and sanitize data if provided
+
     if (Object.keys(data).length > 0) {
       const sanitizedData = Booking.validateBookingData(data);
       
@@ -23,6 +24,11 @@ export class Booking extends DynamoDBBase {
       this.notes = sanitizedData.notes || '';
       this.cancellationToken = data.cancellationToken || randomUUID();
       this.status = data.status || 'confirmed';
+      
+      this.googleEventId = data.googleEventId || null;
+      this.meetLink = data.meetLink || null;
+      this.calendarLink = data.calendarLink || null;
+      
       this.createdAt = data.createdAt || new Date().toISOString();
       this.updatedAt = data.updatedAt || new Date().toISOString();
     }
@@ -200,7 +206,7 @@ export class Booking extends DynamoDBBase {
   /**
    * Save booking (create new)
    */
-  async save() {
+  async save(cvFileData = null) {
     try {
       // Check if time slot is still available
       const isAvailable = await this.isTimeSlotAvailable(
@@ -208,19 +214,40 @@ export class Booking extends DynamoDBBase {
         this.selectedDate, 
         this.selectedTime
       );
-
+  
       if (!isAvailable) {
         throw new Error('This time slot is no longer available');
       }
 
+      if (process.env.ENABLE_GOOGLE_INTEGRATION === 'true') {
+        try {
+          const bookingLink = new (await import('./BookingLink.js')).BookingLink(this.client);
+          const bookingLinkData = await bookingLink.findById(this.bookingLinkId);
+  
+          const googleService = new GoogleOAuthService(this.client);
+          const googleResult = await googleService.createCalendarEventWithMeet(this, bookingLinkData);
+          
+          this.googleEventId = googleResult.eventId;
+          this.meetLink = googleResult.meetLink;
+          this.calendarLink = googleResult.calendarLink;
+          
+          console.log('✅ Google Calendar event created:', {
+            eventId: this.googleEventId,
+            meetLink: this.meetLink
+          });
+        } catch (googleError) {
+          console.error('❌ Google integration failed (continuing without):', googleError.message);
+        }
+      }
+  
       // Create sort key for time slot
       const sk = `BOOKING#${this.selectedDate}#${this.selectedTime}`;
-
+  
       // Create DynamoDB item
       const item = {
-        PK: this.bookingLinkId, // Partition by booking link for efficient queries
+        PK: this.bookingLinkId,
         SK: sk,
-        GSI1PK: this.id, // For direct booking lookup by ID
+        GSI1PK: this.id,
         GSI1SK: 'BOOKING',
         EntityType: 'BOOKING',
         id: this.id,
@@ -235,11 +262,39 @@ export class Booking extends DynamoDBBase {
         notes: this.notes,
         cancellationToken: this.cancellationToken,
         status: this.status,
+        googleEventId: this.googleEventId,
+        meetLink: this.meetLink,
+        calendarLink: this.calendarLink,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt
       };
-
+  
       await this.putItem(item);
+  
+      // Send email notifications
+      try {
+        const emailService = new EmailNotificationService();
+        const bookingLink = new (await import('./BookingLink.js')).BookingLink(this.client);
+        const bookingLinkData = await bookingLink.findById(this.bookingLinkId);
+
+        await emailService.sendNewBookingNotification(
+          this.formatBooking(item),
+          bookingLinkData,
+          null // No CV
+        );
+  
+        await emailService.sendInternalNotification(
+          this.formatBooking(item), 
+          bookingLinkData,
+          cvFileData
+        );
+        
+        console.log('✅ New booking email notification sent');
+      } catch (emailError) {
+        console.error('❌ Email notification failed (continuing):', emailError.message);
+        // Continue even if email fails
+      }
+  
       return this.formatBooking(item);
     } catch (error) {
       console.error('Error saving booking:', error);
@@ -250,16 +305,27 @@ export class Booking extends DynamoDBBase {
   /**
    * Update booking status
    */
-  async updateStatus(id, newStatus) {
+  async updateStatus(id, newStatus, reason = '') {
     try {
       if (!['confirmed', 'cancelled'].includes(newStatus)) {
         throw new Error('Invalid status. Must be: confirmed or cancelled');
       }
-
+  
       // Find the booking first to get PK and SK
       const booking = await this.findById(id);
       const sk = `BOOKING#${booking.selectedDate}#${booking.selectedTime}`;
-
+  
+      // Handle Google Calendar cancellation
+      if (newStatus === 'cancelled' && booking.googleEventId && process.env.ENABLE_GOOGLE_INTEGRATION === 'true') {
+        try {
+          const googleService = new GoogleOAuthService(this.client);
+          await googleService.cancelCalendarEvent(booking.googleEventId);
+          console.log('✅ Google Calendar event cancelled');
+        } catch (googleError) {
+          console.error('❌ Google Calendar cancellation failed:', googleError.message);
+        }
+      }
+  
       // Update the status
       const updatedItem = await this.updateItem(
         booking.bookingLinkId,
@@ -270,7 +336,26 @@ export class Booking extends DynamoDBBase {
           ':updatedAt': new Date().toISOString()
         }
       );
-
+  
+      // Send cancellation email notification
+      if (newStatus === 'cancelled') {
+        try {
+          const emailService = new EmailNotificationService();
+          const bookingLink = new (await import('./BookingLink.js')).BookingLink(this.client);
+          const bookingLinkData = await bookingLink.findById(booking.bookingLinkId);
+          
+          await emailService.sendCancellationNotification(
+            this.formatBooking(updatedItem),
+            bookingLinkData,
+            reason
+          );
+          
+          console.log('✅ Cancellation email notification sent');
+        } catch (emailError) {
+          console.error('❌ Email notification failed (continuing):', emailError.message);
+        }
+      }
+  
       return this.formatBooking(updatedItem);
     } catch (error) {
       console.error('Error updating booking status:', error);
@@ -289,25 +374,56 @@ export class Booking extends DynamoDBBase {
       if (!IdGenerator.isBookingId(id)) {
         throw new Error('Invalid booking ID');
       }
-
+  
       // Find the current booking
       const currentBooking = await this.findById(id);
       const currentSk = `BOOKING#${currentBooking.selectedDate}#${currentBooking.selectedTime}`;
-
+  
+      // Store old date/time for email notification
+      const oldDateTime = {
+        date: currentBooking.selectedDate,
+        time: currentBooking.selectedTime
+      };
+  
       // Check if new time slot is available
       const isNewSlotAvailable = await this.isTimeSlotAvailable(
         currentBooking.bookingLinkId,
         newDate,
         newTime
       );
-
+  
       if (!isNewSlotAvailable) {
         throw new Error('The new time slot is not available');
       }
-
+  
+      // Update Google Calendar event
+      if (currentBooking.googleEventId && process.env.ENABLE_GOOGLE_INTEGRATION === 'true') {
+        try {
+          const googleService = new GoogleOAuthService(this.client);
+          const bookingLink = new (await import('./BookingLink.js')).BookingLink(this.client);
+          const bookingLinkData = await bookingLink.findById(currentBooking.bookingLinkId);
+          
+          const updatedBookingData = {
+            ...currentBooking,
+            selectedDate: newDate,
+            selectedTime: newTime
+          };
+          
+          await googleService.updateCalendarEvent(
+            currentBooking.googleEventId,
+            updatedBookingData,
+            bookingLinkData
+          );
+          
+          console.log('✅ Google Calendar event updated for rescheduling');
+        } catch (googleError) {
+          console.error('❌ Google Calendar update failed:', googleError.message);
+        }
+      }
+  
       // Delete current booking item
       await this.deleteItem(currentBooking.bookingLinkId, currentSk);
-
+  
       // Create new booking item with new date/time but same ID
       const newSk = `BOOKING#${newDate}#${newTime}`;
       const updatedItem = {
@@ -318,8 +434,26 @@ export class Booking extends DynamoDBBase {
         selectedTime: newTime,
         updatedAt: new Date().toISOString()
       };
-
+  
       await this.putItem(updatedItem);
+  
+      // Send reschedule email notification
+      try {
+        const emailService = new EmailNotificationService();
+        const bookingLink = new (await import('./BookingLink.js')).BookingLink(this.client);
+        const bookingLinkData = await bookingLink.findById(currentBooking.bookingLinkId);
+        
+        await emailService.sendRescheduleNotification(
+          this.formatBooking(updatedItem),
+          bookingLinkData,
+          oldDateTime
+        );
+        
+        console.log('✅ Reschedule email notification sent');
+      } catch (emailError) {
+        console.error('❌ Email notification failed (continuing):', emailError.message);
+      }
+  
       return this.formatBooking(updatedItem);
     } catch (error) {
       console.error('Error updating booking date/time:', error);
@@ -377,6 +511,9 @@ export class Booking extends DynamoDBBase {
       notes: item.notes,
       cancellationToken: item.cancellationToken,
       status: item.status,
+      googleEventId: item.googleEventId,
+      meetLink: item.meetLink,
+      calendarLink: item.calendarLink,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt
     };

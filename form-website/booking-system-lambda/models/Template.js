@@ -77,9 +77,13 @@ export class Template extends DynamoDBBase {
         {
           ':name': sanitizedName,
           ':entityType': 'TEMPLATE'
+        },
+        null, // limit
+        {
+          '#name': 'name'
         }
       );
-
+  
       return result.items.length > 0 ? result.items[0] : null;
     } catch (error) {
       console.error('Error finding template by name:', error);
@@ -200,7 +204,9 @@ export class Template extends DynamoDBBase {
         id, 
         config.sortKeys.metadata, 
         updateExpression, 
-        expressionValues
+        expressionValues,
+        null, // conditionExpression
+        expressionAttributeNames
       );
 
       return this.formatTemplate(updatedItem);

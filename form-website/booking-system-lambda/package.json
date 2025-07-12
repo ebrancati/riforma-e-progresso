@@ -13,12 +13,14 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.540.0",
-    "@aws-sdk/lib-dynamodb": "^3.540.0"
+    "@aws-sdk/client-ses": "^3.844.0",
+    "@aws-sdk/lib-dynamodb": "^3.540.0",
+    "googleapis": "^128.0.0"
   },
   "devDependencies": {
     "serverless": "^3.38.0",
-    "serverless-offline": "^13.3.3",
-    "serverless-dotenv-plugin": "^6.0.0"
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-offline": "^13.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

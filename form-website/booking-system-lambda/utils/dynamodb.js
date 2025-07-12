@@ -132,7 +132,7 @@ export class DynamoDBBase {
   /**
    * Update item with condition
    */
-  async updateItem(pk, sk, updateExpression, expressionValues, conditionExpression = null) {
+  async updateItem(pk, sk, updateExpression, expressionValues, conditionExpression = null, expressionAttributeNames = null) {
     try {
       const command = new UpdateCommand({
         TableName: this.tableName,
@@ -140,6 +140,7 @@ export class DynamoDBBase {
         UpdateExpression: updateExpression,
         ExpressionAttributeValues: expressionValues,
         ...(conditionExpression && { ConditionExpression: conditionExpression }),
+        ...(expressionAttributeNames && { ExpressionAttributeNames: expressionAttributeNames }), // ← AGGIUNGERE
         ReturnValues: 'ALL_NEW'
       });
       
@@ -233,6 +234,7 @@ export class DynamoDBBase {
           params.ExpressionAttributeValues = expressionValues;
         }
         
+        // AGGIUNTO: Support for ExpressionAttributeNames
         if (expressionAttributeNames) {
           params.ExpressionAttributeNames = expressionAttributeNames;
         }

@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { GoogleAuthController } from './controllers/googleAuthController.js';
 
 // Initialize DynamoDB client
 const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
@@ -132,6 +133,19 @@ export const handler = async (event, context) => {
   }
 };
 
+function prepareCVFileForEmail(fileInfo) {
+  if (!fileInfo || !fileInfo.received || !fileInfo.fileData) {
+    return null;
+  }
+
+  // Prepare CV file data for email attachment
+  return {
+    fileName: fileInfo.fileName || 'CV.pdf',
+    fileData: fileInfo.fileData, // Raw binary data
+    contentType: fileInfo.contentType || 'application/pdf'
+  };
+}
+
 /**
  * Route incoming requests to appropriate controllers
  * @param {Object} req - Request object
@@ -159,19 +173,35 @@ async function routeRequest(req) {
       return { statusCode: 204, body: {} };
     }
 
-    // Public routes (no auth required)
-    if (path.startsWith('/api/public/booking/') && 
-        (path.includes('/details') || path.includes('/cancel') || path.includes('/reschedule'))) {
+    if (
+      path.startsWith('/api/public/booking/') && 
+      (path.includes('/details') || path.includes('/cancel') || path.includes('/reschedule'))
+    ) {
       return await PublicCancelRescheduleController.handleRequest(req);
     }
 
     if (path.startsWith('/api/public/')) {
+      if (method === 'POST' && path.includes('/book')) {
+        const cvFileData = prepareCVFileForEmail(req.body.fileInfo);
+        req.cvFileData = cvFileData;
+        
+        console.log('CV data prepared for booking:', {
+          hasCV: !!cvFileData,
+          fileName: cvFileData?.fileName
+        });
+      }
+      
       return await PublicBookingController.handleRequest(req);
     }
 
     // Contact form
     if (path.startsWith('/api/contact')) {
       return await ContactController.handleRequest(req);
+    }
+
+    // Google OAuth routes
+    if (path.startsWith('/api/auth/google')) {
+      return await GoogleAuthController.handleRequest(req);
     }
 
     // Auth verification endpoint
@@ -232,6 +262,8 @@ function parseMultipartFormData(body, contentType) {
     let fileReceived = false;
     let fileName = '';
     let fileSize = 0;
+    let fileData = null;
+    let fileContentType = 'application/octet-stream';
 
     parts.forEach(part => {
       if (part.includes('Content-Disposition: form-data;')) {
@@ -247,10 +279,16 @@ function parseMultipartFormData(body, contentType) {
             const fileNameMatch = header.match(/filename="([^"]+)"/);
             fileName = fileNameMatch ? fileNameMatch[1] : 'unknown';
             
+            // Detect content type from headers
+            const contentTypeHeader = lines.find(line => line.includes('Content-Type:'));
+            if (contentTypeHeader) {
+              fileContentType = contentTypeHeader.split('Content-Type:')[1].trim();
+            }
+            
             const emptyLineIndex = part.indexOf('\r\n\r\n');
             if (emptyLineIndex !== -1) {
-              const fileData = part.substring(emptyLineIndex + 4);
-              fileSize = fileData.length - 2; // Remove trailing \r\n
+              fileData = part.substring(emptyLineIndex + 4, part.length - 2); // Remove trailing \r\n
+              fileSize = fileData.length;
               fileReceived = true;
             }
           } else if (fieldName) {
@@ -265,7 +303,7 @@ function parseMultipartFormData(body, contentType) {
       }
     });
 
-    // Log file info (as per original requirement)
+    // Log file info (come prima)
     if (fileReceived) {
       console.log('\n=== CV RECEIVED ===');
       console.log(`Candidate: ${formData.firstName} ${formData.lastName}`);
@@ -273,14 +311,17 @@ function parseMultipartFormData(body, contentType) {
       console.log(`Role: ${formData.role}`);
       console.log(`File: ${fileName}`);
       console.log(`Size: ${formatFileSize(fileSize)}`);
+      console.log(`Type: ${fileContentType}`);
       console.log(`Appointment: ${formData.selectedDate} at ${formData.selectedTime}`);
       console.log('==================\n');
     }
 
-    // Add file info to form data
+    // Add complete file info to form data
     formData.fileInfo = {
       fileName,
       fileSize,
+      fileData,
+      contentType: fileContentType,
       received: fileReceived
     };
 
