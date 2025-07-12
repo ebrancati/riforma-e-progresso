@@ -4,6 +4,7 @@ import { AvailabilityService } from '../services/availabilityService.js';
 import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
 
 export class BookingLinkController {
+
   /**
    * Handle all booking link-related requests
    * @param {Object} req - Request object with DynamoDB client
@@ -18,24 +19,22 @@ export class BookingLinkController {
       const bookingLinkId = bookingLinkMatch ? bookingLinkMatch[1] : null;
 
       // Route to appropriate method
-      if (path === '/api/booking-links' && method === 'GET') {
-        return await this.getAllBookingLinks(dynamodb);
-      }
+      if (path === '/api/booking-links' && method === 'GET')
+        return await BookingLinkController.getAllBookingLinks(dynamodb);
 
-      if (path === '/api/booking-links' && method === 'POST') {
-        return await this.createBookingLink(req);
-      }
+      if (path === '/api/booking-links' && method === 'POST')
+        return await BookingLinkController.createBookingLink(req);
 
       if (bookingLinkId) {
         req.params = { id: bookingLinkId };
         
         switch (method) {
           case 'GET':
-            return await this.getBookingLinkById(dynamodb, bookingLinkId);
+            return await BookingLinkController.getBookingLinkById(dynamodb, bookingLinkId);
           case 'PUT':
-            return await this.updateBookingLink(req);
+            return await BookingLinkController.updateBookingLink(req);
           case 'DELETE':
-            return await this.deleteBookingLink(dynamodb, bookingLinkId);
+            return await BookingLinkController.deleteBookingLink(dynamodb, bookingLinkId);
           default:
             return createErrorResponse(405, 'Method not allowed', `${method} not supported for this endpoint`);
         }
@@ -105,9 +104,8 @@ export class BookingLinkController {
   static async createBookingLink(req) {
     try {
       const { dynamodb, body, headers } = req;
-      
-      // Validate input data
-      const validationResult = this.validateBookingLinkData(body);
+
+      const validationResult = BookingLinkController.validateBookingLinkData(body);
       if (!validationResult.isValid) {
         return createErrorResponse(400, 'Validation Error', validationResult.errors.join(', '));
       }
@@ -213,15 +211,62 @@ export class BookingLinkController {
         }
       }
 
-      // Validate the update data
-      const validationResult = this.validateBookingLinkUpdateData(sanitizedData);
+      const validationResult = BookingLinkController.validateBookingLinkUpdateData(sanitizedData);
       if (!validationResult.isValid) {
         return createErrorResponse(400, 'Validation Error', validationResult.errors.join(', '));
       }
 
-      // Perform the update
+      // Create BookingLink instance to use updateItem method
       const bookingLink = new BookingLink(dynamodb);
-      const updatedBookingLink = await bookingLink.updateById(id, sanitizedData);
+
+      // Prepare update expression
+      const updateFields = [];
+      const expressionValues = {};
+      let expressionAttributeNames = {};
+
+      if (sanitizedData.name !== undefined) {
+        updateFields.push('#name = :name');
+        updateFields.push('GSI1SK = :gsi1sk');
+        expressionValues[':name'] = sanitizedData.name;
+        expressionValues[':gsi1sk'] = sanitizedData.name.toLowerCase();
+        expressionAttributeNames['#name'] = 'name';
+      }
+      
+      if (sanitizedData.templateId !== undefined) {
+        updateFields.push('templateId = :templateId');
+        expressionValues[':templateId'] = sanitizedData.templateId;
+      }
+      
+      if (sanitizedData.requireAdvanceBooking !== undefined) {
+        updateFields.push('requireAdvanceBooking = :requireAdvanceBooking');
+        expressionValues[':requireAdvanceBooking'] = sanitizedData.requireAdvanceBooking;
+      }
+      
+      if (sanitizedData.advanceHours !== undefined) {
+        updateFields.push('advanceHours = :advanceHours');
+        expressionValues[':advanceHours'] = sanitizedData.advanceHours;
+      }
+      
+      if (sanitizedData.isActive !== undefined) {
+        updateFields.push('isActive = :isActive');
+        expressionValues[':isActive'] = sanitizedData.isActive;
+      }
+
+      // Always update timestamp
+      updateFields.push('updatedAt = :updatedAt');
+      expressionValues[':updatedAt'] = new Date().toISOString();
+
+      const updateExpression = 'SET ' + updateFields.join(', ');
+      const attributeNames = Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined;
+
+      const updatedItem = await bookingLink.updateItem(
+        id, 
+        'METADATA', // config.sortKeys.metadata
+        updateExpression, 
+        expressionValues,
+        null, // conditionExpression
+        attributeNames
+      );
 
       // EVENT-DRIVEN CACHE INVALIDATION: Check if cache-affecting fields changed
       const cacheAffectingFields = ['templateId', 'requireAdvanceBooking', 'advanceHours', 'isActive'];
@@ -237,13 +282,13 @@ export class BookingLinkController {
           console.error('Background cache invalidation failed:', error);
         });
         
-        console.log(`✅ Booking link updated, cache invalidation initiated in background`);
+        console.log(`Booking link updated, cache invalidation initiated in background`);
       } else {
-        console.log(`📝 Booking link ${id} updated with non-cache-affecting changes (name only)`);
+        console.log(`Booking link ${id} updated with non-cache-affecting changes (name only)`);
       }
 
       return createSuccessResponse(200, 
-        { bookingLink: updatedBookingLink }, 
+        { bookingLink: bookingLink.formatBookingLink(updatedItem) }, 
         'Booking link updated successfully'
       );
 
