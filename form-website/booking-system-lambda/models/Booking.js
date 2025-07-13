@@ -392,7 +392,8 @@ export class Booking extends DynamoDBBase {
       // Find the current booking
       const currentBooking = await this.findById(id);
       const currentSk = `BOOKING#${currentBooking.selectedDate}#${currentBooking.selectedTime}`;
-  
+      const rawBooking = await this.getItem(currentBooking.bookingLinkId, currentSk);
+
       // Store old date/time for email notification
       const oldDateTime = {
         date: currentBooking.selectedDate,
@@ -441,8 +442,7 @@ export class Booking extends DynamoDBBase {
       // Create new booking item with new date/time but same ID
       const newSk = `BOOKING#${newDate}#${newTime}`;
       const updatedItem = {
-        ...currentBooking,
-        PK: currentBooking.bookingLinkId,
+        ...rawBooking,
         SK: newSk,
         selectedDate: newDate,
         selectedTime: newTime,
