@@ -155,7 +155,7 @@ export class PublicCancelRescheduleController {
       const bookingLinkId = foundBooking.bookingLinkId;
       
       // Update booking status to cancelled
-      const updatedBooking = await booking.updateStatus(bookingId, 'cancelled');
+      const updatedBooking = await booking.updateStatus(bookingId, 'cancelled', reason);
       
       // Invalidate cache after cancellation
       const availabilityService = new AvailabilityService(dynamodb);

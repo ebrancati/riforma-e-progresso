@@ -91,22 +91,33 @@ export class EmailNotificationService {
    */
   async sendCancellationNotification(bookingData, bookingLinkData, reason = '') {
     try {
-      const subject = `❌ Prenotazione Cancellata - ${bookingData.firstName} ${bookingData.lastName}`;
-      
+      const subject = `Prenotazione Cancellata - ${bookingData.firstName} ${bookingData.lastName}`;
       const htmlContent = this.generateCancellationEmailHTML(bookingData, bookingLinkData, reason);
       
-      const emailParams = this.buildRawEmailParams({
+      // Send to admin
+      const adminEmailParams = this.buildRawEmailParams({
         to: this.notificationEmail,
         from: this.systemEmail,
         subject: subject,
         htmlContent: htmlContent
       });
 
-      const command = new SendRawEmailCommand(emailParams);
-      const result = await this.sesClient.send(command);
+      // Send to candidate  
+      const candidateEmailParams = this.buildRawEmailParams({
+        to: bookingData.email,
+        from: this.systemEmail,
+        subject: subject,
+        htmlContent: htmlContent
+      });
+
+      // Send both emails
+      await Promise.all([
+        this.sesClient.send(new SendRawEmailCommand(adminEmailParams)),
+        this.sesClient.send(new SendRawEmailCommand(candidateEmailParams))
+      ]);
       
-      console.log('✅ Cancellation notification sent:', result.MessageId);
-      return { success: true, messageId: result.MessageId };
+      console.log('✅ Cancellation notification sent to both admin and candidate');
+      return { success: true };
       
     } catch (error) {
       console.error('❌ Failed to send cancellation notification:', error);
@@ -123,22 +134,33 @@ export class EmailNotificationService {
    */
   async sendRescheduleNotification(bookingData, bookingLinkData, oldDateTime) {
     try {
-      const subject = `🔄 Prenotazione Riprogrammata - ${bookingData.firstName} ${bookingData.lastName}`;
-      
+      const subject = `Prenotazione Riprogrammata - ${bookingData.firstName} ${bookingData.lastName}`;
       const htmlContent = this.generateRescheduleEmailHTML(bookingData, bookingLinkData, oldDateTime);
       
-      const emailParams = this.buildRawEmailParams({
+      // Send to admin
+      const adminEmailParams = this.buildRawEmailParams({
         to: this.notificationEmail,
         from: this.systemEmail,
         subject: subject,
         htmlContent: htmlContent
       });
 
-      const command = new SendRawEmailCommand(emailParams);
-      const result = await this.sesClient.send(command);
+      // Send to candidate
+      const candidateEmailParams = this.buildRawEmailParams({
+        to: bookingData.email,
+        from: this.systemEmail,
+        subject: subject,
+        htmlContent: htmlContent
+      });
+
+      // Send both emails
+      await Promise.all([
+        this.sesClient.send(new SendRawEmailCommand(adminEmailParams)),
+        this.sesClient.send(new SendRawEmailCommand(candidateEmailParams))
+      ]);
       
-      console.log('✅ Reschedule notification sent:', result.MessageId);
-      return { success: true, messageId: result.MessageId };
+      console.log('✅ Reschedule notification sent to both admin and candidate');
+      return { success: true };
       
     } catch (error) {
       console.error('❌ Failed to send reschedule notification:', error);
@@ -235,8 +257,6 @@ export class EmailNotificationService {
                 <p><strong>Durata:</strong> ${bookingLinkData.duration} minuti</p>
                 <p><strong>Posizione:</strong> ${bookingData.role}</p>
             </div>
-
-            <p>📅 <strong>colloquio.ics</strong> - Clicca per aggiungere al tuo calendario</p>
             
             ${bookingData.meetLink ? `
             <div class="meet-link">

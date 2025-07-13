@@ -310,11 +310,11 @@ export class Booking extends DynamoDBBase {
       if (!['confirmed', 'cancelled'].includes(newStatus)) {
         throw new Error('Invalid status. Must be: confirmed or cancelled');
       }
-  
+
       // Find the booking first to get PK and SK
       const booking = await this.findById(id);
       const sk = `BOOKING#${booking.selectedDate}#${booking.selectedTime}`;
-  
+
       // Handle Google Calendar cancellation
       if (newStatus === 'cancelled' && booking.googleEventId && process.env.ENABLE_GOOGLE_INTEGRATION === 'true') {
         try {
@@ -326,20 +326,31 @@ export class Booking extends DynamoDBBase {
         }
       }
 
+      // Prepare update expression
+      let updateExpression = 'SET #status = :status, updatedAt = :updatedAt';
+      let expressionValues = {
+        ':status': newStatus,
+        ':updatedAt': new Date().toISOString()
+      };
+      let expressionAttributeNames = {
+        '#status': 'status'
+      };
+
+      // If it's a cancellation and there's a reason, save it
+      if (newStatus === 'cancelled' && reason && reason.trim()) {
+        updateExpression += ', cancellationReason = :reason';
+        expressionValues[':reason'] = reason.trim();
+      }
+
       const updatedItem = await this.updateItem(
         booking.bookingLinkId,
         sk,
-        'SET #status = :status, updatedAt = :updatedAt',
-        {
-          ':status': newStatus,
-          ':updatedAt': new Date().toISOString()
-        },
+        updateExpression,
+        expressionValues,
         null, // conditionExpression
-        {
-          '#status': 'status'
-        }
+        expressionAttributeNames
       );
-  
+
       // Send cancellation email notification
       if (newStatus === 'cancelled') {
         try {
@@ -358,7 +369,7 @@ export class Booking extends DynamoDBBase {
           console.error('❌ Email notification failed (continuing):', emailError.message);
         }
       }
-  
+
       return this.formatBooking(updatedItem);
     } catch (error) {
       console.error('Error updating booking status:', error);
@@ -514,6 +525,7 @@ export class Booking extends DynamoDBBase {
       notes: item.notes,
       cancellationToken: item.cancellationToken,
       status: item.status,
+      cancellationReason: item.cancellationReason || null,
       googleEventId: item.googleEventId,
       meetLink: item.meetLink,
       calendarLink: item.calendarLink,

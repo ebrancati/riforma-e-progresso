@@ -66,22 +66,35 @@ export const config = {
  * PK: TPL_<timestamp>_<random>
  * SK: METADATA
  * GSI1PK: TEMPLATE
+ * GSI1SK: <name_lowercase>
+ * Fields: id, name, schedule, blackoutDays, bookingCutoffDate, createdAt, updatedAt
  * 
  * Booking Links:
  * PK: BL_<timestamp>_<random>  
  * SK: METADATA
  * GSI1PK: BOOKING_LINK
+ * GSI1SK: <name_lowercase>
  * GSI2PK: <urlSlug>  (for slug lookup)
+ * Fields: id, name, templateId, urlSlug, duration, requireAdvanceBooking, advanceHours, isActive, createdAt, updatedAt
  * 
  * Bookings:
  * PK: BL_<bookingLinkId>
  * SK: BOOKING#<date>#<time>
  * GSI1PK: BKG_<bookingId>
+ * GSI1SK: BOOKING
+ * Fields: id, bookingLinkId, selectedDate, selectedTime, firstName, lastName, email, phone, role, notes, 
+ *         cancellationToken, status, cancellationReason, googleEventId, meetLink, calendarLink, createdAt, updatedAt
  * 
  * Month Availability (Pre-calculated):
  * PK: MONTH#<bookingLinkId>#<YYYY-MM>
  * SK: OVERVIEW
+ * Fields: bookingLinkId, year, month, data, lastUpdated, cacheVersion
  * TTL: <expiration>
+ * 
+ * Google OAuth Tokens:
+ * PK: GOOGLE_OAUTH
+ * SK: TOKENS
+ * Fields: accessToken, refreshToken, tokenType, expiryDate, scope, updatedAt
  */
 
 /**
@@ -140,7 +153,7 @@ export class DynamoDBBase {
         UpdateExpression: updateExpression,
         ExpressionAttributeValues: expressionValues,
         ...(conditionExpression && { ConditionExpression: conditionExpression }),
-        ...(expressionAttributeNames && { ExpressionAttributeNames: expressionAttributeNames }), // ← AGGIUNGERE
+        ...(expressionAttributeNames && { ExpressionAttributeNames: expressionAttributeNames }),
         ReturnValues: 'ALL_NEW'
       });
       
