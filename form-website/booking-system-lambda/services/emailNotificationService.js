@@ -511,26 +511,26 @@ export class EmailNotificationService {
     rawMessage += `MIME-Version: 1.0\r\n`;
     rawMessage += `Content-Type: multipart/mixed; boundary="${boundary}"\r\n`;
     rawMessage += `\r\n`;
-    
-    // HTML body part
+
     rawMessage += `--${boundary}\r\n`;
     rawMessage += `Content-Type: text/html; charset=UTF-8\r\n`;
-    rawMessage += `Content-Transfer-Encoding: quoted-printable\r\n`;
+    rawMessage += `Content-Transfer-Encoding: 8bit\r\n`;
     rawMessage += `\r\n`;
     rawMessage += `${htmlContent}\r\n`;
     rawMessage += `\r\n`;
-    
-    // Multiple attachments
+
     attachments.forEach(attachment => {
       if (attachment && attachment.fileData) {
-        const base64Data = Buffer.from(attachment.fileData, 'binary').toString('base64');
+        const base64Data = attachment.fileData.toString('base64');
         
         rawMessage += `--${boundary}\r\n`;
-        rawMessage += `Content-Type: ${attachment.contentType || 'application/octet-stream'}; name="${attachment.fileName}"\r\n`;
+        rawMessage += `Content-Type: ${attachment.contentType || 'application/pdf'}; name="${attachment.fileName}"\r\n`;
         rawMessage += `Content-Transfer-Encoding: base64\r\n`;
         rawMessage += `Content-Disposition: attachment; filename="${attachment.fileName}"\r\n`;
         rawMessage += `\r\n`;
-        rawMessage += `${base64Data}\r\n`;
+
+        const formattedBase64 = base64Data.match(/.{1,76}/g).join('\r\n');
+        rawMessage += `${formattedBase64}\r\n`;
         rawMessage += `\r\n`;
       }
     });

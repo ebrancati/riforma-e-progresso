@@ -346,7 +346,7 @@ export class GoogleOAuthService extends DynamoDBBase {
    * @returns {string} Event description
    */
   generateEventDescription(bookingData, bookingLinkData) {
-    const baseUrl = 'https://y13prg01eb.execute-api.eu-central-1.amazonaws.com/prod';
+    const baseUrl = 'https://candidature.riformaeprogresso.it';
     const rescheduleUrl = `${baseUrl}/booking/${bookingData.id}/reschedule?token=${bookingData.cancellationToken}`;
     const cancelUrl = `${baseUrl}/booking/${bookingData.id}/cancel?token=${bookingData.cancellationToken}`;
     

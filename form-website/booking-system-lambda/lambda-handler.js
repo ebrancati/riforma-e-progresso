@@ -287,9 +287,21 @@ function parseMultipartFormData(body, contentType) {
             
             const emptyLineIndex = part.indexOf('\r\n\r\n');
             if (emptyLineIndex !== -1) {
-              fileData = part.substring(emptyLineIndex + 4, part.length - 2); // Remove trailing \r\n
+              // ✅ FIX: Gestione corretta dei dati binari
+              const binaryData = part.substring(emptyLineIndex + 4, part.length - 2);
+              
+              // ✅ FIX: Converte correttamente da stringa binaria a Buffer
+              fileData = Buffer.from(binaryData, 'binary');
               fileSize = fileData.length;
               fileReceived = true;
+              
+              console.log('📎 CV Processing:', {
+                fileName,
+                contentType: fileContentType,
+                originalSize: binaryData.length,
+                bufferSize: fileData.length,
+                firstBytes: Array.from(fileData.slice(0, 10))
+              });
             }
           } else if (fieldName) {
             // Regular form field
@@ -303,7 +315,7 @@ function parseMultipartFormData(body, contentType) {
       }
     });
 
-    // Log file info (come prima)
+    // Log file info
     if (fileReceived) {
       console.log('\n=== CV RECEIVED ===');
       console.log(`Candidate: ${formData.firstName} ${formData.lastName}`);
@@ -312,7 +324,7 @@ function parseMultipartFormData(body, contentType) {
       console.log(`File: ${fileName}`);
       console.log(`Size: ${formatFileSize(fileSize)}`);
       console.log(`Type: ${fileContentType}`);
-      console.log(`Appointment: ${formData.selectedDate} at ${formData.selectedTime}`);
+      console.log(`Buffer valid: ${Buffer.isBuffer(fileData)}`);
       console.log('==================\n');
     }
 
@@ -320,7 +332,7 @@ function parseMultipartFormData(body, contentType) {
     formData.fileInfo = {
       fileName,
       fileSize,
-      fileData,
+      fileData, // ← Ora è un Buffer corretto
       contentType: fileContentType,
       received: fileReceived
     };

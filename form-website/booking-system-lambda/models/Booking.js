@@ -325,8 +325,7 @@ export class Booking extends DynamoDBBase {
           console.error('❌ Google Calendar cancellation failed:', googleError.message);
         }
       }
-  
-      // Update the status
+
       const updatedItem = await this.updateItem(
         booking.bookingLinkId,
         sk,
@@ -334,6 +333,10 @@ export class Booking extends DynamoDBBase {
         {
           ':status': newStatus,
           ':updatedAt': new Date().toISOString()
+        },
+        null, // conditionExpression
+        {
+          '#status': 'status'
         }
       );
   
