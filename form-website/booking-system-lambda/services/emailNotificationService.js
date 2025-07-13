@@ -234,8 +234,6 @@ export class EmailNotificationService {
             .header { background: #4CAF50; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
             .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50; }
-            .button { display: inline-block; padding: 12px 24px; margin: 8px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; }
-            .cancel-button { background: #f44336; }
             .meet-link { background: #4CAF50; font-size: 18px; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; }
             .meet-link a { color: white; text-decoration: none; font-weight: bold; }
             .divider { border-top: 2px solid #ddd; margin: 20px 0; }
@@ -267,8 +265,34 @@ export class EmailNotificationService {
             <div class="info-box">
                 <h2>Gestisci Appuntamento</h2>
                 <p>Hai bisogno di modificare l'appuntamento?</p>
-                <a href="${rescheduleUrl}" class="button">Riprogramma</a>
-                <a href="${cancelUrl}" class="button cancel-button">Cancella</a>
+                <table cellpadding="0" cellspacing="0" border="0" style="margin: 15px auto;">
+                    <tr>
+                        <td style="padding: 8px;">
+                            <table cellpadding="0" cellspacing="0" border="0" style="background: #2196F3; border-radius: 5px;">
+                                <tr>
+                                    <td style="padding: 12px 24px; border-radius: 5px;">
+                                        <a href="${rescheduleUrl}" 
+                                          style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; display: block;">
+                                            Riprogramma
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="padding: 8px;">
+                            <table cellpadding="0" cellspacing="0" border="0" style="background: #f44336; border-radius: 5px;">
+                                <tr>
+                                    <td style="padding: 12px 24px; border-radius: 5px;">
+                                        <a href="${cancelUrl}" 
+                                          style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; display: block;">
+                                            Cancella
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <div class="divider"></div>
@@ -304,8 +328,6 @@ export class EmailNotificationService {
             .field { margin: 8px 0; }
             .label { font-weight: bold; }
             .admin-section { background: white; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0; }
-            .button { display: inline-block; padding: 10px 20px; margin: 5px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-size: 14px; }
-            .cancel-button { background: #f44336; }
             .header { background: #2196F3; color: white; padding: 20px; text-align: center; margin-bottom: 20px; }
         </style>
     </head>
@@ -389,10 +411,34 @@ export class EmailNotificationService {
         <div class="admin-section">
             <h3>Gestione Appuntamento</h3>
             <p>Il candidato può gestire autonomamente l'appuntamento con questi link:</p>
-            <div style="text-align: center; margin: 15px 0;">
-                <a href="${rescheduleUrl}" class="button">Riprogramma</a>
-                <a href="${cancelUrl}" class="button cancel-button">Cancella</a>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin: 15px auto;">
+                <tr>
+                    <td style="padding: 8px;">
+                        <table cellpadding="0" cellspacing="0" border="0" style="background: #2196F3; border-radius: 5px;">
+                            <tr>
+                                <td style="padding: 12px 24px; border-radius: 5px;">
+                                    <a href="${rescheduleUrl}" 
+                                      style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px; display: block;">
+                                        Riprogramma
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="padding: 8px;">
+                        <table cellpadding="0" cellspacing="0" border="0" style="background: #f44336; border-radius: 5px;">
+                            <tr>
+                                <td style="padding: 12px 24px; border-radius: 5px;">
+                                    <a href="${cancelUrl}" 
+                                      style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px; display: block;">
+                                        Cancella
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <div class="admin-section">
@@ -476,8 +522,6 @@ export class EmailNotificationService {
             .header { background: #FF9800; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
             .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF9800; }
-            .button { display: inline-block; padding: 12px 24px; margin: 8px; background: #2196F3; color: white; text-decoration: none; border-radius: 5px; }
-            .cancel-button { background: #f44336; }
             .change-highlight { background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107; }
             .emoji { font-size: 18px; }
         </style>
@@ -505,9 +549,36 @@ export class EmailNotificationService {
             </div>
 
             <div class="info-box">
-                <h2>Gestione Appuntamento</h2>
-                <a href="${rescheduleUrl}" class="button">Riprogramma Ancora</a>
-                <a href="${cancelUrl}" class="button cancel-button">Cancella</a>
+                <h2>Gestisci Appuntamento</h2>
+                <p>Hai bisogno di modificare l'appuntamento?</p>
+                <table cellpadding="0" cellspacing="0" border="0" style="margin: 15px auto;">
+                    <tr>
+                        <td style="padding: 8px;">
+                            <table cellpadding="0" cellspacing="0" border="0" style="background: #2196F3; border-radius: 5px;">
+                                <tr>
+                                    <td style="padding: 12px 24px; border-radius: 5px;">
+                                        <a href="${rescheduleUrl}" 
+                                          style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; display: block;">
+                                            Riprogramma
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="padding: 8px;">
+                            <table cellpadding="0" cellspacing="0" border="0" style="background: #f44336; border-radius: 5px;">
+                                <tr>
+                                    <td style="padding: 12px 24px; border-radius: 5px;">
+                                        <a href="${cancelUrl}" 
+                                          style="color: white !important; text-decoration: none !important; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; display: block;">
+                                            Cancella
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
             <p style="text-align: center; color: #666; font-size: 14px;">
