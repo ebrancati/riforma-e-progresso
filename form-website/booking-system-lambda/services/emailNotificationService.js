@@ -42,9 +42,6 @@ export class EmailNotificationService {
       
       console.log('✅ Booking confirmation email sent to candidate:', result.MessageId);
       
-      // Send internal notification (without .ics)
-      await this.sendInternalNotification(bookingData, bookingLinkData, cvFile);
-      
       return { success: true, messageId: result.MessageId };
       
     } catch (error) {
