@@ -35,7 +35,7 @@ const PrivacyPolicyPage: React.FC = () => {
               <h2>Chi Siamo</h2>
             </div>
             <p>
-              Riforma e Progresso è una ATS che si occupa di ricerca e divulgazione in ambito politico ed economico. 
+              Riforma e Progresso è una APS che si occupa di ricerca e divulgazione in ambito politico ed economico. 
               Questo sito web gestisce un sistema di prenotazione colloqui per candidati interessati a collaborare con noi.
             </p>
             <div className="contact-details">
