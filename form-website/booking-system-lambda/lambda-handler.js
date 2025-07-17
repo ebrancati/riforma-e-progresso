@@ -168,6 +168,23 @@ async function routeRequest(req) {
       return await getUploadUrl(req);
     }
 
+    // In lambda-handler.js
+    if (path.startsWith('/admin/')) {
+      const authResult = await requireAuth(req);
+      if (authResult.statusCode !== 200) {
+        return authResult;
+      }
+      
+      // CV viewer
+      if (path.startsWith('/admin/cv/') && method === 'GET') {
+        const fileMatch = path.match(/^\/admin\/cv\/([^\/]+)$/);
+        if (fileMatch) {
+          const fileId = fileMatch[1];
+          return await serveCVFile(req, fileId);
+        }
+      }
+    }
+
     // Public cancel/reschedule routes
     if (
       path.startsWith('/api/public/booking/') && 
@@ -354,4 +371,35 @@ function getAllowedOrigin(origin) {
   }
   
   return allowedOrigins[0] || '*';
+}
+
+
+async function serveCVFile(req, fileId) {
+  try {
+    const s3Service = new S3CurriculumService();
+    const metadata = await s3Service.getFileMetadata(fileId);
+    
+    // Generate presigned URL for viewing
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+    const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+    
+    const command = new GetObjectCommand({
+      Bucket: process.env.CV_BUCKET_NAME,
+      Key: metadata.s3Key,
+      ResponseContentDisposition: `inline; filename="${metadata.fileName}"`
+    });
+    
+    const viewUrl = await getSignedUrl(req.s3Client, command, { expiresIn: 3600 });
+    
+    return {
+      statusCode: 302,
+      headers: { 'Location': viewUrl },
+      body: {}
+    };
+  } catch (error) {
+    return {
+      statusCode: 404,
+      body: { error: 'File not found' }
+    };
+  }
 }
