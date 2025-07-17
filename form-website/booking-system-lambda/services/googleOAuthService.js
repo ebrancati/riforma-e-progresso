@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { DynamoDBBase, config } from '../utils/dynamodb.js';
+import { DynamoDBBase } from '../utils/dynamodb.js';
 
 export class GoogleOAuthService extends DynamoDBBase {
   constructor(dynamoClient) {
@@ -9,7 +9,7 @@ export class GoogleOAuthService extends DynamoDBBase {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      'https://y13prg01eb.execute-api.eu-central-1.amazonaws.com/prod/api/auth/google/callback'
+      'https://x97grz0lwk.execute-api.eu-central-1.amazonaws.com/prod/api/auth/google/callback'
     );
 
     this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });

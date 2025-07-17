@@ -1,6 +1,7 @@
 import { BookingLink } from '../models/BookingLink.js';
 import { Booking } from '../models/Booking.js';
 import { AvailabilityService } from '../services/availabilityService.js';
+import { S3CurriculumService } from '../services/s3CurriculumService.js';
 import { createErrorResponse, createSuccessResponse } from '../utils/dynamodb.js';
 
 export class PublicBookingController {
@@ -260,7 +261,7 @@ export class PublicBookingController {
    */
   static async createBooking(req, slug) {
     try {
-      const { dynamodb, body, cvFileData } = req;
+      const { dynamodb, body } = req;
       
       // Find booking link by slug
       const bookingLink = new BookingLink(dynamodb);
@@ -269,6 +270,21 @@ export class PublicBookingController {
       if (!foundBookingLink || !foundBookingLink.isActive) {
         return createErrorResponse(404, 'Booking link not found', 
           'No active booking link found with this URL');
+      }
+
+      let cvFileData = null;
+      if (body.fileId) {
+        try {
+          cvFileData = await this.validateAndProcessCV(body.fileId, req.s3Client);
+          console.log('CV validated and processed:', {
+            fileId: body.fileId,
+            fileName: cvFileData.fileName,
+            size: cvFileData.size
+          });
+        } catch (cvError) {
+          console.error('❌ CV validation failed:', cvError);
+          return createErrorResponse(400, 'CV Processing Error', cvError.message);
+        }
       }
       
       // Add booking link ID to the data
@@ -286,22 +302,14 @@ export class PublicBookingController {
       );
       
       if (!validation.valid) {
+        if (body.fileId) await this.cleanupOrphanedFile(body.fileId, req.s3Client);
         return createErrorResponse(400, 'Invalid booking slot', validation.error);
       }
 
       const booking = new Booking(dynamodb, completeBookingData);
       
-      // Log CV info if present
-      if (cvFileData) {
-        console.log('Creating booking with CV attachment:', {
-          fileName: cvFileData.fileName,
-          size: cvFileData.fileData?.length || 0,
-          contentType: cvFileData.contentType
-        });
-      }
-      
-      // Pass CV data to save method
       const savedBooking = await booking.save(cvFileData);
+
       
       // EVENT-DRIVEN CACHE INVALIDATION: Invalidate cache after successful booking
       await availabilityService.invalidateCacheForBookingEvent(
@@ -322,6 +330,14 @@ export class PublicBookingController {
       
     } catch (error) {
       console.error('Error creating booking:', error);
+
+      if (req.body.fileId) {
+        try {
+          await this.cleanupOrphanedFile(req.body.fileId, req.s3Client);
+        } catch (cleanupError) {
+          console.error('❌ Failed to cleanup orphaned file:', cleanupError);
+        }
+      }
       
       if (error.message.includes('already booked') || 
           error.message.includes('no longer available')) {
@@ -335,6 +351,80 @@ export class PublicBookingController {
       }
       
       return createErrorResponse(500, 'Internal Server Error', error.message);
+    }
+  }
+
+  static async validateAndProcessCV(fileId, s3Client) {
+    try {
+      const s3Service = new S3CurriculumService();
+      
+      // 1. Verifica che il file esista in S3
+      const fileExists = await s3Service.checkFileExists(fileId);
+      if (!fileExists) {
+        throw new Error('CV file not found in storage');
+      }
+      
+      // 2. Ottieni metadata del file
+      const fileMetadata = await s3Service.getFileMetadata(fileId);
+      
+      // 3. Valida il file (dimensione, tipo, integrità)
+      const validation = S3CurriculumService.validateCVFile(
+        fileMetadata.fileName,
+        fileMetadata.size,
+        fileMetadata.contentType
+      );
+      
+      if (!validation.valid) {
+        throw new Error(`CV validation failed: ${validation.errors.join(', ')}`);
+      }
+      
+      // 4. Opzionale: Scarica e valida contenuto PDF
+      // const fileContent = await s3Service.getFileContent(fileId);
+      // const isPDFValid = this.validatePDFContent(fileContent);
+      // if (!isPDFValid) throw new Error('CV file is corrupted');
+      
+      // 5. Prepara dati per il booking
+      return {
+        fileId: fileId,
+        fileName: fileMetadata.fileName,
+        size: fileMetadata.size,
+        contentType: fileMetadata.contentType,
+        s3Key: fileMetadata.s3Key,
+        uploadedAt: fileMetadata.uploadedAt
+      };
+      
+    } catch (error) {
+      console.error('❌ CV validation failed:', error);
+      throw new Error(`CV processing error: ${error.message}`);
+    }
+  }
+
+  static async cleanupOrphanedFile(fileId, s3Client) {
+    try {
+      const s3Service = new S3CurriculumService();
+      await s3Service.deleteCV(fileId);
+      console.log('🗑️ Orphaned CV file cleaned up:', fileId);
+    } catch (error) {
+      console.error('❌ Failed to cleanup orphaned file:', error);
+    }
+  }
+
+  static validatePDFContent(buffer) {
+    try {
+      // Verifica signature PDF
+      const pdfSignature = buffer.slice(0, 4).toString();
+      if (pdfSignature !== '%PDF') return false;
+      
+      // Verifica che termini con %%EOF
+      const endMarker = buffer.slice(-10).toString();
+      if (!endMarker.includes('%%EOF')) return false;
+      
+      // Altre validazioni PDF se necessarie...
+      
+      return true;
+    } catch (error) {
+      console.error('PDF validation error:', error);
+      return false;
     }
   }
 

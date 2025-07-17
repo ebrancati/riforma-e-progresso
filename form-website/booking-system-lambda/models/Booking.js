@@ -3,6 +3,7 @@ import { InputSanitizer } from '../utils/sanitizer.js';
 import { IdGenerator } from '../utils/idGenerator.js';
 import { GoogleOAuthService } from '../services/googleOAuthService.js';
 import { EmailNotificationService } from '../services/emailNotificationService.js';
+import { S3CurriculumService } from '../services/s3CurriculumService.js';
 import { randomUUID } from 'crypto';
 
 export class Booking extends DynamoDBBase {
@@ -28,6 +29,10 @@ export class Booking extends DynamoDBBase {
       this.googleEventId = data.googleEventId || null;
       this.meetLink = data.meetLink || null;
       this.calendarLink = data.calendarLink || null;
+
+      this.cvUrl = data.cvUrl || null;
+      this.cvFileName = data.cvFileName || null;
+      this.cvFileId = data.cvFileId || null;
       
       this.createdAt = data.createdAt || new Date().toISOString();
       this.updatedAt = data.updatedAt || new Date().toISOString();
@@ -59,13 +64,8 @@ export class Booking extends DynamoDBBase {
   async findById(id) {
     try {
       // Validate ID format
-      if (!InputSanitizer.isValidId(id)) {
-        throw new Error('Invalid ID format');
-      }
-
-      if (!IdGenerator.isBookingId(id)) {
-        throw new Error('Invalid booking ID');
-      }
+      if (!InputSanitizer.isValidId(id)) throw new Error('Invalid ID format');
+      if (!IdGenerator.isBookingId(id))  throw new Error('Invalid booking ID');
 
       // Bookings are stored with GSI1PK = booking ID for direct lookup
       const result = await this.queryGSI(
@@ -73,9 +73,8 @@ export class Booking extends DynamoDBBase {
         id
       );
 
-      if (result.items.length === 0) {
+      if (result.items.length === 0)
         throw new Error('Booking not found');
-      }
 
       return this.formatBooking(result.items[0]);
     } catch (error) {
@@ -89,20 +88,18 @@ export class Booking extends DynamoDBBase {
    */
   async findByBookingLinkAndDate(bookingLinkId, selectedDate) {
     try {
-      if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
+      if (!IdGenerator.isBookingLinkId(bookingLinkId))
         throw new Error('Invalid booking link ID');
-      }
 
       // Validate date format (YYYY-MM-DD)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate))
         throw new Error('Invalid date format. Use YYYY-MM-DD');
-      }
 
       // Query bookings for specific booking link and date
       const result = await this.query(
         bookingLinkId,
         {
-          expression: 'begins_with(SK, :datePrefix)', // Only KeyCondition here
+          expression: 'begins_with(SK, :datePrefix)', // Only KeyCondition
           values: {
             ':datePrefix': `BOOKING#${selectedDate}`,
             ':cancelled': 'cancelled'
@@ -122,8 +119,10 @@ export class Booking extends DynamoDBBase {
       console.error('Error finding bookings by booking link and date:', error);
       
       // If no bookings exist for this date, return empty array
-      if (error.name === 'ResourceNotFoundException' || 
-          error.message.includes('no items')) {
+      if (
+        error.name === 'ResourceNotFoundException' || 
+        error.message.includes('no items')
+      ) {
         console.log('No bookings found for this date (normal)');
         return [];
       }
@@ -138,19 +137,18 @@ export class Booking extends DynamoDBBase {
    */
   async findByBookingLinkAndMonth(bookingLinkId, year, month) {
     try {
-      if (!IdGenerator.isBookingLinkId(bookingLinkId)) {
+      if (!IdGenerator.isBookingLinkId(bookingLinkId))
         throw new Error('Invalid booking link ID');
-      }
 
       // Create date range for the month
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-      const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+      const endDate   = `${year}-${month.toString().padStart(2, '0')}-31`;
 
       // Query all bookings for the booking link in the month range
       const result = await this.query(
         bookingLinkId,
         {
-          expression: 'SK BETWEEN :startDate AND :endDate', // Only KeyCondition here
+          expression: 'SK BETWEEN :startDate AND :endDate', // Only KeyCondition
           values: {
             ':startDate': `BOOKING#${startDate}`,
             ':endDate': `BOOKING#${endDate}#99:99`, // Ensure we capture all times
@@ -164,12 +162,11 @@ export class Booking extends DynamoDBBase {
         }
       );
 
-      return result.items
-        .map(item => this.formatBooking(item))
-        .sort((a, b) => {
-          const dateCompare = a.selectedDate.localeCompare(b.selectedDate);
-          return dateCompare !== 0 ? dateCompare : a.selectedTime.localeCompare(b.selectedTime);
-        });
+      return result.items.map(item => this.formatBooking(item))
+                         .sort((a, b) => {
+                            const dateCompare = a.selectedDate.localeCompare(b.selectedDate);
+                            return dateCompare !== 0 ? dateCompare : a.selectedTime.localeCompare(b.selectedTime);
+                         });
     } catch (error) {
       console.error('Error finding bookings by booking link and month:', error);
       
@@ -215,8 +212,29 @@ export class Booking extends DynamoDBBase {
         this.selectedTime
       );
   
-      if (!isAvailable) {
+      if (!isAvailable)
         throw new Error('This time slot is no longer available');
+      
+      if (cvFileData) {
+        try {
+          this.cvFileId = cvFileData.fileId;
+          this.cvUrl = this.generateCVViewerUrl(cvFileData.fileId);
+          this.cvFileName = cvFileData.fileName;
+            
+          console.log('CV associated with booking:', {
+            bookingId: this.id,
+            fileId: cvFileData.fileId,
+            fileName: cvFileData.fileName,
+            s3Key: cvFileData.s3Key,
+            cvUrl: this.cvUrl
+          });
+        } catch (cvError) {
+          console.error('❌ CV association failed:', cvError);
+          // Continue with booking creation even if CV association fails
+          this.cvUrl = null;
+          this.cvFileName = null;
+          this.cvFileId = null;
+        }
       }
 
       if (process.env.ENABLE_GOOGLE_INTEGRATION === 'true') {
@@ -231,7 +249,7 @@ export class Booking extends DynamoDBBase {
           this.meetLink = googleResult.meetLink;
           this.calendarLink = googleResult.calendarLink;
           
-          console.log('✅ Google Calendar event created:', {
+          console.log('Google Calendar event created:', {
             eventId: this.googleEventId,
             meetLink: this.meetLink
           });
@@ -265,6 +283,9 @@ export class Booking extends DynamoDBBase {
         googleEventId: this.googleEventId,
         meetLink: this.meetLink,
         calendarLink: this.calendarLink,
+        cvUrl: this.cvUrl,
+        cvFileName: this.cvFileName,
+        cvFileId: this.cvFileId,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt
       };
@@ -280,19 +301,18 @@ export class Booking extends DynamoDBBase {
         await emailService.sendNewBookingNotification(
           this.formatBooking(item),
           bookingLinkData,
-          null // No CV
+          null
         );
   
         await emailService.sendInternalNotification(
           this.formatBooking(item), 
           bookingLinkData,
-          cvFileData
+          null
         );
         
-        console.log('✅ New booking email notification sent');
+        console.log('New booking email notification sent');
       } catch (emailError) {
         console.error('❌ Email notification failed (continuing):', emailError.message);
-        // Continue even if email fails
       }
   
       return this.formatBooking(item);
@@ -300,6 +320,10 @@ export class Booking extends DynamoDBBase {
       console.error('Error saving booking:', error);
       throw error;
     }
+  }
+
+  generateCVViewerUrl(fileId) {
+    return `https://candidature.riformaeprogresso.it/cv/${fileId}`;
   }
 
   /**
@@ -320,9 +344,19 @@ export class Booking extends DynamoDBBase {
         try {
           const googleService = new GoogleOAuthService(this.client);
           await googleService.cancelCalendarEvent(booking.googleEventId);
-          console.log('✅ Google Calendar event cancelled');
+          console.log('Google Calendar event cancelled');
         } catch (googleError) {
           console.error('❌ Google Calendar cancellation failed:', googleError.message);
+        }
+      }
+
+      if (newStatus === 'cancelled' && booking.cvFileId) {
+        try {
+          const s3CVService = new S3CurriculumService();
+          await s3CVService.deleteCV(booking.cvFileId);
+          console.log('CV deleted from S3 on cancellation');
+        } catch (s3Error) {
+          console.error('❌ CV deletion failed:', s3Error.message);
         }
       }
 
@@ -342,12 +376,20 @@ export class Booking extends DynamoDBBase {
         expressionValues[':reason'] = reason.trim();
       }
 
+      // Clear CV data on cancellation
+      if (newStatus === 'cancelled') {
+        updateExpression += ', cvUrl = :cvUrl, cvFileName = :cvFileName, cvFileId = :cvFileId';
+        expressionValues[':cvUrl'] = null;
+        expressionValues[':cvFileName'] = null;
+        expressionValues[':cvFileId'] = null;
+      }
+
       const updatedItem = await this.updateItem(
         booking.bookingLinkId,
         sk,
         updateExpression,
         expressionValues,
-        null, // conditionExpression
+        null,
         expressionAttributeNames
       );
 
@@ -364,7 +406,7 @@ export class Booking extends DynamoDBBase {
             reason
           );
           
-          console.log('✅ Cancellation email notification sent');
+          console.log('Cancellation email notification sent');
         } catch (emailError) {
           console.error('❌ Email notification failed (continuing):', emailError.message);
         }
@@ -430,7 +472,7 @@ export class Booking extends DynamoDBBase {
             bookingLinkData
           );
           
-          console.log('✅ Google Calendar event updated for rescheduling');
+          console.log('Google Calendar event updated for rescheduling');
         } catch (googleError) {
           console.error('❌ Google Calendar update failed:', googleError.message);
         }
@@ -463,7 +505,7 @@ export class Booking extends DynamoDBBase {
           oldDateTime
         );
         
-        console.log('✅ Reschedule email notification sent');
+        console.log('Reschedule email notification sent');
       } catch (emailError) {
         console.error('❌ Email notification failed (continuing):', emailError.message);
       }
@@ -495,6 +537,16 @@ export class Booking extends DynamoDBBase {
       // Delete the booking
       const deletedItem = await this.deleteItem(booking.bookingLinkId, sk);
       
+      if (booking.cvFileId) {
+        try {
+          const s3CVService = new S3CurriculumService();
+          await s3CVService.deleteCV(booking.cvFileId);
+          console.log('CV deleted from S3');
+        } catch (s3Error) {
+          console.error('❌ CV deletion failed:', s3Error.message);
+        }
+      }
+
       if (!deletedItem) {
         throw new Error('Booking not found');
       }
@@ -529,6 +581,9 @@ export class Booking extends DynamoDBBase {
       googleEventId: item.googleEventId,
       meetLink: item.meetLink,
       calendarLink: item.calendarLink,
+      cvUrl: item.cvUrl,
+      cvFileName: item.cvFileName,
+      cvFileId: item.cvFileId,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt
     };

@@ -1,10 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { GoogleAuthController } from './controllers/googleAuthController.js';
+import { S3CurriculumService } from './services/s3CurriculumService.js';
+import { Readable } from 'stream';
 
 // Initialize DynamoDB client
 const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
+const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
 // Import controllers
 import { TemplateController } from './controllers/templateController.js';
@@ -13,6 +17,7 @@ import { PublicBookingController } from './controllers/publicBookingController.j
 import { PublicCancelRescheduleController } from './controllers/publicCancelRescheduleController.js';
 import { ContactController } from './controllers/contactController.js';
 import { requireAuth, verifyAuth } from './middleware/auth.js';
+import { IdGenerator } from './utils/idGenerator.js';
 
 /**
  * Get security headers with CORS support
@@ -92,9 +97,6 @@ export const handler = async (event, context) => {
             })
           };
         }
-      } else if (headers['content-type']?.includes('multipart/form-data')) {
-        // Handle file upload (CV submission)
-        body = parseMultipartFormData(event.body, headers['content-type']);
       }
     }
 
@@ -106,8 +108,8 @@ export const handler = async (event, context) => {
       query: queryParams,
       params: pathParams,
       body,
-      // Add DynamoDB client to request for controllers to use
-      dynamodb: docClient
+      dynamodb: docClient,
+      s3Client: s3Client
     };
 
     // Route the request
@@ -133,19 +135,6 @@ export const handler = async (event, context) => {
   }
 };
 
-function prepareCVFileForEmail(fileInfo) {
-  if (!fileInfo || !fileInfo.received || !fileInfo.fileData) {
-    return null;
-  }
-
-  // Prepare CV file data for email attachment
-  return {
-    fileName: fileInfo.fileName || 'CV.pdf',
-    fileData: fileInfo.fileData, // Raw binary data
-    contentType: fileInfo.contentType || 'application/pdf'
-  };
-}
-
 /**
  * Route incoming requests to appropriate controllers
  * @param {Object} req - Request object
@@ -163,7 +152,8 @@ async function routeRequest(req) {
           status: 'OK',
           timestamp: new Date().toISOString(),
           environment: process.env.NODE_ENV || 'production',
-          database: 'DynamoDB Connected'
+          database: 'DynamoDB Connected',
+          fileParser: 'Direct S3 Upload'
         }
       };
     }
@@ -173,6 +163,11 @@ async function routeRequest(req) {
       return { statusCode: 204, body: {} };
     }
 
+    if (path === '/api/get-upload-url' && method === 'POST') {
+      return await getUploadUrl(req);
+    }
+
+    // Public cancel/reschedule routes
     if (
       path.startsWith('/api/public/booking/') && 
       (path.includes('/details') || path.includes('/cancel') || path.includes('/reschedule'))
@@ -180,17 +175,8 @@ async function routeRequest(req) {
       return await PublicCancelRescheduleController.handleRequest(req);
     }
 
+    // Public booking routes
     if (path.startsWith('/api/public/')) {
-      if (method === 'POST' && path.includes('/book')) {
-        const cvFileData = prepareCVFileForEmail(req.body.fileInfo);
-        req.cvFileData = cvFileData;
-        
-        console.log('CV data prepared for booking:', {
-          hasCV: !!cvFileData,
-          fileName: cvFileData?.fileName
-        });
-      }
-      
       return await PublicBookingController.handleRequest(req);
     }
 
@@ -247,102 +233,107 @@ async function routeRequest(req) {
   }
 }
 
-/**
- * Parse multipart form data for file uploads
- * @param {string} body - Raw body data
- * @param {string} contentType - Content type header
- * @returns {Object} Parsed form data
- */
-function parseMultipartFormData(body, contentType) {
+async function getUploadUrl(req) {
   try {
-    const boundary = '--' + contentType.split('boundary=')[1];
-    const parts = body.split(boundary);
-    
-    const formData = {};
-    let fileReceived = false;
-    let fileName = '';
-    let fileSize = 0;
-    let fileData = null;
-    let fileContentType = 'application/octet-stream';
+    const { fileName, fileSize, fileType } = req.body;
 
-    parts.forEach(part => {
-      if (part.includes('Content-Disposition: form-data;')) {
-        const lines = part.split('\r\n');
-        const header = lines.find(line => line.includes('Content-Disposition'));
-        
-        if (header) {
-          const nameMatch = header.match(/name="([^"]+)"/);
-          const fieldName = nameMatch ? nameMatch[1] : null;
-          
-          if (header.includes('filename=')) {
-            // This is a file
-            const fileNameMatch = header.match(/filename="([^"]+)"/);
-            fileName = fileNameMatch ? fileNameMatch[1] : 'unknown';
-            
-            // Detect content type from headers
-            const contentTypeHeader = lines.find(line => line.includes('Content-Type:'));
-            if (contentTypeHeader) {
-              fileContentType = contentTypeHeader.split('Content-Type:')[1].trim();
-            }
-            
-            const emptyLineIndex = part.indexOf('\r\n\r\n');
-            if (emptyLineIndex !== -1) {
-              // ✅ FIX: Gestione corretta dei dati binari
-              const binaryData = part.substring(emptyLineIndex + 4, part.length - 2);
-              
-              // ✅ FIX: Converte correttamente da stringa binaria a Buffer
-              fileData = Buffer.from(binaryData, 'binary');
-              fileSize = fileData.length;
-              fileReceived = true;
-              
-              console.log('📎 CV Processing:', {
-                fileName,
-                contentType: fileContentType,
-                originalSize: binaryData.length,
-                bufferSize: fileData.length,
-                firstBytes: Array.from(fileData.slice(0, 10))
-              });
-            }
-          } else if (fieldName) {
-            // Regular form field
-            const emptyLineIndex = part.indexOf('\r\n\r\n');
-            if (emptyLineIndex !== -1) {
-              const value = part.substring(emptyLineIndex + 4, part.length - 2);
-              formData[fieldName] = value;
-            }
-          }
+    if (!fileName || !fileSize || !fileType) {
+      return {
+        statusCode: 400,
+        body: {
+          error: 'Missing required fields',
+          details: 'fileName, fileSize, and fileType are required'
         }
+      };
+    }
+
+    const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+    if (fileSize > maxSizeBytes) {
+      return {
+        statusCode: 400,
+        body: {
+          error: 'File too large',
+          details: `File size ${Math.round(fileSize / 1024 / 1024)}MB exceeds limit of 10MB`
+        }
+      };
+    }
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (!allowedTypes.includes(fileType)) {
+      return {
+        statusCode: 400,
+        body: {
+          error: 'Invalid file type',
+          details: `File type ${fileType} not allowed. Allowed: PDF, DOC, DOCX`
+        }
+      };
+    }
+
+    const fileId = IdGenerator.generateBookingId();
+    const fileExtension = getFileExtension(fileName);
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const s3Key = `${year}/${month}/CV_${fileId}${fileExtension}`;
+    const bucketName = process.env.CV_BUCKET_NAME || 'riformaeprogresso-cvs';
+    
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: s3Key,
+      ContentType: fileType,
+      ContentLength: fileSize,
+      Metadata: {
+        originalFileName: fileName,
+        uploadedAt: now.toISOString(),
+        fileId: fileId
       }
     });
 
-    // Log file info
-    if (fileReceived) {
-      console.log('\n=== CV RECEIVED ===');
-      console.log(`Candidate: ${formData.firstName} ${formData.lastName}`);
-      console.log(`Email: ${formData.email}`);
-      console.log(`Role: ${formData.role}`);
-      console.log(`File: ${fileName}`);
-      console.log(`Size: ${formatFileSize(fileSize)}`);
-      console.log(`Type: ${fileContentType}`);
-      console.log(`Buffer valid: ${Buffer.isBuffer(fileData)}`);
-      console.log('==================\n');
-    }
+    const uploadUrl = await getSignedUrl(req.s3Client, command, { 
+      expiresIn: 300 // 5 min
+    });
 
-    // Add complete file info to form data
-    formData.fileInfo = {
+    console.log('Upload URL generated:', {
+      fileId,
       fileName,
       fileSize,
-      fileData, // ← Ora è un Buffer corretto
-      contentType: fileContentType,
-      received: fileReceived
+      s3Key,
+      expiresIn: 300
+    });
+
+    return {
+      statusCode: 200,
+      body: {
+        uploadUrl: uploadUrl,
+        fileId: fileId,
+        s3Key: s3Key,
+        expiresIn: 300
+      }
     };
 
-    return formData;
-
   } catch (error) {
-    console.error('Error parsing multipart form data:', error);
-    throw new Error('Invalid form data');
+    console.error('❌ Failed to generate upload URL:', error);
+    return {
+      statusCode: 500,
+      body: {
+        error: 'Failed to generate upload URL',
+        details: error.message
+      }
+    };
   }
+}
+
+function getFileExtension(fileName) {
+  if (!fileName) return '.pdf';
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex === -1) return '.pdf';
+  return fileName.substring(lastDotIndex).toLowerCase();
 }
 
 /**
@@ -360,17 +351,4 @@ function getAllowedOrigin(origin) {
   }
   
   return allowedOrigins[0] || '*';
-}
-
-/**
- * Format file size in human readable format
- * @param {number} bytes - File size in bytes
- * @returns {string} Formatted file size
- */
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

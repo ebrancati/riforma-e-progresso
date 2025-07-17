@@ -1,5 +1,3 @@
-import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
-
 export class EmailNotificationService {
   constructor() {
     this.sesClient = new SESClient({ region: process.env.AWS_REGION || 'eu-central-1' });
@@ -8,7 +6,7 @@ export class EmailNotificationService {
   }
 
   /**
-   * Send new booking notification with CV attachment and .ics calendar file
+   * Send new booking notification with .ics calendar file
    */
   async sendNewBookingNotification(bookingData, bookingLinkData, cvFile = null) {
     try {
@@ -26,9 +24,6 @@ export class EmailNotificationService {
         subject: subject,
         htmlContent: htmlContent,
         attachments: [
-          // CV attachment (if present)
-          ...(cvFile ? [cvFile] : []),
-          // .ics calendar file
           {
             fileName: 'colloquio.ics',
             fileData: icsFile,
@@ -40,7 +35,7 @@ export class EmailNotificationService {
       const command = new SendRawEmailCommand(emailParams);
       const result = await this.sesClient.send(command);
       
-      console.log('✅ Booking confirmation email sent to candidate:', result.MessageId);
+      console.log('Booking confirmation email sent to candidate:', result.MessageId);
       
       return { success: true, messageId: result.MessageId };
       
@@ -51,7 +46,7 @@ export class EmailNotificationService {
   }
 
   /**
-   * Send internal notification to admin (separate from candidate email)
+   * Send internal notification to admin with CV link
    */
   async sendInternalNotification(bookingData, bookingLinkData, cvFile = null) {
     try {
@@ -65,13 +60,13 @@ export class EmailNotificationService {
         from: this.systemEmail,
         subject: subject,
         htmlContent: htmlContent,
-        attachments: cvFile ? [cvFile] : [] // CV only, no .ics
+        attachments: [] // CV link is in the email body
       });
 
       const command = new SendRawEmailCommand(emailParams);
       const result = await this.sesClient.send(command);
       
-      console.log('✅ Internal notification sent:', result.MessageId);
+      console.log('Internal notification sent:', result.MessageId);
       return { success: true, messageId: result.MessageId };
       
     } catch (error) {
@@ -113,7 +108,7 @@ export class EmailNotificationService {
         this.sesClient.send(new SendRawEmailCommand(candidateEmailParams))
       ]);
       
-      console.log('✅ Cancellation notification sent to both admin and candidate');
+      console.log('Cancellation notification sent to both admin and candidate');
       return { success: true };
       
     } catch (error) {
@@ -156,7 +151,7 @@ export class EmailNotificationService {
         this.sesClient.send(new SendRawEmailCommand(candidateEmailParams))
       ]);
       
-      console.log('✅ Reschedule notification sent to both admin and candidate');
+      console.log('Reschedule notification sent to both admin and candidate');
       return { success: true };
       
     } catch (error) {
@@ -211,7 +206,7 @@ export class EmailNotificationService {
   }
 
   /**
-   * Generate email HTML for candidate (different from internal notification)
+   * Generate email HTML for candidate
    */
   generateNewBookingEmailHTML(bookingData, bookingLinkData) {
     const baseUrl = process.env.GOOGLE_REDIRECT_URI?.replace('/api/auth/google/callback', '') || 'https://candidature.riformaeprogresso.it';
@@ -304,7 +299,7 @@ export class EmailNotificationService {
   }
 
   /**
-   * Generate internal notification HTML (simplified for web scraping)
+   * Generate internal notification HTML
    */
   generateInternalNotificationHTML(bookingData, bookingLinkData) {
     const formattedDate = this.formatItalianDate(bookingData.selectedDate);
@@ -326,6 +321,8 @@ export class EmailNotificationService {
             .label { font-weight: bold; }
             .admin-section { background: white; padding: 20px; border-left: 4px solid #2196F3; margin: 20px 0; }
             .header { background: #2196F3; color: white; padding: 20px; text-align: center; margin-bottom: 20px; }
+            .cv-link { background: #FF9800; color: white; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; }
+            .cv-link a { color: white; text-decoration: none; font-weight: bold; font-size: 16px; }
         </style>
     </head>
     <body>
@@ -398,11 +395,23 @@ export class EmailNotificationService {
             </div>
         </div>
 
+        ${bookingData.cvUrl ? `
+        <div class="cv-link">
+            <a href="${bookingData.cvUrl}" target="_blank">📎 Visualizza CV del candidato</a>
+        </div>
+        ` : `
+        <div class="admin-section">
+            <h3>CV del candidato</h3>
+            <p>Nessun CV allegato per questa prenotazione.</p>
+        </div>
+        `}
+
         <div class="admin-section">
             <h3>Informazioni Aggiuntive</h3>
             <p><strong>Data Formattata:</strong> ${formattedDate}</p>
             <p><strong>Orario Completo:</strong> ${formattedTime}</p>
             ${bookingData.meetLink ? `<p><strong>Link Meet Completo:</strong><br><a href="${bookingData.meetLink}" target="_blank">${bookingData.meetLink}</a></p>` : ''}
+            ${bookingData.cvFileName ? `<p><strong>Nome File CV:</strong> ${bookingData.cvFileName}</p>` : ''}
         </div>
 
         <div class="admin-section">
@@ -440,7 +449,11 @@ export class EmailNotificationService {
 
         <div class="admin-section">
             <h3>Allegati e Status</h3>
-            <p><strong>CV del candidato:</strong> allegato a questa email</p>
+            ${bookingData.cvUrl ? `
+            <p><strong>CV del candidato:</strong> <a href="${bookingData.cvUrl}" target="_blank">Visualizza CV</a></p>
+            ` : `
+            <p><strong>CV del candidato:</strong> Non fornito</p>
+            `}
             <p style="font-size: 12px; color: #666;">
                 Il candidato ha ricevuto separatamente una email di conferma con il file .ics per aggiungere l'appuntamento al suo calendario.
             </p>
@@ -588,7 +601,7 @@ export class EmailNotificationService {
   }
 
   /**
-   * Build raw email parameters with multiple attachments
+   * Build raw email parameters with attachments
    */
   buildRawEmailParams({ to, from, subject, htmlContent, attachments = [] }) {
     const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36)}`;
@@ -609,10 +622,12 @@ export class EmailNotificationService {
 
     attachments.forEach(attachment => {
       if (attachment && attachment.fileData) {
-        const base64Data = attachment.fileData.toString('base64');
+        const base64Data = Buffer.isBuffer(attachment.fileData) 
+          ? attachment.fileData.toString('base64')
+          : Buffer.from(attachment.fileData).toString('base64');
         
         rawMessage += `--${boundary}\r\n`;
-        rawMessage += `Content-Type: ${attachment.contentType || 'application/pdf'}; name="${attachment.fileName}"\r\n`;
+        rawMessage += `Content-Type: ${attachment.contentType || 'application/octet-stream'}; name="${attachment.fileName}"\r\n`;
         rawMessage += `Content-Transfer-Encoding: base64\r\n`;
         rawMessage += `Content-Disposition: attachment; filename="${attachment.fileName}"\r\n`;
         rawMessage += `\r\n`;
@@ -679,7 +694,7 @@ export class EmailNotificationService {
       const command = new SendRawEmailCommand(emailParams);
       const result = await this.sesClient.send(command);
         
-      console.log('✅ Contact form notification sent:', result.MessageId);
+      console.log('Contact form notification sent:', result.MessageId);
       return { success: true, messageId: result.MessageId };
         
     } catch (error) {
@@ -689,7 +704,7 @@ export class EmailNotificationService {
   }
   
   /**
-    * Generate HTML content for contact form notification
+   * Generate HTML content for contact form notification
    */
   generateContactFormEmailHTML(contactData) {
     const formattedDate = new Date(contactData.timestamp).toLocaleDateString('it-IT', {
