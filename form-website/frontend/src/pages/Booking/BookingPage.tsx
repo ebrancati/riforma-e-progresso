@@ -346,8 +346,7 @@ const BookingPage: React.FC = () => {
       const { uploadUrl, fileId } = await uploadUrlResponse.json();
       
       setUploadProgress('Caricamento CV in corso...');
-      
-      // 2. Upload diretto a S3
+
       const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
         body: file,
@@ -417,17 +416,12 @@ const BookingPage: React.FC = () => {
       if (!formData.cvFile) throw new Error('CV file is required');
 
       const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-      
-      // ⭐ STEP 1: Upload CV a S3
-      console.log('📎 Step 1: Uploading CV...');
       const fileId = await uploadCVToS3(formData.cvFile);
-      
-      // ⭐ STEP 2: Crea booking con fileId
-      console.log('📅 Step 2: Creating booking...');
+   
       const bookingResponse = await fetch(`${baseUrl}/api/public/booking/${slug}/book`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json' // ⭐ Ora è JSON, non FormData
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           selectedDate: formData.selectedDate,
@@ -438,7 +432,7 @@ const BookingPage: React.FC = () => {
           email: formData.email,
           role: formData.role,
           notes: formData.notes || '',
-          fileId: fileId // ⭐ Passa solo il riferimento al file
+          fileId: fileId
         })
       });
 

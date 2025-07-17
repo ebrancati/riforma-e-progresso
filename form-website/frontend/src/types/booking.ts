@@ -39,6 +39,7 @@ export interface BookingFormData {
   selectedDate: string;  // YYYY-MM-DD
   selectedTime: string;  // HH:MM
   bookingLinkId: string;
+  fileId: string;
 }
 
 export interface CreateBookingRequest {
