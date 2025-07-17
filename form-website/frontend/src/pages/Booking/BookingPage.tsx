@@ -46,7 +46,8 @@ const BookingPage: React.FC = () => {
     acceptPrivacy: false,
     selectedDate: '',
     selectedTime: '',
-    bookingLinkId: ''
+    bookingLinkId: '',
+    fileId: ''
   });
   
   // Loading states
@@ -54,10 +55,12 @@ const BookingPage: React.FC = () => {
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingCV, setIsUploadingCV] = useState(false);
   
   // Error and success states
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
 
   // Load booking link info on mount
   useEffect(() => {
@@ -311,6 +314,67 @@ const BookingPage: React.FC = () => {
       setError(null);
     } else {
       handleInputChange('cvFile', null);
+      setFormData(prev => ({ ...prev, fileId: '' }));
+    }
+  };
+
+  const uploadCVToS3 = async (file: File): Promise<string> => {
+    try {
+      setIsUploadingCV(true);
+      setUploadProgress('Preparazione upload...');
+      
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      
+      // 1. Ottieni URL presigned
+      const uploadUrlResponse = await fetch(`${baseUrl}/api/get-upload-url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        })
+      });
+
+      if (!uploadUrlResponse.ok) {
+        const errorData = await uploadUrlResponse.json();
+        throw new Error(errorData.error || 'Errore ottenimento URL upload');
+      }
+
+      const { uploadUrl, fileId } = await uploadUrlResponse.json();
+      
+      setUploadProgress('Caricamento CV in corso...');
+      
+      // 2. Upload diretto a S3
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Errore upload S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      }
+
+      setUploadProgress('CV caricato con successo!');
+      console.log('CV uploaded successfully:', {
+        fileId,
+        fileName: file.name,
+        size: file.size
+      });
+
+      return fileId;
+
+    } catch (error) {
+      console.error('❌ CV upload failed:', error);
+      throw new Error(`Errore caricamento CV: ${(error as Error).message}`);
+    } finally {
+      setIsUploadingCV(false);
+      setTimeout(() => setUploadProgress(''), 2000);
     }
   };
 
@@ -350,38 +414,49 @@ const BookingPage: React.FC = () => {
       setError(null);
       
       if (!slug) throw new Error('Missing booking slug');
+      if (!formData.cvFile) throw new Error('CV file is required');
+
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
       
-      // Crea FormData
-      const formDataToSend = new FormData();
-      formDataToSend.append('selectedDate', formData.selectedDate);
-      formDataToSend.append('selectedTime', formData.selectedTime);
-      formDataToSend.append('firstName',    formData.firstName);
-      formDataToSend.append('lastName',     formData.lastName);
-      formDataToSend.append('phone',        formData.phone);
-      formDataToSend.append('email',        formData.email);
-      formDataToSend.append('role',         formData.role);
-      formDataToSend.append('notes',        formData.notes || '');
+      // ⭐ STEP 1: Upload CV a S3
+      console.log('📎 Step 1: Uploading CV...');
+      const fileId = await uploadCVToS3(formData.cvFile);
       
-      // Add CV file
-      if (formData.cvFile) formDataToSend.append('cvFile', formData.cvFile);
-      
-      // Send to backend
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/public/booking/${slug}/book`, {
+      // ⭐ STEP 2: Crea booking con fileId
+      console.log('📅 Step 2: Creating booking...');
+      const bookingResponse = await fetch(`${baseUrl}/api/public/booking/${slug}/book`, {
         method: 'POST',
-        body: formDataToSend
+        headers: {
+          'Content-Type': 'application/json' // ⭐ Ora è JSON, non FormData
+        },
+        body: JSON.stringify({
+          selectedDate: formData.selectedDate,
+          selectedTime: formData.selectedTime,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          email: formData.email,
+          role: formData.role,
+          notes: formData.notes || '',
+          fileId: fileId // ⭐ Passa solo il riferimento al file
+        })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Errore durante l\'invio');
+      if (!bookingResponse.ok) {
+        const errorData = await bookingResponse.json();
+        throw new Error(errorData.error || 'Errore durante la creazione della prenotazione');
       }
 
+      // ⭐ Successo!
       setSuccessMessage(
         'Prenotazione confermata!\n\n' +
         'Riceverai tutti i dettagli via email.'
       );
       
-      setIsSubmitting(false);
+      console.log('✅ Booking created successfully with CV:', {
+        fileId,
+        fileName: formData.cvFile.name
+      });
 
       setTimeout(() => {
         navigate('/', { 
@@ -393,7 +468,8 @@ const BookingPage: React.FC = () => {
             
     } catch (error) {
       console.error('Failed to submit booking:', error);
-      setError('Errore durante l\'invio: ' + (error as Error).message);
+      setError(`Errore durante l'invio: ${(error as Error).message}`);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -634,7 +710,7 @@ const BookingPage: React.FC = () => {
                         className="file-input"
                         accept=".pdf,.doc,.docx,.ppt,.pptx"
                         onChange={handleFileUpload}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploadingCV}
                         required
                       />
                       <label htmlFor="cvFile" className="file-upload-label">
@@ -645,6 +721,18 @@ const BookingPage: React.FC = () => {
                         <span className="file-upload-button">Sfoglia</span>
                       </label>
                     </div>
+                    {uploadProgress && (
+                      <div className="upload-progress" style={{
+                        marginTop: '8px',
+                        padding: '8px 12px',
+                        backgroundColor: '#e3f2fd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#1976d2'
+                      }}>
+                        {uploadProgress}
+                      </div>
+                    )}
                     <div className="file-help">
                       Formati supportati: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx)
                     </div>
@@ -691,7 +779,7 @@ const BookingPage: React.FC = () => {
                       type="button"
                       className="btn btn-secondary"
                       onClick={handleBackToTimeSlots}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploadingCV}
                     >
                       <MoveLeft className='move-left-icon' size={20} />
                       Cambia orario
@@ -700,10 +788,15 @@ const BookingPage: React.FC = () => {
                     <button 
                       type="submit"
                       className="btn btn-primary btn-submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isUploadingCV}
                     >
                       <Rocket size={20} />
-                      Conferma Prenotazione
+                      {isSubmitting 
+                        ? 'Invio in corso...' 
+                        : isUploadingCV 
+                          ? 'Caricamento CV...' 
+                          : 'Conferma Prenotazione'
+                      }
                     </button>
                   </div>
                 </form>
