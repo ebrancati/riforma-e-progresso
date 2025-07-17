@@ -1,3 +1,5 @@
+import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
+
 export class EmailNotificationService {
   constructor() {
     this.sesClient = new SESClient({ region: process.env.AWS_REGION || 'eu-central-1' });

@@ -13,7 +13,7 @@ provider:
     CV_BUCKET_NAME: riformaeprogresso-cvs
     NODE_ENV: ${self:provider.stage}
     ADMIN_USERNAME: ${env:ADMIN_USERNAME, 'admin'}
-    ADMIN_PASSWORD: ${env:ADMIN_PASSWORD, 'rep2025@'}
+    ADMIN_PASSWORD: ${env:ADMIN_PASSWORD, 'replace_with_your_own'}
     CORS_ORIGINS: ${env:CORS_ORIGINS, '*'}
     GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID, ''}
     GOOGLE_CLIENT_SECRET: ${env:GOOGLE_CLIENT_SECRET, ''}

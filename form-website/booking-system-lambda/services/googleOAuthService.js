@@ -9,7 +9,7 @@ export class GoogleOAuthService extends DynamoDBBase {
     this.oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      'https://x97grz0lwk.execute-api.eu-central-1.amazonaws.com/prod/api/auth/google/callback'
+      'https://y13prg01eb.execute-api.eu-central-1.amazonaws.com/prod/api/auth/google/callback' // Fake URL, replace with your own
     );
 
     this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
