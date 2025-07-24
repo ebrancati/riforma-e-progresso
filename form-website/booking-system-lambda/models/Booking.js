@@ -323,7 +323,10 @@ export class Booking extends DynamoDBBase {
   }
 
   generateCVViewerUrl(fileId) {
-    return `https://candidature.riformaeprogresso.it/cv/${fileId}`;
+    const baseUrl = process.env.GOOGLE_REDIRECT_URI?.replace('/api/auth/google/callback', '') 
+      || 'https://candidature.riformaeprogresso.it';
+    
+    return `${baseUrl}/admin/cv/${fileId}`;
   }
 
   /**

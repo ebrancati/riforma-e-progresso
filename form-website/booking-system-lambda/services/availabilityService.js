@@ -588,11 +588,15 @@ export class AvailabilityService extends DynamoDBBase {
     return slots;
   }
 
+  /**
+   * Apply advance booking restrictions and filter past time slots
+   * @param {Array} slots - Available time slots
+   * @param {string} selectedDate - Date in YYYY-MM-DD format
+   * @param {boolean} requireAdvanceBooking - Whether advance booking is required
+   * @param {number} advanceHours - Required advance hours if advance booking is enabled
+   * @returns {Array} Filtered time slots
+   */
   applyAdvanceBookingFilter(slots, selectedDate, requireAdvanceBooking, advanceHours) {
-    if (!requireAdvanceBooking) {
-      return slots;
-    }
-    
     const now = new Date();
     
     return slots.filter(slot => {
@@ -600,6 +604,9 @@ export class AvailabilityService extends DynamoDBBase {
       const timeDifference = slotDateTime.getTime() - now.getTime();
       const hoursUntilSlot = timeDifference / (1000 * 60 * 60);
       
+      if (hoursUntilSlot < 0)     return false;
+      if (!requireAdvanceBooking) return true;
+
       return hoursUntilSlot >= advanceHours;
     });
   }

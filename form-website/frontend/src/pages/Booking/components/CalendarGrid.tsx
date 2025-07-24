@@ -42,7 +42,20 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   
   const getDayAvailability = (date: Date): DayAvailability | null => {
     const dateString = formatDateToString(date);
-    return availability.find(day => day.date === dateString) || null;
+    const backendAvailability = availability.find(day => day.date === dateString);
+
+    if (!backendAvailability) return null;
+
+    if (isPastDate(date)) {
+      return {
+        ...backendAvailability,
+        available: false,           // Force unavailable for past dates
+        availableSlots: 0          // No slots available for past dates
+      };
+    }
+    
+    // For current and future dates, trust the backend data
+    return backendAvailability;
   };
   
   const getDayClassName = (date: Date): string => {
